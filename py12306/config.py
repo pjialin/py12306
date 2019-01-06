@@ -7,6 +7,9 @@ USER_ACCOUNTS = []
 
 # 查询任务
 QUERY_JOBS = []
+# 查询间隔
+QUERY_INTERVAL = 1
+
 
 SEAT_TYPES = {
     '商务座': 32,
