@@ -17,6 +17,12 @@ USER_HEARTBEAT_INTERVAL = 120
 # 多线程查询
 QUERY_JOB_THREAD_ENABLED = 0
 
+# 打码平台账号
+AUTO_CODE_ACCOUNT = {
+    'user': '',
+    'pwd': ''
+}
+
 SEAT_TYPES = {
     '商务座': 32,
     '一等座': 31,
@@ -28,10 +34,12 @@ SEAT_TYPES = {
     '无座': 26,
 }
 
-# Query
-QUERY_DATA_DIR = 'runtime/query'
-USER_DATA_DIR = 'runtime/user'
+PROJECT_DIR = path.dirname(path.dirname(path.abspath(__file__))) + '/'
 
+# Query
+RUNTIME_DIR = PROJECT_DIR + 'runtime/'
+QUERY_DATA_DIR = RUNTIME_DIR + 'query/'
+USER_DATA_DIR = RUNTIME_DIR + 'user/'
 
 STATION_FILE = 'data/stations.txt'
 CONFIG_FILE = 'env.py'

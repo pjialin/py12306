@@ -19,10 +19,16 @@ class User:
 
     def start(self):
         self.init_users()
-        UserLog.print_init_users(jobs=self.users)
+        UserLog.print_init_users(users=self.users)
         while True:
+            # 多线程维护用户
+            threads = []
             for user in self.users:
-                user.run()
+                thread = threading.Thread(target=user.run)
+                thread.start()
+                threads.append(thread)
+                # user.run()
+            for thread in threads: thread.join()
 
     def init_users(self):
         accounts = config.USER_ACCOUNTS

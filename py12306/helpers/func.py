@@ -1,3 +1,4 @@
+import datetime
 import random
 import threading
 from time import sleep
@@ -65,7 +66,11 @@ def stay_second(second):
 def is_main_thread():
     return threading.current_thread() == threading.main_thread()
 
+
 def current_thread_id():
     return threading.current_thread().ident
 
+
+def time_now():
+    return datetime.datetime.now()
 # def test:

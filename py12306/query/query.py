@@ -38,8 +38,7 @@ class Query:
                     thread = threading.Thread(target=job.run)
                     thread.start()
                     threads.append(thread)
-                for thread in threads:
-                    thread.join()
+                for thread in threads: thread.join()
             else:
                 for job in self.jobs:
                     job.run()

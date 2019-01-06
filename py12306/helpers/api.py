@@ -26,8 +26,22 @@ API_USER_CHECK = {
     "is_cdn": True,
 }
 
+API_AUTH_CODE_DOWNLOAD = {
+    'url': BASE_URL_OF_12306 + '/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&_={random}'
+}
+API_AUTH_CODE_CHECK = {
+    'url': BASE_URL_OF_12306 + '/passport/captcha/captcha-check?answer={answer}&rand=sjrand&login_site=E&_={random}'
+}
+API_AUTH_UAMTK = {
+    'url': BASE_URL_OF_12306 + '/passport/web/auth/uamtk'
+}
+API_AUTH_UAMAUTHCLIENT = {
+    'url': BASE_URL_OF_12306 + '/otn/uamauthclient'
+}
 
-
+API_USER_INFO = {
+    'url': BASE_URL_OF_12306 + '/otn/modifyUser/initQueryUserInfoApi'
+}
 
 urls = {
     "auth": {  # 登录接口

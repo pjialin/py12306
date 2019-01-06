@@ -12,7 +12,7 @@ class QueryLog(BaseLog):
         'query_count': 1,
         'last_time': '',
     }
-    data_path = config.QUERY_DATA_DIR + '/status.json'
+    data_path = config.QUERY_DATA_DIR + 'status.json'
 
     LOG_INIT_JOBS = ''
 
