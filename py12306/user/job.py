@@ -2,6 +2,7 @@ import pickle
 from os import path
 
 from py12306.helpers.api import API_USER_CHECK, API_BASE_LOGIN, API_AUTH_UAMTK, API_AUTH_UAMAUTHCLIENT, API_USER_INFO
+from py12306.helpers.app import *
 from py12306.helpers.auth_code import AuthCode
 from py12306.helpers.func import *
 from py12306.helpers.request import Request
@@ -26,10 +27,10 @@ class UserJob:
         self.user_name = info.get('user_name')
         self.password = info.get('password')
         self.user = user
-        # load user
-        self.load_user()
 
     def run(self):
+        # load user
+        self.load_user()
         self.start()
 
     def start(self):
@@ -38,6 +39,7 @@ class UserJob:
         :return:
         """
         while True:
+            app_available_check()
             self.check_heartbeat()
             sleep(self.heartbeat_interval)
 

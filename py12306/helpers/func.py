@@ -73,4 +73,17 @@ def current_thread_id():
 
 def time_now():
     return datetime.datetime.now()
+
+
+def create_thread_and_run(jobs, callback_name, wait=True):
+    threads = []
+    if not isinstance(jobs, list):
+        jobs = [jobs]
+    for job in jobs:
+        thread = threading.Thread(target=getattr(job, callback_name))
+        thread.start()
+        threads.append(thread)
+    if wait:
+        for thread in threads: thread.join()
+
 # def test:

@@ -1,3 +1,4 @@
+from py12306.helpers.app import *
 from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
 from py12306.user.job import UserJob
@@ -14,21 +15,15 @@ class User:
     @classmethod
     def run(cls):
         self = cls()
+        app_available_check()
         self.start()
         pass
 
     def start(self):
         self.init_users()
         UserLog.print_init_users(users=self.users)
-        while True:
-            # 多线程维护用户
-            threads = []
-            for user in self.users:
-                thread = threading.Thread(target=user.run)
-                thread.start()
-                threads.append(thread)
-                # user.run()
-            for thread in threads: thread.join()
+        # 多线程维护用户
+        create_thread_and_run(jobs=self.users, callback_name='run', wait=False)
 
     def init_users(self):
         accounts = config.USER_ACCOUNTS
