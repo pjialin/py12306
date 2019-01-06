@@ -1,5 +1,5 @@
 # encoding=utf8
-
+import os
 from threading import Thread
 
 from py12306.log.query_log import QueryLog

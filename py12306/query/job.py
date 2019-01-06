@@ -25,10 +25,13 @@ class Job:
     interval = {}
 
     query = None
+    ticket_info = {}
     INDEX_TICKET_NUM = 11
     INDEX_TRAIN_NUMBER = 3
     INDEX_LEFT_DATE = 13
-
+    INDEX_LEFT_STATION = 6  # 4 5 始发 终点
+    INDEX_ARRIVE_STATION = 7
+    INDEX_ORDER_TEXT = 1  # 下单文字
 
     def __init__(self, info, query):
         self.left_dates = info.get('left_dates')
@@ -64,8 +67,14 @@ class Job:
             response = self.query_by_date(date)
             self.handle_response(response)
             self.safe_stay()
+            if is_main_thread():
+                QueryLog.flush(sep='\t\t')
+            else:
+                QueryLog.add_log('\n')
+        if is_main_thread():
+            QueryLog.add_quick_log('').flush()
+        else:
             QueryLog.flush(sep='\t\t')
-        QueryLog.add_quick_log('').flush()
 
     def query_by_date(self, date):
         """
@@ -92,10 +101,11 @@ class Job:
         if not results:
             return False
         for result in results:
-            ticket_info = result.split('|')
+            self.ticket_info = ticket_info = result.split('|')
             if not self.is_trains_number_valid(ticket_info):  # 车次是否有效
                 continue
-            QueryLog.add_log(QueryLog.MESSAGE_QUERY_LOG_OF_EVERY_TRAIN.format(ticket_info[self.INDEX_TRAIN_NUMBER], ticket_info[self.INDEX_TICKET_NUM]))
+            QueryLog.add_log(QueryLog.MESSAGE_QUERY_LOG_OF_EVERY_TRAIN.format(self.get_info_of_train_number(),
+                                                                              self.get_info_of_ticket_num()))
             if not self.is_has_ticket(ticket_info):
                 continue
             allow_seats = self.allow_seats if self.allow_seats else list(config.SEAT_TYPES.values())  # 未设置 则所有可用
@@ -103,15 +113,21 @@ class Job:
                 ticket_of_seat = ticket_info[get_seat_number_by_name(seat)]
                 if not self.is_has_ticket_by_seat(ticket_of_seat):  # 座位是否有效
                     continue
-                QueryLog.print_ticket_seat_available(left_date=ticket_info[self.INDEX_LEFT_DATE], train_number=ticket_info[self.INDEX_TRAIN_NUMBER], seat_type=seat, rest_num=ticket_of_seat)
+                QueryLog.print_ticket_seat_available(left_date=self.get_info_of_left_date(),
+                                                     train_number=self.get_info_of_train_number(), seat_type=seat,
+                                                     rest_num=ticket_of_seat)
                 if not self.is_member_number_valid(ticket_of_seat):  # 乘车人数是否有效
                     if self.allow_less_member:
                         self.member_num_take = int(ticket_of_seat)
                         QueryLog.print_ticket_num_less_than_specified(ticket_of_seat, self)
                     else:
-                        QueryLog.add_quick_log( QueryLog.MESSAGE_GIVE_UP_CHANCE_CAUSE_TICKET_NUM_LESS_THAN_SPECIFIED).flush()
+                        QueryLog.add_quick_log(
+                            QueryLog.MESSAGE_GIVE_UP_CHANCE_CAUSE_TICKET_NUM_LESS_THAN_SPECIFIED).flush()
                         continue
                 # 检查完成 开始提交订单
+                QueryLog.print_ticket_available(left_date=self.get_info_of_left_date(),
+                                                train_number=self.get_info_of_train_number(),
+                                                rest_num=ticket_of_seat)
                 print('检查完成 开始提交订单')
 
     def get_results(self, response):
@@ -130,21 +146,39 @@ class Job:
         return result if result else False
 
     def is_has_ticket(self, ticket_info):
-        return ticket_info[11] == 'Y' and ticket_info[1] == '预订'
+        return self.get_info_of_ticket_num() == 'Y' and self.get_info_of_order_text() == '预订'
 
     def is_has_ticket_by_seat(self, seat):
         return seat != '' and seat != '无' and seat != '*'
 
     def is_trains_number_valid(self, ticket_info):
         if self.allow_train_numbers:
-            return ticket_info[3] in self.allow_train_numbers
+            return self.get_info_of_train_number() in self.allow_train_numbers
         return True
 
     def is_member_number_valid(self, seat):
         return seat == '有' or self.member_num <= int(seat)
 
-
     def safe_stay(self):
         interval = get_interval_num(self.interval)
         QueryLog.add_stay_log(interval)
         stay_second(interval)
+
+    # 提供一些便利方法
+    def get_info_of_left_date(self):
+        return self.ticket_info[self.INDEX_LEFT_DATE]
+
+    def get_info_of_ticket_num(self):
+        return self.ticket_info[self.INDEX_TICKET_NUM]
+
+    def get_info_of_train_number(self):
+        return self.ticket_info[self.INDEX_TRAIN_NUMBER]
+
+    def get_info_of_left_station(self):
+        return Station.get_station_name_by_key(self.ticket_info[self.INDEX_LEFT_STATION])
+
+    def get_info_of_arrive_station(self):
+        return Station.get_station_name_by_key(self.ticket_info[self.INDEX_ARRIVE_STATION])
+
+    def get_info_of_order_text(self):
+        return self.ticket_info[self.INDEX_ORDER_TEXT]

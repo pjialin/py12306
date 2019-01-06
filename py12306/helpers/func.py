@@ -1,4 +1,5 @@
 import random
+import threading
 from time import sleep
 
 from py12306 import config
@@ -59,5 +60,12 @@ def get_interval_num(interval, decimal=2):
 
 def stay_second(second):
     sleep(second)
+
+
+def is_main_thread():
+    return threading.current_thread() == threading.main_thread()
+
+def current_thread_id():
+    return threading.current_thread().ident
 
 # def test:

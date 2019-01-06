@@ -14,6 +14,21 @@ LEFT_TICKETS = {
     "is_cdn": True,
 }
 
+API_BASE_LOGIN = {
+    "url": BASE_URL_OF_12306 + '/passport/web/login',
+    "method": "post",
+    "is_cdn": True,
+}
+
+API_USER_CHECK = {
+    "url": BASE_URL_OF_12306 + '/otn/login/checkUser',
+    "method": "post",
+    "is_cdn": True,
+}
+
+
+
+
 urls = {
     "auth": {  # 登录接口
         "req_url": "/passport/web/auth/uamtk",

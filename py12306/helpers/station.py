@@ -22,13 +22,21 @@ class Station:
 
     @classmethod
     def get_station_by_name(cls, name):
+        return cls.get_station_by(name, 'name')
+
+    @classmethod
+    def get_station_by(cls, value, field):
         self = cls()
         for station in self.stations:
-            if station.get('name') == name:
+            if station.get(field) == value:
                 return station
         return None
 
     @classmethod
     def get_station_key_by_name(cls, name):
         return cls.get_station_by_name(name).get('key')
+
+    @classmethod
+    def get_station_name_by_key(cls, key):
+        return cls.get_station_by(key, 'key').get('name')
 

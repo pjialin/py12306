@@ -1,5 +1,6 @@
 import datetime
 import json
+import sys
 from os import path
 from py12306.log.base import BaseLog
 from py12306.helpers.func import *
@@ -17,7 +18,8 @@ class QueryLog(BaseLog):
 
     MESSAGE_GIVE_UP_CHANCE_CAUSE_TICKET_NUM_LESS_THAN_SPECIFIED = '余票数小于乘车人数，放弃此次提交机会'
     MESSAGE_QUERY_LOG_OF_EVERY_TRAIN = '{}-{}'
-    MESSAGE_QUERY_START_BY_DATE = '出发日期 {}:  {} - {}'
+    MESSAGE_QUERY_LOG_OF_TRAIN_INFO = '{} {}'
+    MESSAGE_QUERY_START_BY_DATE = '出发日期 {}: {} - {}'
 
     def __init__(self):
         super().__init__()
@@ -35,11 +37,11 @@ class QueryLog(BaseLog):
 
     @classmethod
     def print_init_jobs(cls, jobs):
-        self = cls()
         """
         输出初始化信息
         :return:
         """
+        self = cls()
         self.add_log('# 发现 {} 个任务 #'.format(len(jobs)))
         index = 1
         for job in jobs:
@@ -77,6 +79,16 @@ class QueryLog(BaseLog):
         return self
 
     @classmethod
+    def print_ticket_available(cls, left_date, train_number, rest_num):
+        self = cls()
+        self.add_quick_log('检查完成 开始提交订单 '.format())
+        self.notification('查询到可用车票', '时间 {left_date} 车次 {train_number} 余票数量 {rest_num}'.format(left_date=left_date,
+                                                                                               train_number=train_number,
+                                                                                               rest_num=rest_num))
+        self.flush()
+        return self
+
+    @classmethod
     def print_query_error(cls, reason, code=None):
         self = cls()
         self.add_quick_log('查询余票请求失败')
@@ -90,9 +102,13 @@ class QueryLog(BaseLog):
     @classmethod
     def print_job_start(cls):
         self = cls()
-        self.add_quick_log('=== 正在进行第 {query_count} 次查询 === {time}'.format(query_count=self.data.get('query_count'), time=datetime.datetime.now()))
+        self.add_log('=== 正在进行第 {query_count} 次查询 === {time}'.format(query_count=self.data.get('query_count'),
+                                                                     time=datetime.datetime.now()))
         self.refresh_data()
-        self.flush()
+        if is_main_thread():
+            self.flush()
+        else:
+            self.add_log('\n')
         return self
 
     @classmethod

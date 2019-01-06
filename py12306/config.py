@@ -7,9 +7,15 @@ USER_ACCOUNTS = []
 
 # 查询任务
 QUERY_JOBS = []
+
 # 查询间隔
 QUERY_INTERVAL = 1
 
+# 用户心跳检测间隔
+USER_HEARTBEAT_INTERVAL = 120
+
+# 多线程查询
+QUERY_JOB_THREAD_ENABLED = 0
 
 SEAT_TYPES = {
     '商务座': 32,
@@ -24,6 +30,7 @@ SEAT_TYPES = {
 
 # Query
 QUERY_DATA_DIR = 'runtime/query'
+USER_DATA_DIR = 'runtime/user'
 
 
 STATION_FILE = 'data/stations.txt'

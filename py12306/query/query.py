@@ -1,3 +1,5 @@
+import threading
+
 from requests_html import HTMLSession
 
 from py12306.helpers.func import *
@@ -30,8 +32,17 @@ class Query:
         self.init_jobs()
         QueryLog.print_init_jobs(jobs=self.jobs)
         while True:
-            for job in self.jobs:
-                job.run()
+            threads = []
+            if config.QUERY_JOB_THREAD_ENABLED:  # 多线程
+                for job in self.jobs:
+                    thread = threading.Thread(target=job.run)
+                    thread.start()
+                    threads.append(thread)
+                for thread in threads:
+                    thread.join()
+            else:
+                for job in self.jobs:
+                    job.run()
 
     def init_jobs(self):
         jobs = config.QUERY_JOBS
