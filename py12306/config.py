@@ -1,7 +1,5 @@
 from os import path
 
-# from py12306.helpers.config import Config
-
 # 12306 账号
 USER_ACCOUNTS = []
 

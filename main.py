@@ -18,7 +18,7 @@ def main():
     Query.run()
     if not Const.IS_TEST:
         while True:
-            sleep(1)
+            sleep(10000)
 
     CommonLog.test_complete()
 
