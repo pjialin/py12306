@@ -30,7 +30,7 @@ class BaseLog:
             if is_main_thread():
                 logs = self.logs
             else:
-                logs = self.thread_logs[current_thread_id()]
+                logs = self.thread_logs.get(current_thread_id())
         # for i in logs:
         print(*logs, sep=sep, end=end, file=file)
         if self.quick_log:
@@ -39,7 +39,7 @@ class BaseLog:
             if is_main_thread():
                 self.logs = []
             else:
-                del self.thread_logs[current_thread_id()]
+                if logs: del self.thread_logs[current_thread_id()]
         # print(self.logs)
 
     @classmethod

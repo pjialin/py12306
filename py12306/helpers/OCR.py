@@ -17,7 +17,6 @@ class OCR:
         """
         self = cls()
         return self.get_img_position_by_ruokuai(img_path)
-        pass
 
     def get_img_position_by_ruokuai(self, img_path):
         ruokuai_account = config.AUTO_CODE_ACCOUNT

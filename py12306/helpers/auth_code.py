@@ -17,7 +17,7 @@ class AuthCode:
     """
     session = None
     data_path = config.RUNTIME_DIR
-    retry_time = 1
+    retry_time = 5
 
     def __init__(self, session):
         self.session = session
@@ -27,11 +27,18 @@ class AuthCode:
         self = cls(session)
         img_path = self.download_code()
         position = OCR.get_img_position(img_path)
+        if not position:  # 打码失败
+            return self.retry_get_auth_code()
+
         answer = ','.join(map(str, position))
         if not self.check_code(answer):
-            time.sleep(self.retry_time)
-            return self.get_auth_code(session)
+            return self.retry_get_auth_code()
         return position
+
+    def retry_get_auth_code(self): # TODO 安全次数检测
+        CommonLog.add_quick_log(CommonLog.MESSAGE_RETRY_AUTH_CODE.format(self.retry_time))
+        time.sleep(self.retry_time)
+        return self.get_auth_code(self.session)
 
     def download_code(self):
         url = API_AUTH_CODE_DOWNLOAD.get('url').format(random=random.random())

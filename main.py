@@ -10,7 +10,7 @@ from py12306.user.user import User
 def main():
     # Thread(target=Query.run).start()  # 余票查询
     create_thread_and_run(User, 'run', wait=False)
-    Query.run()
+    # Query.run()
     # Query.run()
     pass
 
