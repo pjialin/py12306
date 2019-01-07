@@ -34,6 +34,8 @@ class Query:
         # return # DEBUG
         self.init_jobs()
         QueryLog.print_init_jobs(jobs=self.jobs)
+        stay_second(1)
+
         while True:
             app_available_check()
             if config.QUERY_JOB_THREAD_ENABLED:  # 多线程
@@ -41,6 +43,7 @@ class Query:
             else:
                 for job in self.jobs:
                     job.run()
+            if Const.IS_TEST: return
 
     def init_jobs(self):
         jobs = config.QUERY_JOBS

@@ -4,6 +4,11 @@ from py12306.helpers.func import *
 
 @singleton
 class UserLog(BaseLog):
+    # 这里如果不声明，会出现重复打印，目前不知道什么原因
+    logs = []
+    thread_logs = {}
+    quick_log = []
+
     MESSAGE_DOWNLAOD_AUTH_CODE_FAIL = '验证码下载失败 错误原因: {} {} 秒后重试'
     MESSAGE_DOWNLAODING_THE_CODE = '正在下载验证码...'
     MESSAGE_CODE_AUTH_FAIL = '验证码验证失败 错误原因: {} {} 秒后重试'
@@ -17,14 +22,14 @@ class UserLog(BaseLog):
     MESSAGE_GET_USER_PASSENGERS_FAIL = '获取用户乘客列表失败，错误原因: {} {} 秒后重试'
     MESSAGE_USER_PASSENGERS_IS_INVALID = '乘客信息校验失败，在账号 {} 中未找到该乘客: {}'
 
-    MESSAGE_WAIT_USER_INIT_COMPLETE = '未找到可用账号或用户正在初始化，{} 秒重试'
+    MESSAGE_WAIT_USER_INIT_COMPLETE = '未找到可用账号或用户正在初始化，{} 秒后重试'
 
     def __init__(self):
         super().__init__()
         self.init_data()
 
     def init_data(self):
-        print('User Log 初始化')
+        pass
 
     @classmethod
     def print_init_users(cls, users):
@@ -33,7 +38,7 @@ class UserLog(BaseLog):
         :return:
         """
         self = cls()
-        self.add_log('================== 发现 {} 个用户 =================='.format(len(users)))
+        self.add_log('# 发现 {} 个用户 #'.format(len(users)))
         self.flush()
         return self
 

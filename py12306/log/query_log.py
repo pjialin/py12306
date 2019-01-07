@@ -8,6 +8,11 @@ from py12306.helpers.func import *
 
 @singleton
 class QueryLog(BaseLog):
+    # 这里如果不声明，会出现重复打印，目前不知道什么原因
+    logs = []
+    thread_logs = {}
+    quick_log = []
+
     data = {
         'query_count': 1,
         'last_time': '',
@@ -27,13 +32,14 @@ class QueryLog(BaseLog):
 
     def init_data(self):
         # 获取上次记录
-        print('Query Log 初始化')
+        if Const.IS_TEST: return
         if path.exists(self.data_path):
-            result = open(self.data_path, encoding='utf-8').read()
-            if result:
-                result = json.loads(result)
-                self.data = {**self.data, **result}
-                self.print_data_restored()
+            with open(self.data_path, encoding='utf-8') as f:
+                result = f.read()
+                if result:
+                    result = json.loads(result)
+                    self.data = {**self.data, **result}
+                    self.print_data_restored()
 
     @classmethod
     def print_init_jobs(cls, jobs):
@@ -50,10 +56,11 @@ class QueryLog(BaseLog):
             self.add_log('乘车日期：{}'.format(job.left_dates))
             self.add_log('坐席：{}'.format('，'.join(job.allow_seats)))
             self.add_log('乘车人：{}'.format('，'.join(job.members)))
-            self.add_log('筛选车次：{}'.format('，'.join(job.allow_train_numbers)))
+            self.add_log('筛选车次：{}'.format('，'.join(job.allow_train_numbers if job.allow_train_numbers else ['不筛选'])))
             # 乘车日期：['2019-01-24', '2019-01-25', '2019-01-26', '2019-01-27']
+            self.add_log('')
             index += 1
-        self.add_log('')
+
         self.flush()
         return self
 
@@ -71,10 +78,11 @@ class QueryLog(BaseLog):
     def print_ticket_seat_available(cls, left_date, train_number, seat_type, rest_num):
         self = cls()
         self.add_quick_log(
-            '查询到座位可用 出发时间 {left_date} 车次 {train_number} 座位类型 {seat_type} 余票数量 {rest_num}'.format(left_date=left_date,
-                                                                                                 train_number=train_number,
-                                                                                                 seat_type=seat_type,
-                                                                                                 rest_num=rest_num))
+            '[ 查询到座位可用 出发时间 {left_date} 车次 {train_number} 座位类型 {seat_type} 余票数量 {rest_num} ]'.format(
+                left_date=left_date,
+                train_number=train_number,
+                seat_type=seat_type,
+                rest_num=rest_num))
         self.flush()
         return self
 
@@ -107,8 +115,6 @@ class QueryLog(BaseLog):
         self.refresh_data()
         if is_main_thread():
             self.flush()
-        else:
-            self.add_log('\n')
         return self
 
     @classmethod
@@ -121,7 +127,7 @@ class QueryLog(BaseLog):
         self.add_quick_log('============================================================')
         self.add_quick_log('|=== 查询记录恢复成功 上次查询 {last_date} ===|'.format(last_date=self.data.get('last_time')))
         self.add_quick_log('============================================================')
-        self.add_log('')
+        self.add_quick_log('')
         self.flush()
         return self
 

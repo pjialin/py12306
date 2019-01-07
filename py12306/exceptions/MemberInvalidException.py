@@ -1,4 +1,0 @@
-class MemberInvalidException(Exception):
-    pass
-
-

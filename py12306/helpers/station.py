@@ -7,7 +7,6 @@ class Station:
     stations = []
 
     def __init__(self):
-        print('Station 初始化')
         if path.exists(config.STATION_FILE):
             result = open(config.STATION_FILE, encoding='utf-8').read()
             result = result.lstrip('@').split('@')

@@ -1,10 +1,12 @@
 import datetime
 import random
 import threading
+import functools
+
 from time import sleep
 
 from py12306 import config
-import functools
+
 
 
 def singleton(cls):
@@ -65,6 +67,15 @@ def stay_second(second, call_back=None):
         return call_back()
 
 
+def sleep_forever():
+    """
+    当不是主线程时，假象停止
+    :return:
+    """
+    if not is_main_thread():
+        while True: sleep(10000000)
+
+
 def is_main_thread():
     return threading.current_thread() == threading.main_thread()
 
@@ -99,4 +110,17 @@ def array_dict_find_by_key_value(data, key, value, default=None):
     result = [v for k, v in enumerate(data) if key in v and v[key] == value]
     return result.pop() if len(result) else default
 
-# def test:
+
+def get_true_false_text(value, true='', false=''):
+    if value: return true
+    return false
+
+
+def sleep_forever_when_in_test():
+    if Const.IS_TEST: sleep_forever()
+
+
+@singleton
+class Const:
+    IS_TEST = False
+    IS_TEST_NOTIFICATION = False

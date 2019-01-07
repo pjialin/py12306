@@ -80,20 +80,21 @@ class Job:
             self.handle_response(response)
             self.safe_stay()
             if is_main_thread():
-                QueryLog.flush(sep='\t')
-            else:
-                QueryLog.add_log('\n')
+                QueryLog.flush(sep='\t\t')
         if is_main_thread():
             QueryLog.add_quick_log('').flush()
         else:
-            QueryLog.flush(sep='\t')
+            QueryLog.add_log('\n').flush(sep='\t\t')
 
     def query_by_date(self, date):
         """
         通过日期进行查询
         :return:
         """
-        QueryLog.add_log(QueryLog.MESSAGE_QUERY_START_BY_DATE.format(date, self.left_station, self.arrive_station))
+        QueryLog.add_log(
+            ('\n' if not is_main_thread() else '') + QueryLog.MESSAGE_QUERY_START_BY_DATE.format(date,
+                                                                                                 self.left_station,
+                                                                                                 self.arrive_station))
         url = LEFT_TICKETS.get('url').format(left_date=date, left_station=self.left_station_code,
                                              arrive_station=self.arrive_station_code, type='leftTicket/queryZ')
 
@@ -141,6 +142,7 @@ class Job:
                     QueryLog.add_quick_log(
                         QueryLog.MESSAGE_GIVE_UP_CHANCE_CAUSE_TICKET_NUM_LESS_THAN_SPECIFIED).flush()
                     continue
+            if Const.IS_TEST: return
             # 检查完成 开始提交订单
             QueryLog.print_ticket_available(left_date=self.get_info_of_left_date(),
                                             train_number=self.get_info_of_train_number(),

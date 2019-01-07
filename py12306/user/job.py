@@ -42,7 +42,8 @@ class UserJob:
 
     def run(self):
         # load user
-        self.load_user()
+        if not Const.IS_TEST:
+            self.load_user()
         self.start()
 
     def start(self):
@@ -53,6 +54,7 @@ class UserJob:
         while True:
             app_available_check()
             self.check_heartbeat()
+            if Const.IS_TEST: return
             sleep(self.heartbeat_interval)
 
     def check_heartbeat(self):
@@ -259,7 +261,7 @@ class UserJob:
         order = re.search(r'var orderRequestDTO *= *(\{.+\})', html)
         # 系统忙，请稍后重试
         if html.find('系统忙，请稍后重试') != -1:
-            OrderLog.add_quick_log(OrderLog.MESSAGE_REQUEST_INIT_DC_PAGE_FAIL).flush() # 重试无用，直接跳过
+            OrderLog.add_quick_log(OrderLog.MESSAGE_REQUEST_INIT_DC_PAGE_FAIL).flush()  # 重试无用，直接跳过
             return False
         try:
             self.global_repeat_submit_token = token.groups()[0]

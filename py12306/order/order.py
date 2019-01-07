@@ -5,6 +5,7 @@ from py12306.config import UserType
 from py12306.helpers.api import *
 from py12306.helpers.app import *
 from py12306.helpers.func import *
+from py12306.helpers.notification import Notification
 from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 
@@ -30,6 +31,11 @@ class Order:
     current_queue_wait = 0
     retry_time = 3
     wait_queue_interval = 3
+
+    order_id = 0
+
+    notification_sustain_time = 60 * 30  # 通知持续时间 30 分钟
+    notification_interval = 5 * 60  # 通知间隔
 
     def __init__(self, query, user):
         self.session = user.session
@@ -57,9 +63,31 @@ class Order:
         if not self.confirm_single_for_queue(): return
         order_id = self.query_order_wait_time()
         if order_id:  # 发送通知
-            OrderLog.print_ticket_did_ordered(order_id)
-            OrderLog.notification(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
-                                  OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_CONTENT)
+            self.order_id = order_id
+            self.order_did_success()
+
+    def order_did_success(self):
+        OrderLog.print_ticket_did_ordered(self.order_id)
+        OrderLog.notification(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
+                              OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_CONTENT)
+        self.send_notification()
+
+    def send_notification(self):
+        num = 0  # 通知次数
+        sustain_time = self.notification_sustain_time
+        while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
+            num += 1
+            if config.NOTIFICATION_BY_VOICE_CODE:  # 语音通知
+                OrderLog.add_quick_log(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND.format(num))
+                Notification.voice_code(config.NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(),
+                                        OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format(
+                                            self.query_ins.left_station, self.query_ins.arrive_station))
+            sustain_time -= self.notification_interval
+            sleep(self.notification_interval)
+
+        OrderLog.add_quick_log(OrderLog.MESSAGE_JOB_CLOSED)
+        # 结束运行
+        while True: sleep(self.retry_time)
 
     def submit_order_request(self):
         data = {
@@ -277,9 +305,11 @@ class Order:
                 elif result_data.get('waitTime') and result_data.get('waitTime') >= 0:
                     OrderLog.add_quick_log(
                         OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_WAITING.format(result_data.get('waitTime'))).flush()
-                elif result_data.get('msg'):  # 失败
+                elif result_data.get('msg'):  # 失败 对不起，由于您取消次数过多，今日将不能继续受理您的订票请求。1月8日您可继续使用订票功能。
+                    # TODO 需要增加判断 直接结束
                     OrderLog.add_quick_log(
                         OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(result_data.get('msg', '-'))).flush()
+                    stay_second(self.retry_time)
                     return False
             elif result.get('messages') or result.get('validateMessages'):
                 OrderLog.add_quick_log(OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(

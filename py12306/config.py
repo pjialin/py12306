@@ -52,8 +52,13 @@ RUNTIME_DIR = PROJECT_DIR + 'runtime/'
 QUERY_DATA_DIR = RUNTIME_DIR + 'query/'
 USER_DATA_DIR = RUNTIME_DIR + 'user/'
 
-STATION_FILE = 'data/stations.txt'
-CONFIG_FILE = 'env.py'
+STATION_FILE = PROJECT_DIR + 'data/stations.txt'
+CONFIG_FILE = PROJECT_DIR + 'env.py'
+
+# 语音验证码
+NOTIFICATION_BY_VOICE_CODE = 0
+NOTIFICATION_VOICE_CODE_PHONE = ''
+NOTIFICATION_API_APP_CODE = ''
 
 if path.exists(CONFIG_FILE):
     exec(open(CONFIG_FILE, encoding='utf8').read())
@@ -71,7 +76,3 @@ class UserType:
         '学生': STUDENT,
         '残疾军人、伤残人民警察': SOLDIER,
     }
-
-
-def get(key, default=None):
-    return eval(key)

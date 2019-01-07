@@ -1,20 +1,41 @@
 # encoding=utf8
-import os
-from threading import Thread
+import sys
+from time import sleep
 
 from py12306.helpers.func import *
+from py12306.helpers.app import *
+from py12306.log.common_log import CommonLog
 from py12306.query.query import Query
 from py12306.user.user import User
 
 
 def main():
-    # Thread(target=Query.run).start()  # 余票查询
-    # create_thread_and_run(User, 'run', wait=False)
+    if '--test' in sys.argv or '-t' in sys.argv: test()
+    CommonLog.print_welcome().print_configs()
+
+    App.run_check()
     User.run()
     Query.run()
-    # Query.run()
-    while True:
-        sleep(1)
+    if not Const.IS_TEST:
+        while True:
+            sleep(1)
+
+    CommonLog.test_complete()
+
+
+def test():
+    """
+    功能检查
+    包含：
+        账号密码验证 (打码)
+        座位验证
+        乘客验证
+        语音验证码验证
+    :return:
+    """
+    Const.IS_TEST = True
+    if '--test-notification' in sys.argv or '-n' in sys.argv:
+        Const.IS_TEST_NOTIFICATION = True
     pass
 
 
