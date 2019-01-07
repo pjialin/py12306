@@ -59,8 +59,10 @@ def get_interval_num(interval, decimal=2):
     return round(random.uniform(interval.get('min'), interval.get('max')), decimal)
 
 
-def stay_second(second):
+def stay_second(second, call_back=None):
     sleep(second)
+    if call_back:
+        return call_back()
 
 
 def is_main_thread():

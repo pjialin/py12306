@@ -1,4 +1,6 @@
+import json
 import pickle
+import re
 from os import path
 
 from py12306.config import *
@@ -7,6 +9,7 @@ from py12306.helpers.app import *
 from py12306.helpers.auth_code import AuthCode
 from py12306.helpers.func import *
 from py12306.helpers.request import Request
+from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 
 
@@ -22,6 +25,11 @@ class UserJob:
     is_ready = False
     passengers = []
     retry_time = 5
+
+    # Init page
+    global_repeat_submit_token = None
+    ticket_info_for_passenger_form = None
+    order_request_dto = None
 
     def __init__(self, info, user):
         self.session = Request()
@@ -229,9 +237,35 @@ class UserJob:
                 new_member = {
                     'name': passenger.get('passenger_name'),
                     'id_card': passenger.get('passenger_id_no'),
+                    'id_card_type': passenger.get('passenger_id_type_code'),
+                    'mobile': passenger.get('mobile_no'),
                     'type': passenger.get('passenger_type'),
                     'type_text': dict_find_key_by_value(UserType.dicts, int(passenger.get('passenger_type')))
                 }
             results.append(new_member)
 
         return results
+
+    def request_init_dc_page(self):
+        """
+        请求下单页面 拿到 token
+        :return:
+        """
+        data = {'_json_att': ''}
+        response = self.session.post(API_INITDC_URL, data)
+        html = response.text
+        token = re.search(r'var globalRepeatSubmitToken = \'(.+?)\'', html)
+        form = re.search(r'var ticketInfoForPassengerForm *= *(\{.+\})', html)
+        order = re.search(r'var orderRequestDTO *= *(\{.+\})', html)
+        # 系统忙，请稍后重试
+        if html.find('系统忙，请稍后重试') != -1:
+            OrderLog.add_quick_log(OrderLog.MESSAGE_REQUEST_INIT_DC_PAGE_FAIL).flush() # 重试无用，直接跳过
+            return False
+        try:
+            self.global_repeat_submit_token = token.groups()[0]
+            self.ticket_info_for_passenger_form = json.loads(form.groups()[0].replace("'", '"'))
+            self.order_request_dto = json.loads(order.groups()[0].replace("'", '"'))
+        except:
+            pass  # TODO Error
+
+        return True

@@ -3,6 +3,7 @@ from py12306.helpers.station import Station
 from py12306.log.query_log import QueryLog
 from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
+from py12306.order.order import Order
 from py12306.user.user import User
 
 
@@ -12,6 +13,7 @@ class Job:
     """
 
     left_dates = []
+    left_date = None
     left_station = ''
     arrive_station = ''
     left_station_code = ''
@@ -19,6 +21,8 @@ class Job:
 
     account_key = 0
     allow_seats = []
+    current_seat = None
+    current_order_seat = None
     allow_train_numbers = []
     members = []
     member_num = 0
@@ -32,10 +36,12 @@ class Job:
     ticket_info = {}
     INDEX_TICKET_NUM = 11
     INDEX_TRAIN_NUMBER = 3
+    INDEX_TRAIN_NO = 2
     INDEX_LEFT_DATE = 13
     INDEX_LEFT_STATION = 6  # 4 5 始发 终点
     INDEX_ARRIVE_STATION = 7
     INDEX_ORDER_TEXT = 1  # 下单文字
+    INDEX_SECRET_STR = 0
 
     def __init__(self, info, query):
         self.left_dates = info.get('left_dates')
@@ -67,22 +73,20 @@ class Job:
         :param job:
         :return:
         """
-        if not self.passengers:
-            User.check_members(self.members, self.account_key, call_back=self.set_passengers)
-
         QueryLog.print_job_start()
         for date in self.left_dates:
+            self.left_date = date
             response = self.query_by_date(date)
             self.handle_response(response)
             self.safe_stay()
             if is_main_thread():
-                QueryLog.flush(sep='\t\t')
+                QueryLog.flush(sep='\t')
             else:
                 QueryLog.add_log('\n')
         if is_main_thread():
             QueryLog.add_quick_log('').flush()
         else:
-            QueryLog.flush(sep='\t\t')
+            QueryLog.flush(sep='\t')
 
     def query_by_date(self, date):
         """
@@ -116,12 +120,14 @@ class Job:
                                                                               self.get_info_of_ticket_num()))
             if not self.is_has_ticket(ticket_info):
                 continue
-            allow_seats = self.allow_seats if self.allow_seats else list(config.SEAT_TYPES.values())  # 未设置 则所有可用
+            allow_seats = self.allow_seats if self.allow_seats else list(
+                config.SEAT_TYPES.values())  # 未设置 则所有可用 TODO  合法检测
             self.handle_seats(allow_seats, ticket_info)
 
     def handle_seats(self, allow_seats, ticket_info):
         for seat in allow_seats:  # 检查座位是否有票
-            ticket_of_seat = ticket_info[get_seat_number_by_name(seat)]
+            self.set_seat(seat)
+            ticket_of_seat = ticket_info[self.current_seat]
             if not self.is_has_ticket_by_seat(ticket_of_seat):  # 座位是否有效
                 continue
             QueryLog.print_ticket_seat_available(left_date=self.get_info_of_left_date(),
@@ -139,7 +145,9 @@ class Job:
             QueryLog.print_ticket_available(left_date=self.get_info_of_left_date(),
                                             train_number=self.get_info_of_train_number(),
                                             rest_num=ticket_of_seat)
-            print('检查完成 开始提交订单')
+            self.check_passengers()
+            order = Order(user=self.get_user(), query=self)
+            order.order()
 
     def get_results(self, response):
         """
@@ -179,6 +187,22 @@ class Job:
         UserLog.print_user_passenger_init_success(passengers)
         self.passengers = passengers
 
+    def set_seat(self, seat):
+        self.current_seat = get_seat_number_by_name(seat)
+        self.current_order_seat = config.ORDER_SEAT_TYPES[seat]
+
+    def get_user(self):
+        user = User.get_user(self.account_key)
+        if not user.check_is_ready():
+            # TODO user is not ready
+            pass
+        return user
+
+    def check_passengers(self):
+        if not self.passengers:
+            User.check_members(self.members, self.account_key, call_back=self.set_passengers)
+        return True
+
     # 提供一些便利方法
     def get_info_of_left_date(self):
         return self.ticket_info[self.INDEX_LEFT_DATE]
@@ -189,6 +213,9 @@ class Job:
     def get_info_of_train_number(self):
         return self.ticket_info[self.INDEX_TRAIN_NUMBER]
 
+    def get_info_of_train_no(self):
+        return self.ticket_info[self.INDEX_TRAIN_NO]
+
     def get_info_of_left_station(self):
         return Station.get_station_name_by_key(self.ticket_info[self.INDEX_LEFT_STATION])
 
@@ -197,3 +224,6 @@ class Job:
 
     def get_info_of_order_text(self):
         return self.ticket_info[self.INDEX_ORDER_TEXT]
+
+    def get_info_of_secret_str(self):
+        return self.ticket_info[self.INDEX_SECRET_STR]

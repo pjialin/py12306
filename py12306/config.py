@@ -24,14 +24,25 @@ AUTO_CODE_ACCOUNT = {
 }
 
 SEAT_TYPES = {
+    '特等座': 25,
     '商务座': 32,
     '一等座': 31,
     '二等座': 30,
-    '特等座': 25,
     '软卧': 23,
     '硬卧': 28,
     '硬座': 29,
     '无座': 26,
+}
+
+ORDER_SEAT_TYPES = {
+    '特等座': 'P',
+    '商务座': 9,
+    '一等座': 'M',
+    '二等座': 'O',
+    '软卧': 4,
+    '硬卧': 3,
+    '硬座': 1,
+    '无座': 1,
 }
 
 PROJECT_DIR = path.dirname(path.dirname(path.abspath(__file__))) + '/'

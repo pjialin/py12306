@@ -9,6 +9,8 @@ class User:
     heartbeat = 60 * 2
     users = []
 
+    retry_time = 3
+
     def __init__(self):
         self.interval = config.USER_HEARTBEAT_INTERVAL
 
@@ -32,7 +34,15 @@ class User:
             self.users.append(user)
 
     @classmethod
-    def check_members(cls, members, user_key, call_back):
+    def get_user(cls, key):
+        self = cls()
+        for user in self.users:
+            if user.key == key:
+                return user
+        return None
+
+    @classmethod
+    def check_members(cls, members, key, call_back):
         """
         检测乘客信息
         :param passengers:
@@ -42,7 +52,10 @@ class User:
 
         for user in self.users:
             assert isinstance(user, UserJob)
-            if user.key == user_key and user.check_is_ready():
+            if user.key == key and user.check_is_ready():
                 passengers = user.get_passengers_by_members(members)
-                call_back(passengers)
-        pass
+                return call_back(passengers)
+
+        UserLog.add_quick_log(UserLog.MESSAGE_WAIT_USER_INIT_COMPLETE.format(self.retry_time)).flush()
+        stay_second(self.retry_time)
+        return self.check_members(members, key, call_back)

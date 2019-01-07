@@ -63,7 +63,7 @@ class QueryLog(BaseLog):
         self.add_quick_log(
             '余票数小于乘车人数，当前余票数: {rest_num}, 实际人数 {actual_num}, 删减人车人数到: {take_num}'.format(rest_num=rest_num,
                                                                                          actual_num=job.member_num,
-                                                                                         take=job.member_num_take))
+                                                                                         take_num=job.member_num_take))
         self.flush()
         return self
 
