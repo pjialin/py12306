@@ -9,9 +9,12 @@ from py12306.user.user import User
 
 def main():
     # Thread(target=Query.run).start()  # 余票查询
-    create_thread_and_run(User, 'run', wait=False)
+    # create_thread_and_run(User, 'run', wait=False)
+    User.run()
+    Query.run()
     # Query.run()
-    # Query.run()
+    while True:
+        sleep(1)
     pass
 
 

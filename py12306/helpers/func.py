@@ -75,15 +75,26 @@ def time_now():
     return datetime.datetime.now()
 
 
-def create_thread_and_run(jobs, callback_name, wait=True):
+def create_thread_and_run(jobs, callback_name, wait=True, daemon=True):
     threads = []
     if not isinstance(jobs, list):
         jobs = [jobs]
     for job in jobs:
         thread = threading.Thread(target=getattr(job, callback_name))
+        thread.setDaemon(daemon)
         thread.start()
         threads.append(thread)
     if wait:
         for thread in threads: thread.join()
+
+
+def dict_find_key_by_value(data, value, default=None):
+    result = [k for k, v in data.items() if v == value]
+    return result.pop() if len(result) else default
+
+
+def array_dict_find_by_key_value(data, key, value, default=None):
+    result = [v for k, v in enumerate(data) if key in v and v[key] == value]
+    return result.pop() if len(result) else default
 
 # def test:

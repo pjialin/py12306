@@ -4,13 +4,15 @@ from py12306.log.user_log import UserLog
 from py12306.user.job import UserJob
 
 
-@singleton
-class User:
+class Order:
+    """
+    处理下单
+    """
     heartbeat = 60 * 2
     users = []
 
     def __init__(self):
-        self.interval = config.USER_HEARTBEAT_INTERVAL
+        pass
 
     @classmethod
     def run(cls):
@@ -30,19 +32,3 @@ class User:
         for account in accounts:
             user = UserJob(info=account, user=self)
             self.users.append(user)
-
-    @classmethod
-    def check_members(cls, members, user_key, call_back):
-        """
-        检测乘客信息
-        :param passengers:
-        :return:
-        """
-        self = cls()
-
-        for user in self.users:
-            assert isinstance(user, UserJob)
-            if user.key == user_key and user.check_is_ready():
-                passengers = user.get_passengers_by_members(members)
-                call_back(passengers)
-        pass

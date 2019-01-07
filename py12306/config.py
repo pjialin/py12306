@@ -48,5 +48,19 @@ if path.exists(CONFIG_FILE):
     exec(open(CONFIG_FILE, encoding='utf8').read())
 
 
+class UserType:
+    ADULT = 1
+    CHILD = 2
+    STUDENT = 3
+    SOLDIER = 4
+
+    dicts = {
+        '成人': ADULT,
+        '儿童': CHILD,
+        '学生': STUDENT,
+        '残疾军人、伤残人民警察': SOLDIER,
+    }
+
+
 def get(key, default=None):
     return eval(key)

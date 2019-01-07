@@ -42,6 +42,7 @@ API_AUTH_UAMAUTHCLIENT = {
 API_USER_INFO = {
     'url': BASE_URL_OF_12306 + '/otn/modifyUser/initQueryUserInfoApi'
 }
+API_USER_PASSENGERS = BASE_URL_OF_12306 + '/otn/confirmPassenger/getPassengerDTOs'
 
 urls = {
     "auth": {  # 登录接口

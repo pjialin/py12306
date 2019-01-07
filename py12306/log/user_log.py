@@ -14,6 +14,9 @@ class UserLog(BaseLog):
     MESSAGE_LOADED_USER_BUT_EXPIRED = '用户状态已过期，正在重新登录'
     MESSAGE_USER_HEARTBEAT_NORMAL = '用户 {} 心跳正常，下次检测 {} 秒后'
 
+    MESSAGE_GET_USER_PASSENGERS_FAIL = '获取用户乘客列表失败，错误原因: {} {} 秒后重试'
+    MESSAGE_USER_PASSENGERS_IS_INVALID = '乘客信息校验失败，在账号 {} 中未找到该乘客: {}'
+
     def __init__(self):
         super().__init__()
         self.init_data()
@@ -43,5 +46,13 @@ class UserLog(BaseLog):
     def print_start_login(cls, user):
         self = cls()
         self.add_log('正在登录用户 {}'.format(user.user_name))
+        self.flush()
+        return self
+
+    @classmethod
+    def print_user_passenger_init_success(cls, passengers):
+        self = cls()
+        result = [passenger.get('name') + '(' + passenger.get('type_text') + ')' for passenger in passengers]
+        self.add_quick_log('# 乘客验证成功 {} #'.format(', '.join(result)))
         self.flush()
         return self

@@ -31,6 +31,7 @@ class Query:
         pass
 
     def start(self):
+        return # DEBUG
         self.init_jobs()
         QueryLog.print_init_jobs(jobs=self.jobs)
         while True:

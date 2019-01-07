@@ -2,6 +2,8 @@ from py12306.helpers.api import LEFT_TICKETS
 from py12306.helpers.station import Station
 from py12306.log.query_log import QueryLog
 from py12306.helpers.func import *
+from py12306.log.user_log import UserLog
+from py12306.user.user import User
 
 
 class Job:
@@ -15,11 +17,13 @@ class Job:
     left_station_code = ''
     arrive_station_code = ''
 
+    account_key = 0
     allow_seats = []
     allow_train_numbers = []
     members = []
     member_num = 0
     member_num_take = 0  # 最终提交的人数
+    passengers = []
     allow_less_member = False
 
     interval = {}
@@ -40,6 +44,7 @@ class Job:
         self.left_station_code = Station.get_station_key_by_name(self.left_station)
         self.arrive_station_code = Station.get_station_key_by_name(self.arrive_station)
 
+        self.account_key = info.get('account_key')
         self.allow_seats = info.get('seats')
         self.allow_train_numbers = info.get('train_numbers')
         self.members = info.get('members')
@@ -62,6 +67,9 @@ class Job:
         :param job:
         :return:
         """
+        if not self.passengers:
+            User.check_members(self.members, self.account_key, call_back=self.set_passengers)
+
         QueryLog.print_job_start()
         for date in self.left_dates:
             response = self.query_by_date(date)
@@ -109,26 +117,29 @@ class Job:
             if not self.is_has_ticket(ticket_info):
                 continue
             allow_seats = self.allow_seats if self.allow_seats else list(config.SEAT_TYPES.values())  # 未设置 则所有可用
-            for seat in allow_seats:  # 检查座位是否有票
-                ticket_of_seat = ticket_info[get_seat_number_by_name(seat)]
-                if not self.is_has_ticket_by_seat(ticket_of_seat):  # 座位是否有效
+            self.handle_seats(allow_seats, ticket_info)
+
+    def handle_seats(self, allow_seats, ticket_info):
+        for seat in allow_seats:  # 检查座位是否有票
+            ticket_of_seat = ticket_info[get_seat_number_by_name(seat)]
+            if not self.is_has_ticket_by_seat(ticket_of_seat):  # 座位是否有效
+                continue
+            QueryLog.print_ticket_seat_available(left_date=self.get_info_of_left_date(),
+                                                 train_number=self.get_info_of_train_number(), seat_type=seat,
+                                                 rest_num=ticket_of_seat)
+            if not self.is_member_number_valid(ticket_of_seat):  # 乘车人数是否有效
+                if self.allow_less_member:
+                    self.member_num_take = int(ticket_of_seat)
+                    QueryLog.print_ticket_num_less_than_specified(ticket_of_seat, self)
+                else:
+                    QueryLog.add_quick_log(
+                        QueryLog.MESSAGE_GIVE_UP_CHANCE_CAUSE_TICKET_NUM_LESS_THAN_SPECIFIED).flush()
                     continue
-                QueryLog.print_ticket_seat_available(left_date=self.get_info_of_left_date(),
-                                                     train_number=self.get_info_of_train_number(), seat_type=seat,
-                                                     rest_num=ticket_of_seat)
-                if not self.is_member_number_valid(ticket_of_seat):  # 乘车人数是否有效
-                    if self.allow_less_member:
-                        self.member_num_take = int(ticket_of_seat)
-                        QueryLog.print_ticket_num_less_than_specified(ticket_of_seat, self)
-                    else:
-                        QueryLog.add_quick_log(
-                            QueryLog.MESSAGE_GIVE_UP_CHANCE_CAUSE_TICKET_NUM_LESS_THAN_SPECIFIED).flush()
-                        continue
-                # 检查完成 开始提交订单
-                QueryLog.print_ticket_available(left_date=self.get_info_of_left_date(),
-                                                train_number=self.get_info_of_train_number(),
-                                                rest_num=ticket_of_seat)
-                print('检查完成 开始提交订单')
+            # 检查完成 开始提交订单
+            QueryLog.print_ticket_available(left_date=self.get_info_of_left_date(),
+                                            train_number=self.get_info_of_train_number(),
+                                            rest_num=ticket_of_seat)
+            print('检查完成 开始提交订单')
 
     def get_results(self, response):
         """
@@ -163,6 +174,10 @@ class Job:
         interval = get_interval_num(self.interval)
         QueryLog.add_stay_log(interval)
         stay_second(interval)
+
+    def set_passengers(self, passengers):
+        UserLog.print_user_passenger_init_success(passengers)
+        self.passengers = passengers
 
     # 提供一些便利方法
     def get_info_of_left_date(self):

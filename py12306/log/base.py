@@ -22,7 +22,7 @@ class BaseLog:
         return self
 
     @classmethod
-    def flush(cls, sep='\n', end='\n', file=None):
+    def flush(cls, sep='\n', end='\n', file=None, exit=False):
         self = cls()
         if self.quick_log:
             logs = self.quick_log
@@ -41,6 +41,8 @@ class BaseLog:
             else:
                 if logs: del self.thread_logs[current_thread_id()]
         # print(self.logs)
+        if exit:
+            sys.exit()
 
     @classmethod
     def add_quick_log(cls, content):

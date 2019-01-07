@@ -1,7 +1,8 @@
 import pickle
 from os import path
 
-from py12306.helpers.api import API_USER_CHECK, API_BASE_LOGIN, API_AUTH_UAMTK, API_AUTH_UAMAUTHCLIENT, API_USER_INFO
+from py12306.config import *
+from py12306.helpers.api import *
 from py12306.helpers.app import *
 from py12306.helpers.auth_code import AuthCode
 from py12306.helpers.func import *
@@ -18,6 +19,9 @@ class UserJob:
     user = None
     info = {}  # 用户信息
     last_heartbeat = None
+    is_ready = False
+    passengers = []
+    retry_time = 5
 
     def __init__(self, info, user):
         self.session = Request()
@@ -50,6 +54,7 @@ class UserJob:
         if self.is_first_time() or not self.check_user_is_login():
             self.handle_login()
 
+        self.is_ready = True
         UserLog.add_quick_log(UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), self.heartbeat)).flush()
         self.last_heartbeat = time_now()
 
@@ -178,3 +183,55 @@ class UserJob:
                 self.did_loaded_user()
                 return True
         return None
+
+    def check_is_ready(self):
+        return self.is_ready
+
+    def get_user_passengers(self):
+        if self.passengers: return self.passengers
+        response = self.session.post(API_USER_PASSENGERS)
+        result = response.json()
+        if result.get('data') and result.get('data').get('normal_passengers'):
+            self.passengers = result.get('data').get('normal_passengers')
+            return self.passengers
+        else:
+            UserLog.add_quick_log(
+                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(result.get('messages', '-'), self.retry_time))
+            stay_second(self.retry_time)
+            return self.get_user_passengers()
+
+    def get_passengers_by_members(self, members):
+        """
+        获取格式化后的乘客信息
+        :param members:
+        :return:
+        [{
+            name: '项羽',
+            type: 1,
+            id_card: 0000000000000000000,
+            type_text: '成人'
+        }]
+        """
+        self.get_user_passengers()
+        results = []
+        for member in members:
+            child_check = array_dict_find_by_key_value(results, 'name', member)
+            if child_check:
+                new_member = child_check.copy()
+                new_member['type'] = UserType.CHILD
+                new_member['type_text'] = dict_find_key_by_value(UserType.dicts, int(new_member['type']))
+            else:
+                passenger = array_dict_find_by_key_value(self.passengers, 'passenger_name', member)
+                if not passenger:
+                    UserLog.add_quick_log(
+                        UserLog.MESSAGE_USER_PASSENGERS_IS_INVALID.format(self.user_name, member)).flush(
+                        exit=True)  # TODO 需要优化
+                new_member = {
+                    'name': passenger.get('passenger_name'),
+                    'id_card': passenger.get('passenger_id_no'),
+                    'type': passenger.get('passenger_type'),
+                    'type_text': dict_find_key_by_value(UserType.dicts, int(passenger.get('passenger_type')))
+                }
+            results.append(new_member)
+
+        return results
