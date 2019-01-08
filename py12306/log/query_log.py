@@ -52,7 +52,9 @@ class QueryLog(BaseLog):
         index = 1
         for job in jobs:
             self.add_log('================== 任务 {} =================='.format(index))
-            self.add_log('出发站：{}    到达站：{}'.format(job.left_station, job.arrive_station))
+            for station in job.stations:
+                self.add_log('出发站：{}    到达站：{}'.format(station.get('left'), station.get('arrive')))
+
             self.add_log('乘车日期：{}'.format(job.left_dates))
             self.add_log('坐席：{}'.format('，'.join(job.allow_seats)))
             self.add_log('乘车人：{}'.format('，'.join(job.members)))
