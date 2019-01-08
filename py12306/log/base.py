@@ -3,6 +3,7 @@ import sys
 
 from py12306.helpers.func import *
 
+
 class BaseLog:
     logs = []
     thread_logs = {}
@@ -23,6 +24,17 @@ class BaseLog:
     @classmethod
     def flush(cls, sep='\n', end='\n', file=None, exit=False):
         self = cls()
+        logs = self.get_logs()
+        # 输出到文件
+        if file == None and config.OUT_PUT_LOG_TO_FILE_ENABLED:  # TODO 文件无法写入友好提示
+            file = open(config.OUT_PUT_LOG_TO_FILE_PATH, 'a')
+        if not file: file = None
+        print(*logs, sep=sep, end=end, file=file)
+        self.empty_logs(logs)
+        if exit:
+            sys.exit()
+
+    def get_logs(self):
         if self.quick_log:
             logs = self.quick_log
         else:
@@ -30,7 +42,9 @@ class BaseLog:
                 logs = self.logs
             else:
                 logs = self.thread_logs.get(current_thread_id())
-        print(*logs, sep=sep, end=end, file=file)
+        return logs
+
+    def empty_logs(self, logs):
         if self.quick_log:
             self.quick_log = []
         else:
@@ -38,11 +52,9 @@ class BaseLog:
                 self.logs = []
             else:
                 if logs: del self.thread_logs[current_thread_id()]
-        if exit:
-            sys.exit()
 
     @classmethod
-    def add_quick_log(cls, content = ''):
+    def add_quick_log(cls, content=''):
         self = cls()
         self.quick_log.append(content)
         return self

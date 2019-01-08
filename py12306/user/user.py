@@ -25,7 +25,7 @@ class User:
         self.init_users()
         UserLog.print_init_users(users=self.users)
         # 多线程维护用户
-        create_thread_and_run(jobs=self.users, callback_name='run', wait=False)
+        create_thread_and_run(jobs=self.users, callback_name='run', wait=Const.IS_TEST)
 
     def init_users(self):
         accounts = config.USER_ACCOUNTS

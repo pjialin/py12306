@@ -11,7 +11,7 @@ class UserLog(BaseLog):
 
     MESSAGE_DOWNLAOD_AUTH_CODE_FAIL = '验证码下载失败 错误原因: {} {} 秒后重试'
     MESSAGE_DOWNLAODING_THE_CODE = '正在下载验证码...'
-    MESSAGE_CODE_AUTH_FAIL = '验证码验证失败 错误原因: {} {} 秒后重试'
+    MESSAGE_CODE_AUTH_FAIL = '验证码验证失败 错误原因: {}'
     MESSAGE_CODE_AUTH_SUCCESS = '验证码验证成功 开始登录...'
     MESSAGE_LOGIN_FAIL = '登录失败 错误原因: {}'
     MESSAGE_LOADED_USER = '正在尝试恢复用户: {}'

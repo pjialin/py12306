@@ -20,6 +20,10 @@ AUTO_CODE_ACCOUNT = {
     'user': '',
     'pwd': ''
 }
+# 输出日志到文件
+OUT_PUT_LOG_TO_FILE_ENABLED = 0
+OUT_PUT_LOG_TO_FILE_PATH = 'runtime/12306.log'
+
 
 SEAT_TYPES = {
     '特等座': 25,

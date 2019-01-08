@@ -34,6 +34,7 @@ def test():
     :return:
     """
     Const.IS_TEST = True
+    config.OUT_PUT_LOG_TO_FILE_ENABLED = False
     if '--test-notification' in sys.argv or '-n' in sys.argv:
         Const.IS_TEST_NOTIFICATION = True
     pass
