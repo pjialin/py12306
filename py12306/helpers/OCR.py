@@ -1,3 +1,6 @@
+import math
+import random
+
 from py12306 import config
 from py12306.log.common_log import CommonLog
 from py12306.vender.ruokuai.main import RKClient
@@ -32,37 +35,16 @@ class OCR:
 
     def get_image_position_by_offset(self, offsets):
         positions = []
+        width = 70
+        height = 70
+        random_num = random.randint(0, 10)
         for offset in offsets:
-            if offset == '1':
-                y = 46
-                x = 42
-            elif offset == '2':
-                y = 46
-                x = 105
-            elif offset == '3':
-                y = 45
-                x = 184
-            elif offset == '4':
-                y = 48
-                x = 256
-            elif offset == '5':
-                y = 36
-                x = 117
-            elif offset == '6':
-                y = 112
-                x = 115
-            elif offset == '7':
-                y = 114
-                x = 181
-            elif offset == '8':
-                y = 111
-                x = 252
-            else:
-                pass
-            positions.append(x)
-            positions.append(y)
+            offset = int(offset)
+            x = width * (offset % 5) - width / 2 + random_num
+            y = height * math.ceil(offset / 4) - height / 2 - random_num
+            positions.append(int(x))
+            positions.append(int(y))
         return positions
-
 
 
 if __name__ == '__main__':
