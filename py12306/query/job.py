@@ -159,11 +159,7 @@ class Job:
         """
         if response.status_code != 200:
             QueryLog.print_query_error(response.reason, response.status_code)
-        try:
-            result_data = response.json().get('data', {})
-            result = result_data.get('result', [])
-        except:
-            pass  # TODO
+        result = response.json().get('data.result')
         return result if result else False
 
     def is_has_ticket(self, ticket_info):

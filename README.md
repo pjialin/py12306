@@ -16,7 +16,7 @@
 - [ ] 邮件通知
 
 ## 使用
-py12306 需要运行 python 3.6 以上版本（其它版本暂未测试)
+py12306 需要运行在 python 3.6 以上版本（其它版本暂未测试)
 
 **1. 安装依赖**
 ```bash
@@ -57,6 +57,8 @@ python main.py -t -n
 python main.py
 ```
 
+## 下单成功图片
+![下单成功图片](./data/images/order_success.png)
 
 ## Thanks
 感谢大佬 [testerSunshine](https://github.com/testerSunshine/12306)，借鉴了部分实现

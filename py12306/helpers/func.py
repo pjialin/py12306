@@ -4,9 +4,9 @@ import threading
 import functools
 
 from time import sleep
+from types import MethodType
 
 from py12306 import config
-
 
 
 def singleton(cls):
@@ -118,6 +118,13 @@ def get_true_false_text(value, true='', false=''):
 
 def sleep_forever_when_in_test():
     if Const.IS_TEST: sleep_forever()
+
+
+def expand_class(cls, key, value, keep_old=True):
+    if (keep_old):
+        setattr(cls, 'old_' + key, getattr(cls, key))
+    setattr(cls, key, MethodType(value, cls))
+    return cls
 
 
 @singleton

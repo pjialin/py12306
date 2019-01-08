@@ -178,10 +178,9 @@ class UserJob:
     def get_user_info(self):
         response = self.session.get(API_USER_INFO.get('url'))
         result = response.json()
-        user_data = result.get('data')
-        if user_data.get('userDTO') and user_data['userDTO'].get('loginUserDTO'):
-            user_data = user_data['userDTO']['loginUserDTO']
-            self.update_user_info({**user_data, **{'user_name': user_data['name']}})
+        user_data = result.get('data.userDTO.loginUserDTO')
+        if user_data:
+            self.update_user_info({**user_data, **{'user_name': user_data.get('name')}})
             return True
         return None
 
@@ -201,8 +200,8 @@ class UserJob:
         if self.passengers: return self.passengers
         response = self.session.post(API_USER_PASSENGERS)
         result = response.json()
-        if result.get('data') and result.get('data').get('normal_passengers'):
-            self.passengers = result.get('data').get('normal_passengers')
+        if result.get('data.normal_passengers'):
+            self.passengers = result.get('data.normal_passengers')
             return self.passengers
         else:
             UserLog.add_quick_log(

@@ -1,9 +1,9 @@
 import threading
 
-from requests_html import HTMLSession
 
 from py12306.helpers.app import app_available_check
 from py12306.helpers.func import *
+from py12306.helpers.request import Request
 from py12306.log.query_log import QueryLog
 from py12306.query.job import Job
 
@@ -21,7 +21,7 @@ class Query:
 
     def __init__(self):
         self.interval = init_interval_by_number(config.QUERY_INTERVAL)
-        self.session = HTMLSession()
+        self.session = Request()
 
     @classmethod
     def run(cls):
