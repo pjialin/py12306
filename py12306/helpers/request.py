@@ -1,4 +1,6 @@
-from requests_html import HTMLSession
+from py12306.helpers.app import *
+from py12306.helpers.func import *
+from requests_html import HTMLSession, HTMLResponse
 
 
 class Request(HTMLSession):
@@ -18,3 +20,27 @@ class Request(HTMLSession):
             for chunk in response.iter_content(chunk_size=1024):
                 f.write(chunk)
         return response
+
+    @staticmethod
+    def _handle_response(response, **kwargs) -> HTMLResponse:
+        """
+        扩充 response
+        :param response:
+        :param kwargs:
+        :return:
+        """
+        response = HTMLSession._handle_response(response, **kwargs)
+        expand_class(response, 'json', Request.json)
+        return response
+
+    def json(self, default={}):
+        """
+        重写 json 方法，拦截错误
+        :return:
+        """
+        from py12306.helpers.app import Dict
+        try:
+            result = self.old_json()
+            return Dict(result)
+        except:
+            return Dict(default)

@@ -56,3 +56,24 @@ class App:
         if not cls.check_user_account_is_empty():
             CommonLog.add_quick_log(CommonLog.MESSAGE_CHECK_EMPTY_USER_ACCOUNT).flush(exit=True)
         if Const.IS_TEST_NOTIFICATION: cls.test_send_notifications()
+
+
+# Expand
+class Dict(dict):
+    def get(self, key, default=None, sep='.'):
+        keys = key.split(sep)
+        for i, key in enumerate(keys):
+            try:
+                value = self[key]
+                if len(keys[i + 1:]) and isinstance(value, Dict):
+                    return value.get(sep.join(keys[i + 1:]), default=default, sep=sep)
+                return value
+            except:
+                return self.dict_to_dict(default)
+
+    def __getitem__(self, k):
+        return self.dict_to_dict(super().__getitem__(k))
+
+    @staticmethod
+    def dict_to_dict(value):
+        return Dict(value) if isinstance(value, dict) else value

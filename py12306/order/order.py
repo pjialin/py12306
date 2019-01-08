@@ -105,6 +105,8 @@ class Order:
             OrderLog.add_quick_log(OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_SUCCESS).flush()
             return True
         else:
+            if (str(result.get('messages', '')).find('未处理') >= 0):  # 未处理订单
+                stay_second(self.retry_time)
             OrderLog.add_quick_log(
                 OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(result.get('messages', '-'))).flush()
         return False
@@ -134,9 +136,9 @@ class Order:
         }
         response = self.session.post(API_CHECK_ORDER_INFO, data)
         result = response.json()
-        if 'data' in result and result['data'].get('submitStatus'):  # 成功
+        if result.get('data.submitStatus'):  # 成功
             OrderLog.add_quick_log(OrderLog.MESSAGE_CHECK_ORDER_INFO_SUCCESS).flush()
-            if result['data'].get("ifShowPassCode") != 'N':
+            if result.get('data.ifShowPassCode') != 'N':
                 self.is_need_auth_code = True
             return True
         else:
@@ -181,7 +183,7 @@ class Order:
         }
         response = self.session.post(API_GET_QUEUE_COUNT, data)
         result = response.json()
-        if 'data' in result and ('countT' in result['data'] or 'ticket' in result['data']):  # 成功
+        if result.get('data.countT') or result.get('data.ticket'):  # 成功
             """
             "data": { 
                 "count": "66",
@@ -191,7 +193,7 @@ class Order:
                 "op_1": "true"
             }
             """
-            ticket = result['data']['ticket'].split(',')  # 暂不清楚具体作用
+            ticket = result.get('data.ticket').split(',')  # 暂不清楚具体作用
             ticket_number = sum(map(int, ticket))
             current_position = int(data.get('countT', 0))
             OrderLog.add_quick_log(
@@ -251,13 +253,13 @@ class Order:
                 "submitStatus": true
             }
             """
-            if result['data'].get('submitStatus'):  # 成功
+            if result.get('data.submitStatus'):  # 成功
                 OrderLog.add_quick_log(OrderLog.MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_SUCCESS).flush()
                 return True
             else:
                 # 加入小黑屋 TODO
                 OrderLog.add_quick_log(
-                    OrderLog.MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_ERROR.format(result['data'].get('errMsg', '-'))).flush()
+                    OrderLog.MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_ERROR.format(result.get('data.errMsg', '-'))).flush()
         else:
             OrderLog.add_quick_log(OrderLog.MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_FAIL.format(
                 result.get('messages', '-'))).flush()

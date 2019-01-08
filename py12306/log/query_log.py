@@ -101,9 +101,9 @@ class QueryLog(BaseLog):
         self = cls()
         self.add_quick_log('查询余票请求失败')
         if code:
-            self.add_quick_log('状态码{}   '.format(code))
+            self.add_quick_log('状态码 {}   '.format(code))
         if reason:
-            self.add_quick_log('错误原因{}   '.format(reason))
+            self.add_quick_log('错误原因 {}   '.format(reason))
         self.flush(sep='\t')
         return self
 
