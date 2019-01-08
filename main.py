@@ -20,7 +20,7 @@ def main():
         while True:
             sleep(10000)
 
-    CommonLog.test_complete()
+    CommonLog.print_test_complete()
 
 
 def test():

@@ -57,7 +57,7 @@ class CommonLog(BaseLog):
         return self
 
     @classmethod
-    def test_complete(cls):
+    def print_test_complete(cls):
         self = cls()
         self.add_quick_log('# 测试完成，请检查输出是否正确 #')
         self.flush()
