@@ -36,7 +36,7 @@ class AuthCode:
         return position
 
     def retry_get_auth_code(self): # TODO 安全次数检测
-        CommonLog.add_quick_log(CommonLog.MESSAGE_RETRY_AUTH_CODE.format(self.retry_time))
+        CommonLog.add_quick_log(CommonLog.MESSAGE_RETRY_AUTH_CODE.format(self.retry_time)).flush()
         time.sleep(self.retry_time)
         return self.get_auth_code(self.session)
 
@@ -66,7 +66,7 @@ class AuthCode:
             return True
         else:
             UserLog.add_quick_log(
-                UserLog.MESSAGE_CODE_AUTH_FAIL.format(result.get('result_message'), self.retry_time)).flush()
+                UserLog.MESSAGE_CODE_AUTH_FAIL.format(result.get('result_message'))).flush()
             self.session.cookies.clear_session_cookies()
 
         return False
