@@ -14,6 +14,7 @@ class Job:
 
     left_dates = []
     left_date = None
+    stations = []
     left_station = ''
     arrive_station = ''
     left_station_code = ''
@@ -45,10 +46,13 @@ class Job:
 
     def __init__(self, info, query):
         self.left_dates = info.get('left_dates')
-        self.left_station = info.get('stations').get('left')
-        self.arrive_station = info.get('stations').get('arrive')
-        self.left_station_code = Station.get_station_key_by_name(self.left_station)
-        self.arrive_station_code = Station.get_station_key_by_name(self.arrive_station)
+        # 多车站已放在下面处理
+        # self.left_station = info.get('stations').get('left')
+        # self.arrive_station = info.get('stations').get('arrive')
+        # self.left_station_code = Station.get_station_key_by_name(self.left_station)
+        # self.arrive_station_code = Station.get_station_key_by_name(self.arrive_station)
+        self.stations = info.get('stations')
+        self.stations = [self.stations] if isinstance(self.stations, dict) else self.stations
 
         self.account_key = info.get('account_key')
         self.allow_seats = info.get('seats')
@@ -74,13 +78,15 @@ class Job:
         :return:
         """
         QueryLog.print_job_start()
-        for date in self.left_dates:
-            self.left_date = date
-            response = self.query_by_date(date)
-            self.handle_response(response)
-            self.safe_stay()
-            if is_main_thread():
-                QueryLog.flush(sep='\t\t')
+        for station in self.stations:
+            self.refresh_station(station)
+            for date in self.left_dates:
+                self.left_date = date
+                response = self.query_by_date(date)
+                self.handle_response(response)
+                self.safe_stay()
+                if is_main_thread():
+                    QueryLog.flush(sep='\t\t')
         if is_main_thread():
             QueryLog.add_quick_log('').flush()
         else:
@@ -200,6 +206,12 @@ class Job:
         if not self.passengers:
             User.check_members(self.members, self.account_key, call_back=self.set_passengers)
         return True
+
+    def refresh_station(self, station):
+        self.left_station = station.get('left')
+        self.arrive_station = station.get('arrive')
+        self.left_station_code = Station.get_station_key_by_name(self.left_station)
+        self.arrive_station_code = Station.get_station_key_by_name(self.arrive_station)
 
     # 提供一些便利方法
     def get_info_of_left_date(self):
