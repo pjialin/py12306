@@ -103,10 +103,10 @@ class UserJob:
         elif result.get('result_code') == 2:  # 账号之内错误
             # 登录失败，用户名或密码为空
             # 密码输入错误
-            UserLog.add_quick_log(UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message')))
+            UserLog.add_quick_log(UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message'))).flush()
         else:
             UserLog.add_quick_log(
-                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message', '-'))))
+                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message', '-')))).flush()
 
         return False
 
@@ -117,6 +117,9 @@ class UserJob:
         is_login = response.json().get('data').get('flag', False)
         if is_login:
             self.save_user()
+            self.get_user_info() # 检测应该是不会维持状态，这里再请求下个人中心看有没有有
+
+
         return is_login
 
     def auth_uamtk(self):
@@ -168,12 +171,11 @@ class UserJob:
         :return:
         """
         UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name))
-        if self.check_user_is_login():
-            UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name))
-            self.get_user_info()
+        if self.check_user_is_login() and self.get_user_info():
+            UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
             UserLog.print_welcome_user(self)
         else:
-            UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED)
+            UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
 
     def get_user_info(self):
         response = self.session.get(API_USER_INFO.get('url'))
@@ -205,7 +207,7 @@ class UserJob:
             return self.passengers
         else:
             UserLog.add_quick_log(
-                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(result.get('messages', '-'), self.retry_time))
+                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(result.get('messages', '-'), self.retry_time)).flush()
             stay_second(self.retry_time)
             return self.get_user_passengers()
 
