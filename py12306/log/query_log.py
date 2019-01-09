@@ -31,6 +31,12 @@ class QueryLog(BaseLog):
 
     MESSAGE_JOBS_DID_CHANGED = '\n任务已更新，正在重新加载...'
 
+    MESSAGE_SKIP_ORDER = '跳过本次请求，节点 {} 用户 {} 正在处理该订单\n'
+
+    MESSAGE_QUERY_JOB_BEING_DESTROY = '当前查询任务 {} 已结束'
+
+    MESSAGE_INIT_PASSENGERS_SUCCESS = '初始化乘客成功'
+
     cluster = None
 
     def __init__(self):
@@ -88,6 +94,7 @@ class QueryLog(BaseLog):
             self.add_log('坐席：{}'.format('，'.join(job.allow_seats)))
             self.add_log('乘车人：{}'.format('，'.join(job.members)))
             self.add_log('筛选车次：{}'.format('，'.join(job.allow_train_numbers if job.allow_train_numbers else ['不筛选'])))
+            self.add_log('任务名称：{}'.format(job.job_name))
             # 乘车日期：['2019-01-24', '2019-01-25', '2019-01-26', '2019-01-27']
             self.add_log('')
             index += 1
@@ -139,11 +146,12 @@ class QueryLog(BaseLog):
         return self
 
     @classmethod
-    def print_job_start(cls):
+    def print_job_start(cls, job_name):
         self = cls()
         self.refresh_data()
-        self.add_log('=== 正在进行第 {query_count} 次查询 === {time}'.format(query_count=self.data.get('query_count'),
-                                                                     time=datetime.datetime.now()))
+        self.add_log(
+            '=== 正在进行第 {query_count} 次查询 {job_name} === {time}'.format(query_count=self.data.get('query_count'),
+                                                                       job_name=job_name, time=datetime.datetime.now()))
         if is_main_thread():
             self.flush(publish=False)
         return self

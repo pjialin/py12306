@@ -24,7 +24,7 @@ def app_available_check():
 class App:
     """
     程序主类
-    TODO 需要完善
+    TODO 代码需要优化
     """
 
     @classmethod

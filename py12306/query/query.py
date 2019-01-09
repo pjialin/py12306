@@ -48,15 +48,21 @@ class Query:
         # return # DEBUG
         self.init_jobs()
         QueryLog.init_data()
-        stay_second(1)
-        while True:
-            app_available_check()
-            if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
-                create_thread_and_run(jobs=self.jobs, callback_name='run')
-            else:
-                for job in self.jobs: job.run()
-            if Const.IS_TEST: return
-            # self.refresh_jobs()  # 刷新任务
+        app_available_check()
+        stay_second(3)
+        # 多线程
+        if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
+            create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
+        else:
+            while True: jobs_do(self.jobs, 'run')
+        # while True:
+        #     app_available_check()
+        #     if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
+        #         create_thread_and_run(jobs=self.jobs, callback_name='run')
+        #     else:
+        #         for job in self.jobs: job.run()
+        #     if Const.IS_TEST: return
+        # self.refresh_jobs()  # 刷新任务
 
     def init_jobs(self):
         for job in self.query_jobs:
@@ -64,19 +70,37 @@ class Query:
             self.jobs.append(job)
         QueryLog.print_init_jobs(jobs=self.jobs)
 
-    # def get_jobs_from_cluster(self):
-    #     jobs = self.cluster.session.get_dict(Cluster.KEY_JOBS)
-    #     return jobs
-    #
-    # def update_jobs_of_cluster(self):
-    #     if config.CLUSTER_ENABLED and config.NODE_IS_MASTER:
-    #         return self.cluster.session.set_dict(Cluster.KEY_JOBS, self.query_jobs)
-    #
-    # def refresh_jobs(self):
-    #     if not config.CLUSTER_ENABLED: return
-    #     jobs = self.get_jobs_from_cluster()
-    #     if jobs != self.query_jobs:
-    #         self.jobs = []
-    #         self.query_jobs = jobs
-    #         QueryLog.add_quick_log(QueryLog.MESSAGE_JOBS_DID_CHANGED).flush()
-    #         self.init_jobs()
+    @classmethod
+    def job_by_name(cls, name) -> Job:
+        self = cls()
+        for job in self.jobs:
+            if job.job_name == name: return job
+        return None
+
+    @classmethod
+    def job_by_name(cls, name) -> Job:
+        self = cls()
+        return objects_find_object_by_key_value(self.jobs, 'job_name', name)
+
+    @classmethod
+    def job_by_account_id(cls, account_id) -> Job:
+        self = cls()
+        return objects_find_object_by_key_value(self.jobs, 'account_id', account_id)
+
+
+# def get_jobs_from_cluster(self):
+#     jobs = self.cluster.session.get_dict(Cluster.KEY_JOBS)
+#     return jobs
+#
+# def update_jobs_of_cluster(self):
+#     if config.CLUSTER_ENABLED and config.NODE_IS_MASTER:
+#         return self.cluster.session.set_dict(Cluster.KEY_JOBS, self.query_jobs)
+#
+# def refresh_jobs(self):
+#     if not config.CLUSTER_ENABLED: return
+#     jobs = self.get_jobs_from_cluster()
+#     if jobs != self.query_jobs:
+#         self.jobs = []
+#         self.query_jobs = jobs
+#         QueryLog.add_quick_log(QueryLog.MESSAGE_JOBS_DID_CHANGED).flush()
+#         self.init_jobs()

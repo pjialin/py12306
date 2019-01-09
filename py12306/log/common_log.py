@@ -53,9 +53,17 @@ class CommonLog(BaseLog):
         disable = '未开启'
         self.add_quick_log('**** 当前配置 ****')
         self.add_quick_log('多线程查询: {}'.format(get_true_false_text(Config().QUERY_JOB_THREAD_ENABLED, enable, disable)))
-        self.add_quick_log('语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
+        self.add_quick_log(
+            '语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
         self.add_quick_log('查询间隔: {} 秒'.format(Config().QUERY_INTERVAL))
         self.add_quick_log('用户心跳检测间隔: {} 秒'.format(Config().USER_HEARTBEAT_INTERVAL))
+        if Config().is_cluster_enabled():
+            from py12306.cluster.cluster import Cluster
+            self.add_quick_log('分布式查询: {}'.format(get_true_false_text(Config().is_cluster_enabled(), enable, enable)))
+            self.add_quick_log('节点名称: {}'.format(Cluster().node_name))
+            self.add_quick_log('节点是否主节点: {}'.format(get_true_false_text(Config().is_master(), '是', '否')))
+            self.add_quick_log(
+                '子节点提升为主节点: {}'.format(get_true_false_text(Config().NODE_SLAVE_CAN_BE_MASTER, enable, disable)))
         self.add_quick_log()
         self.flush()
         return self
@@ -64,7 +72,7 @@ class CommonLog(BaseLog):
     def print_test_complete(cls):
         self = cls()
         self.add_quick_log('# 测试完成，请检查输出是否正确 #')
-        self.flush()
+        self.flush(publish=False)
         return self
 
     @classmethod

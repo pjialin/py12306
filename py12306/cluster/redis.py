@@ -51,8 +51,8 @@ class Redis(PyRedis):
         return self.set(name, pickle.dumps(value, 0).decode())
 
     def get_pickle(self, name, default=None):
-        res = self.get(name).encode()
-        return pickle.loads(res) if res else default
+        res = self.get(name)
+        return pickle.loads(res.encode()) if res else default
 
     # def smembers(self, name, default=[]):
     #     res = super().smembers(name)

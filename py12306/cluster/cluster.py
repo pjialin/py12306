@@ -1,3 +1,4 @@
+import json
 import os
 import pickle
 import sys
@@ -19,12 +20,19 @@ class Cluster():
     KEY_CONFIGS = 'configs'
     KEY_NODES = 'nodes'
     KEY_CHANNEL_LOG = 'channel_log'
+    KEY_CHANNEL_EVENT = 'channel_even'
     KEY_USER_COOKIES = 'user_cookies'
     KEY_USER_LAST_HEARTBEAT = 'user_last_heartbeat'
     KEY_NODES_ALIVE = 'nodes_alive'
 
-    KEY_LOCK_INIT_USER = 'lock_init_user'
-    # if self.cluster.get_lock(Cluster.KEY_LOCK_INIT_USER, self.lock_init_user_time):  # TODO 未判断 失败重试
+    # 锁
+    KEY_LOCK_INIT_USER = 'lock_init_user'  # 暂未使用
+    KEY_LOCK_DO_ORDER = 'lock_do_order'  # 订单锁
+    lock_do_order_time = 60 * 1  # 订单锁超时时间
+
+    # 事件
+    KEY_EVENT_JOB_DESTROY = 'job_destroy'
+    KEY_EVENT_USER_LOADED = 'user_loaded'
 
     KEY_MASTER = 1
     KEY_SLAVE = 0
@@ -54,7 +62,7 @@ class Cluster():
 
     def start(self):
         self.pubsub = self.session.pubsub()
-        self.pubsub.subscribe(self.KEY_CHANNEL_LOG)
+        self.pubsub.subscribe(self.KEY_CHANNEL_LOG, self.KEY_CHANNEL_EVENT)
         create_thread_and_run(self, 'subscribe', wait=False)
         self.is_ready = True
         self.get_nodes()  # 提前获取节点列表
@@ -114,6 +122,14 @@ class Cluster():
         message = ClusterLog.MESSAGE_SUBSCRIBE_NOTIFICATION.format(self.node_name, message)
         self.session.publish(self.KEY_CHANNEL_LOG, message)
 
+    def publish_event(self, name, data={}):
+        """
+        发布事件消息
+        :return:
+        """
+        data = {'event': name, 'data': data}
+        self.session.publish(self.KEY_CHANNEL_EVENT, json.dumps(data))
+
     def get_nodes(self) -> dict:
         res = self.session.hgetall(self.KEY_NODES)
         res = res if res else {}
@@ -138,7 +154,7 @@ class Cluster():
         :return:
         """
         master = self.have_master()
-        if master == self.node_name: # 动态提升
+        if master == self.node_name:  # 动态提升
             self.is_master = True
         else:
             self.is_master = False
@@ -184,23 +200,48 @@ class Cluster():
         while True:
             message = self.pubsub.get_message()
             if message:
-                if message.get('type') == 'message' and message.get('data'):
+                if message.get('type') == 'message' and message.get('channel') == self.KEY_CHANNEL_LOG and message.get(
+                        'data'):
                     msg = message.get('data')
                     if self.node_name:
                         msg = msg.replace(ClusterLog.MESSAGE_SUBSCRIBE_NOTIFICATION_PREFIX.format(self.node_name), '')
                     ClusterLog.add_quick_log(msg).flush(publish=False)
+                elif message.get('channel') == self.KEY_CHANNEL_EVENT:
+                    create_thread_and_run(self, 'handle_events', args=(message,))
             stay_second(self.refresh_channel_time)
 
-    def get_lock(self, key, timeout=1):
+    def handle_events(self, message):
+        # 这里应该分开处理，先都在这处理了
+        if message.get('type') != 'message': return
+        result = json.loads(message.get('data', {}))
+        event_name = result.get('event')
+        data = result.get('data')
+
+        from py12306.query.query import Query
+        from py12306.user.user import User
+        if event_name == self.KEY_EVENT_JOB_DESTROY:  # 停止查询任务
+            job = Query.job_by_name(data['name'])
+            if job: job.destroy()
+        elif event_name == self.KEY_EVENT_USER_LOADED:  # 用户初始化完成
+            query_job = Query.job_by_account_id(data['key'])
+            if query_job:
+                create_thread_and_run(query_job, 'check_passengers', Const.IS_TEST)  # 检查乘客信息 防止提交订单时才检查
+
+    def get_lock(self, key, timeout=1, info={}):
         timeout = int(time.time()) + timeout
         res = self.session.setnx(key, timeout)
         if res:
             self.locks.append((key, timeout))
+            if info: self.session.set_dict(key + '_info', info)  # 存储额外信息
             return True
         return False
 
+    def get_lock_info(self, key, default={}):
+        return self.session.get_dict(key + '_info', default=default)
+
     def release_lock(self, key):
         self.session.delete(key)
+        self.session.delete(key + '_info')
 
     def check_locks(self):
         index = 0

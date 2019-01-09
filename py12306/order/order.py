@@ -1,14 +1,14 @@
 import urllib
 
 # from py12306.config import UserType
+from py12306.config import Config
 from py12306.helpers.api import *
 from py12306.helpers.func import *
 from py12306.helpers.notification import Notification
+from py12306.helpers.type import UserType
 from py12306.log.order_log import OrderLog
 
 
-# from py12306.query.job import Job
-# from py12306.user.job import UserJob
 
 
 class Order:
@@ -36,8 +36,10 @@ class Order:
 
     def __init__(self, query, user):
         self.session = user.session
-        # assert isinstance(query, Job)  # 循环引用
-        # assert isinstance(user, UserJob)
+        from py12306.query.job import Job
+        from py12306.user.job import UserJob
+        assert isinstance(query, Job)
+        assert isinstance(user, UserJob)
         self.query_ins = query
         self.user_ins = user
 
@@ -49,8 +51,7 @@ class Order:
         下单模式  暂时不清楚，使用正常步骤下单
         :return:
         """
-        self.normal_order()
-        pass
+        return self.normal_order()
 
     def normal_order(self):
         if not self.submit_order_request(): return
@@ -62,6 +63,8 @@ class Order:
         if order_id:  # 发送通知
             self.order_id = order_id
             self.order_did_success()
+            return True
+        return False
 
     def order_did_success(self):
         OrderLog.print_ticket_did_ordered(self.order_id)
@@ -74,17 +77,15 @@ class Order:
         sustain_time = self.notification_sustain_time
         while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
             num += 1
-            if config.NOTIFICATION_BY_VOICE_CODE:  # 语音通知
+            if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
                 OrderLog.add_quick_log(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND.format(num))
-                Notification.voice_code(config.NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(),
+                Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(),
                                         OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format(
                                             self.query_ins.left_station, self.query_ins.arrive_station))
             sustain_time -= self.notification_interval
             sleep(self.notification_interval)
 
         OrderLog.add_quick_log(OrderLog.MESSAGE_JOB_CLOSED)
-        # 结束运行
-        while True: sleep(self.retry_time)
 
     def submit_order_request(self):
         data = {

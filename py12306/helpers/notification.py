@@ -1,5 +1,6 @@
 import urllib
 
+from py12306.config import Config
 from py12306.helpers.api import *
 from py12306.helpers.request import Request
 from py12306.log.common_log import CommonLog
@@ -25,7 +26,7 @@ class Notification():
         购买地址 https://market.aliyun.com/products/57126001/cmapi019902.html?spm=5176.2020520132.101.5.37857218O6iJ3n
         :return:
         """
-        appcode = config.NOTIFICATION_API_APP_CODE
+        appcode = Config().NOTIFICATION_API_APP_CODE
         if not appcode:
             CommonLog.add_quick_log(CommonLog.MESSAGE_EMPTY_APP_CODE).flush()
             return False
@@ -60,4 +61,4 @@ class Notification():
 
 
 if __name__ == '__main__':
-    Notification.voice_code('13800138000', '张三', '你的车票 广州 到 深圳 购买成功，请登录 12306 进行支付')
+    Notification.voice_code('13065667742', '张三', '你的车票 广州 到 深圳 购买成功，请登录 12306 进行支付')

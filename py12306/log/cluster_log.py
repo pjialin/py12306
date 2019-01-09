@@ -25,7 +25,7 @@ class ClusterLog(BaseLog):
     MESSAGE_MASTER_NODE_ALREADY_RUN = '# 启动失败，主节点 {} 已经在运行中 #'
     MESSAGE_MASTER_NODE_NOT_FOUND = '# 启动失败，请先启动主节点 #'
 
-    MESSAGE_NODE_BECOME_MASTER_AGAIN = '# 节点 {} 已启动，已自动成功主节点 #'
+    MESSAGE_NODE_BECOME_MASTER_AGAIN = '# 节点 {} 已启动，已自动成为主节点 #'
 
 
 
