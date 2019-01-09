@@ -146,7 +146,7 @@ class Cluster():
         if not master:
             if Config().NODE_SLAVE_CAN_BE_MASTER:
                 # 提升子节点为主节点
-                slave = list(self.nodes)[-1]
+                slave = list(self.nodes)[0]
                 self.session.hset(self.KEY_NODES, slave, self.KEY_MASTER)
                 self.publish_log_message(ClusterLog.MESSAGE_ASCENDING_MASTER_NODE.format(slave,
                                                                                          ClusterLog.get_print_nodes(

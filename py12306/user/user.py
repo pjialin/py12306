@@ -50,6 +50,7 @@ class User:
     def init_user(self, info):
         user = UserJob(info=info)
         self.users.append(user)
+        return user
 
     def refresh_users(self, old):
         for account in self.user_accounts:
@@ -58,8 +59,10 @@ class User:
             if old_account and account != old_account:
                 user = self.get_user(key)
                 user.init_data(account)
-            elif not old_account:
-                self.init_user(account)
+            elif not old_account: # 新用户 添加到 多线程
+                new_user = self.init_user(account)
+                create_thread_and_run(jobs=new_user, callback_name='run', wait=Const.IS_TEST)
+
         for account in old:  # 退出已删除的用户
             if not array_dict_find_by_key_value(self.user_accounts, 'key', account.get('key')):
                 user = self.get_user(account.get('key'))
