@@ -42,7 +42,7 @@ class CommonLog(BaseLog):
             self.add_quick_log('日志已输出到文件中: {}'.format(Config().OUT_PUT_LOG_TO_FILE_PATH))
 
         self.add_quick_log()
-        self.flush(file=False)
+        self.flush(file=False, publish=False)
         return self
 
     @classmethod

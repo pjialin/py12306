@@ -1,5 +1,5 @@
 from py12306.config import Config
-from py12306.cluster.cluster import Distributed
+from py12306.cluster.cluster import Cluster
 from py12306.app import app_available_check
 from py12306.helpers.func import *
 from py12306.helpers.request import Request
@@ -23,7 +23,7 @@ class Query:
 
     def __init__(self):
         self.session = Request()
-        self.cluster = Distributed()
+        self.cluster = Cluster()
         self.update_query_interval()
         self.update_query_jobs()
 
@@ -47,6 +47,7 @@ class Query:
     def start(self):
         # return # DEBUG
         self.init_jobs()
+        QueryLog.init_data()
         stay_second(1)
         while True:
             app_available_check()
@@ -64,12 +65,12 @@ class Query:
         QueryLog.print_init_jobs(jobs=self.jobs)
 
     # def get_jobs_from_cluster(self):
-    #     jobs = self.cluster.session.get_dict(Distributed.KEY_JOBS)
+    #     jobs = self.cluster.session.get_dict(Cluster.KEY_JOBS)
     #     return jobs
     #
     # def update_jobs_of_cluster(self):
     #     if config.CLUSTER_ENABLED and config.NODE_IS_MASTER:
-    #         return self.cluster.session.set_dict(Distributed.KEY_JOBS, self.query_jobs)
+    #         return self.cluster.session.set_dict(Cluster.KEY_JOBS, self.query_jobs)
     #
     # def refresh_jobs(self):
     #     if not config.CLUSTER_ENABLED: return

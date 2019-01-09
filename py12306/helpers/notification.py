@@ -1,6 +1,5 @@
 import urllib
 
-from py12306 import config
 from py12306.helpers.api import *
 from py12306.helpers.request import Request
 from py12306.log.common_log import CommonLog

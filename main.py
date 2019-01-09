@@ -4,15 +4,18 @@ import sys
 from py12306.app import *
 from py12306.log.common_log import CommonLog
 from py12306.query.query import Query
+from py12306.user.user import User
 
 
 def main():
-    if '--test' in sys.argv or '-t' in sys.argv: test()
+    load_argvs()
+    CommonLog.print_welcome()
     App.run()
-    CommonLog.print_welcome().print_configs()
+    CommonLog.print_configs()
     App.did_start()
-    # App.run_check()
-    # User.run()
+
+    App.run_check()
+    User.run()
     Query.run()
     if not Const.IS_TEST:
         while True:
@@ -36,6 +39,16 @@ def test():
     if '--test-notification' in sys.argv or '-n' in sys.argv:
         Const.IS_TEST_NOTIFICATION = True
     pass
+
+
+def load_argvs():
+    if '--test' in sys.argv or '-t' in sys.argv: test()
+    config_index = None
+
+    if '--config' in sys.argv: config_index = sys.argv.index('--config')
+    if '-c' in sys.argv: config_index = sys.argv.index('-c')
+    if config_index:
+        Config.CONFIG_FILE = sys.argv[config_index + 1:config_index + 2].pop()
 
 
 if __name__ == '__main__':

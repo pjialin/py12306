@@ -1,7 +1,7 @@
 import math
 import random
 
-from py12306 import config
+from py12306.config import Config
 from py12306.log.common_log import CommonLog
 from py12306.vender.ruokuai.main import RKClient
 
@@ -22,7 +22,7 @@ class OCR:
         return self.get_img_position_by_ruokuai(img_path)
 
     def get_img_position_by_ruokuai(self, img_path):
-        ruokuai_account = config.AUTO_CODE_ACCOUNT
+        ruokuai_account = Config().AUTO_CODE_ACCOUNT
         soft_id = '119671'
         soft_key = '6839cbaca1f942f58d2760baba5ed987'
         rc = RKClient(ruokuai_account.get('user'), ruokuai_account.get('pwd'), soft_id, soft_key)
@@ -37,7 +37,7 @@ class OCR:
         positions = []
         width = 70
         height = 70
-        random_num = random.randint(0, 10)
+        random_num = random.randint(0, 8)
         for offset in offsets:
             offset = int(offset)
             x = width * (offset % 5) - width / 2 + random_num
