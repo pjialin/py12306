@@ -8,8 +8,6 @@ from time import sleep
 from types import MethodType
 
 
-
-
 def singleton(cls):
     """
     将一个类作为单例
@@ -88,18 +86,20 @@ def current_thread_id():
 def time_now():
     return datetime.datetime.now()
 
+
 def str_to_time(str):
     return datetime.datetime.strptime(str, '%Y-%m-%d %H:%M:%S.%f')
+
 
 def time_int():
     return int(time.time())
 
 
-def create_thread_and_run(jobs, callback_name, wait=True, daemon=True):
+def create_thread_and_run(jobs, callback_name, wait=True, daemon=True, args=()):
     threads = []
     if not isinstance(jobs, list): jobs = [jobs]
     for job in jobs:
-        thread = threading.Thread(target=getattr(job, callback_name))
+        thread = threading.Thread(target=getattr(job, callback_name), args=args)
         thread.setDaemon(daemon)
         thread.start()
         threads.append(thread)
@@ -115,6 +115,11 @@ def jobs_do(jobs, do):
 
 def dict_find_key_by_value(data, value, default=None):
     result = [k for k, v in data.items() if v == value]
+    return result.pop() if len(result) else default
+
+
+def objects_find_object_by_key_value(objects, key, value, default=None):
+    result = [obj for obj in objects if getattr(obj, key) == value]
     return result.pop() if len(result) else default
 
 

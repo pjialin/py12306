@@ -22,12 +22,14 @@ class UserLog(BaseLog):
     MESSAGE_GET_USER_PASSENGERS_FAIL = '获取用户乘客列表失败，错误原因: {} {} 秒后重试'
     MESSAGE_USER_PASSENGERS_IS_INVALID = '乘客信息校验失败，在账号 {} 中未找到该乘客: {}'
 
-    MESSAGE_WAIT_USER_INIT_COMPLETE = '未找到可用账号或用户正在初始化，{} 秒后重试'
+    # MESSAGE_WAIT_USER_INIT_COMPLETE = '未找到可用账号或用户正在初始化，{} 秒后重试'
 
     MESSAGE_USERS_DID_CHANGED = '\n用户信息已更新，正在重新加载...'
 
     MESSAGE_USER_BEING_DESTROY = '用户 {} 已退出'
     MESSAGE_USER_COOKIE_NOT_FOUND_FROM_REMOTE = '用户 {} 状态加载中...'
+
+    MESSAGE_WAIT_USER_INIT_COMPLETE = '账号正在初始化，{} 秒后自动重试'
 
     def __init__(self):
         super().__init__()

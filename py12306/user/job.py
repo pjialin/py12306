@@ -1,4 +1,6 @@
+import json
 import pickle
+import re
 from os import path
 
 from py12306.cluster.cluster import Cluster
@@ -7,12 +9,14 @@ from py12306.app import *
 from py12306.helpers.auth_code import AuthCode
 from py12306.helpers.func import *
 from py12306.helpers.request import Request
+from py12306.helpers.type import UserType
 from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 
 
 class UserJob:
     # heartbeat = 60 * 2  # 心跳保持时长
+    is_alive = True
     heartbeat_interval = 60 * 2
     check_interval = 5
     key = None
@@ -23,7 +27,7 @@ class UserJob:
     last_heartbeat = None
     is_ready = False
     passengers = []
-    retry_time = 5
+    retry_time = 3
 
     # Init page
     global_repeat_submit_token = None
@@ -40,7 +44,7 @@ class UserJob:
 
     def init_data(self, info):
         self.session = Request()
-        self.key = info.get('key')
+        self.key = str(info.get('key'))
         self.user_name = info.get('user_name')
         self.password = info.get('password')
         self.update_user()
@@ -49,7 +53,8 @@ class UserJob:
         from py12306.user.user import User
         self.user = User()
         self.heartbeat_interval = self.user.heartbeat
-        if not Const.IS_TEST: self.load_user()
+        # if not Const.IS_TEST:  测试模块下也可以从文件中加载用户
+        self.load_user()
 
     def run(self):
         # load user
@@ -60,15 +65,16 @@ class UserJob:
         检测心跳
         :return:
         """
-        while True:
+        while True and self.is_alive:
             app_available_check()
             if Config().is_slave():
                 self.load_user_from_remote()
+                pass  # 虽然同一个 cookie，同时请求之后会导致失效，暂时不在子节点中加载用户
             else:
                 if Config().is_master() and not self.cookie: self.load_user_from_remote()  # 主节点加载一次 Cookie
                 self.check_heartbeat()
             if Const.IS_TEST: return
-            sleep(self.check_interval)
+            stay_second(self.check_interval)
 
     def check_heartbeat(self):
         # 心跳检测
@@ -76,6 +82,7 @@ class UserJob:
             return True
         # 只有主节点才能走到这
         if self.is_first_time() or not self.check_user_is_login():
+            self.is_ready = False
             if not self.handle_login(): return
 
         self.is_ready = True
@@ -149,7 +156,7 @@ class UserJob:
         is_login = response.json().get('data.flag', False)
         if is_login:
             self.save_user()
-            self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有有
+            # self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用
 
         return is_login
 
@@ -206,6 +213,7 @@ class UserJob:
         UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name)).flush()
         if self.check_user_is_login() and self.get_user_info():
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
+            self.cluster.publish_event(Cluster.KEY_EVENT_USER_LOADED, {'key': self.key})  # 发布通知
             UserLog.print_welcome_user(self)
         else:
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
@@ -214,6 +222,7 @@ class UserJob:
         response = self.session.get(API_USER_INFO.get('url'))
         result = response.json()
         user_data = result.get('data.userDTO.loginUserDTO')
+        # 子节点访问会导致主节点登录失效 TODO 可快考虑实时同步 cookie
         if user_data:
             self.update_user_info({**user_data, **{'user_name': user_data.get('name')}})
             return True
@@ -250,13 +259,19 @@ class UserJob:
     def check_is_ready(self):
         return self.is_ready
 
+    def wait_for_ready(self):
+        if self.is_ready: return self
+        UserLog.add_quick_log(UserLog.MESSAGE_WAIT_USER_INIT_COMPLETE.format(self.retry_time)).flush()
+        stay_second(self.retry_time)
+        return self.wait_for_ready()
+
     def destroy(self):
         """
         退出用户
         :return:
         """
         UserLog.add_quick_log(UserLog.MESSAGE_USER_BEING_DESTROY.format(self.user_name)).flush()
-        sys.exit()
+        self.is_alive = False
 
     def get_user_passengers(self):
         if self.passengers: return self.passengers

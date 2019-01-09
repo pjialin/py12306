@@ -1,3 +1,7 @@
+import sys
+
+from py12306.app import app_available_check
+from py12306.cluster.cluster import Cluster
 from py12306.config import Config
 from py12306.helpers.api import LEFT_TICKETS
 from py12306.helpers.station import Station
@@ -13,7 +17,8 @@ class Job:
     """
     查询任务
     """
-
+    is_alive = True
+    job_name = None
     left_dates = []
     left_date = None
     stations = []
@@ -32,10 +37,12 @@ class Job:
     member_num_take = 0  # 最终提交的人数
     passengers = []
     allow_less_member = False
+    retry_time = 3
 
     interval = {}
 
     query = None
+    cluster = None
     ticket_info = {}
     INDEX_TICKET_NUM = 11
     INDEX_TRAIN_NUMBER = 3
@@ -47,6 +54,7 @@ class Job:
     INDEX_SECRET_STR = 0
 
     def __init__(self, info, query):
+        self.cluster = Cluster()
         self.left_dates = info.get('left_dates')
         # 多车站已放在下面处理
         # self.left_station = info.get('stations').get('left')
@@ -55,8 +63,9 @@ class Job:
         # self.arrive_station_code = Station.get_station_key_by_name(self.arrive_station)
         self.stations = info.get('stations')
         self.stations = [self.stations] if isinstance(self.stations, dict) else self.stations
+        self.job_name = info.get('job_name', '{} -> {}'.format(self.stations[0]['left'], self.stations[0]['arrive']))
 
-        self.account_key = info.get('account_key')
+        self.account_key = str(info.get('account_key'))
         self.allow_seats = info.get('seats')
         self.allow_train_numbers = info.get('train_numbers')
         self.members = info.get('members')
@@ -73,26 +82,28 @@ class Job:
     def start(self):
         """
         处理单个任务
-        根据日期循环查询
-
-        展示处理时间
+        根据日期循环查询, 展示处理时间
         :param job:
         :return:
         """
-        QueryLog.print_job_start()
-        for station in self.stations:
-            self.refresh_station(station)
-            for date in self.left_dates:
-                self.left_date = date
-                response = self.query_by_date(date)
-                self.handle_response(response)
-                self.safe_stay()
-                if is_main_thread():
-                    QueryLog.flush(sep='\t\t', publish=False)
-        if is_main_thread():
-            QueryLog.add_quick_log('').flush(publish=False)
-        else:
-            QueryLog.add_log('\n').flush(sep='\t\t',publish=False)
+        while True and self.is_alive:
+            app_available_check()
+            QueryLog.print_job_start(self.job_name)
+            for station in self.stations:
+                self.refresh_station(station)
+                for date in self.left_dates:
+                    self.left_date = date
+                    response = self.query_by_date(date)
+                    self.handle_response(response)
+                    self.safe_stay()
+                    if is_main_thread():
+                        QueryLog.flush(sep='\t\t', publish=False)
+            if is_main_thread():
+                QueryLog.add_quick_log('').flush(publish=False)
+                break
+            else:
+                QueryLog.add_log('\n').flush(sep='\t\t', publish=False)
+            if Const.IS_TEST: return
 
     def query_by_date(self, date):
         """
@@ -154,9 +165,32 @@ class Job:
             QueryLog.print_ticket_available(left_date=self.get_info_of_left_date(),
                                             train_number=self.get_info_of_train_number(),
                                             rest_num=ticket_of_seat)
-            self.check_passengers()
-            order = Order(user=self.get_user(), query=self)
-            order.order()
+            order_result = False
+            user = self.get_user()
+            lock_id = Cluster.KEY_LOCK_DO_ORDER + '_' + user.key
+            if Config().is_cluster_enabled():
+                if self.cluster.get_lock(lock_id, Cluster.lock_do_order_time,
+                                         {'node': self.cluster.node_name}):  # 获得下单锁
+                    order_result = self.do_order(user)
+                    if not order_result:  # 下单失败，解锁
+                        self.cluster.release_lock(lock_id)
+                else:
+                    QueryLog.add_quick_log(
+                        QueryLog.MESSAGE_SKIP_ORDER.format(self.cluster.get_lock_info(lock_id).get('node'),
+                                                           user.user_name))
+                    stay_second(self.retry_time)  # 防止过多重复
+            else:
+                order_result = self.do_order(user)
+
+            # 任务已成功 通知集群停止任务
+            if order_result:
+                self.cluster.publish_event(Cluster.KEY_EVENT_JOB_DESTROY, {'name': self.job_name})
+                self.destroy()
+
+    def do_order(self, user):
+        self.check_passengers()
+        order = Order(user=user, query=self)
+        return order.order()
 
     def get_results(self, response):
         """
@@ -183,6 +217,15 @@ class Job:
     def is_member_number_valid(self, seat):
         return seat == '有' or self.member_num <= int(seat)
 
+    def destroy(self):
+        """
+        退出任务
+        :return:
+        """
+        QueryLog.add_quick_log(QueryLog.MESSAGE_QUERY_JOB_BEING_DESTROY.format(self.job_name)).flush()
+        # sys.exit(1) # 无法退出线程...
+        self.is_alive = False
+
     def safe_stay(self):
         interval = get_interval_num(self.interval)
         QueryLog.add_stay_log(interval)
@@ -205,7 +248,8 @@ class Job:
 
     def check_passengers(self):
         if not self.passengers:
-            User.check_members(self.members, self.account_key, call_back=self.set_passengers)
+            self.set_passengers(User.get_passenger_for_members(self.members, self.account_key))
+            QueryLog.add_quick_log(QueryLog.MESSAGE_INIT_PASSENGERS_SUCCESS)
         return True
 
     def refresh_station(self, station):

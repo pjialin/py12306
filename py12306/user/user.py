@@ -59,7 +59,7 @@ class User:
             if old_account and account != old_account:
                 user = self.get_user(key)
                 user.init_data(account)
-            elif not old_account: # 新用户 添加到 多线程
+            elif not old_account:  # 新用户 添加到 多线程
                 new_user = self.init_user(account)
                 create_thread_and_run(jobs=new_user, callback_name='run', wait=Const.IS_TEST)
 
@@ -76,20 +76,15 @@ class User:
         return None
 
     @classmethod
-    def check_members(cls, members, key, call_back):
+    def get_passenger_for_members(cls, members, key):
         """
         检测乘客信息
-        :param passengers:
+        :param passengers
         :return:
         """
         self = cls()
 
         for user in self.users:
             assert isinstance(user, UserJob)
-            if user.key == key and user.check_is_ready():
-                passengers = user.get_passengers_by_members(members)
-                return call_back(passengers)
-
-        UserLog.add_quick_log(UserLog.MESSAGE_WAIT_USER_INIT_COMPLETE.format(self.retry_time)).flush()
-        stay_second(self.retry_time)
-        return self.check_members(members, key, call_back)
+            if user.key == key and user.wait_for_ready():
+                return user.get_passengers_by_members(members)
