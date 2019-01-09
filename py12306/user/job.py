@@ -1,5 +1,7 @@
 import pickle
+from os import path
 
+from py12306.cluster.cluster import Cluster
 from py12306.helpers.api import *
 from py12306.app import *
 from py12306.helpers.auth_code import AuthCode
@@ -10,8 +12,8 @@ from py12306.log.user_log import UserLog
 
 
 class UserJob:
-    heartbeat = 60 * 2  # 心跳保持时长
-    heartbeat_interval = 5
+    # heartbeat = 60 * 2  # 心跳保持时长
+    heartbeat_interval = 60 * 2
     key = None
     user_name = ''
     password = ''
@@ -27,19 +29,29 @@ class UserJob:
     ticket_info_for_passenger_form = None
     order_request_dto = None
 
-    def __init__(self, info, user):
-        self.session = Request()
-        self.heartbeat = user.heartbeat
+    cluster = None
+    lock_init_user_time = 3 * 60
+    cookie = False
 
+    def __init__(self, info):
+        self.cluster = Cluster()
+        self.init_data(info)
+
+    def init_data(self, info):
+        self.session = Request()
         self.key = info.get('key')
         self.user_name = info.get('user_name')
         self.password = info.get('password')
-        self.user = user
+        self.update_user()
+
+    def update_user(self):
+        from py12306.user.user import User
+        self.user = User()
+        self.heartbeat_interval = self.user.heartbeat
+        if not Const.IS_TEST: self.load_user()
 
     def run(self):
         # load user
-        if not Const.IS_TEST:
-            self.load_user()
         self.start()
 
     def start(self):
@@ -49,23 +61,45 @@ class UserJob:
         """
         while True:
             app_available_check()
-            self.check_heartbeat()
+            if Config().is_slave():
+                self.load_user_from_remote()
+            else:
+                if Config().is_master() and not self.cookie: self.load_user_from_remote()  # 主节点加载一次 Cookie
+                self.check_heartbeat()
             if Const.IS_TEST: return
             sleep(self.heartbeat_interval)
 
     def check_heartbeat(self):
         # 心跳检测
-        if self.last_heartbeat and (time_now() - self.last_heartbeat).seconds < self.heartbeat:
+        if self.get_last_heartbeat() and (time_int() - self.get_last_heartbeat()) < self.heartbeat_interval:
             return True
+        # 只有主节点才能走到这
         if self.is_first_time() or not self.check_user_is_login():
             self.handle_login()
 
         self.is_ready = True
-        UserLog.add_quick_log(UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), self.heartbeat)).flush()
+        message = UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), self.heartbeat_interval)
+        if not Config.is_cluster_enabled():
+            UserLog.add_quick_log(message).flush()
+        else:
+            self.cluster.publish_log_message(message)
+        self.set_last_heartbeat()
+
+    def get_last_heartbeat(self):
+        if Config().is_cluster_enabled():
+            return int(self.cluster.session.get(Cluster.KEY_USER_LAST_HEARTBEAT, 0))
+
+        return self.last_heartbeat
+
+    def set_last_heartbeat(self):
+        if Config().is_cluster_enabled():
+            return self.cluster.session.set(Cluster.KEY_USER_LAST_HEARTBEAT, time_int())
         self.last_heartbeat = time_now()
 
     # def init_cookies
     def is_first_time(self):
+        if Config().is_cluster_enabled():
+            return not self.cluster.get_user_cookie(self.key)
         return not path.exists(self.get_cookie_path())
 
     def handle_login(self):
@@ -110,11 +144,10 @@ class UserJob:
 
     def check_user_is_login(self):
         response = self.session.get(API_USER_CHECK.get('url'))
-        is_login = response.json().get('data').get('flag', False)
+        is_login = response.json().get('data.flag', False)
         if is_login:
             self.save_user()
-            self.get_user_info() # 检测应该是不会维持状态，这里再请求下个人中心看有没有有
-
+            self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有有
 
         return is_login
 
@@ -149,7 +182,7 @@ class UserJob:
         pass
 
     def get_cookie_path(self):
-        return config.USER_DATA_DIR + self.user_name + '.cookie'
+        return Config().USER_DATA_DIR + self.user_name + '.cookie'
 
     def update_user_info(self, info):
         self.info = {**self.info, **info}
@@ -158,6 +191,8 @@ class UserJob:
         return self.info.get('user_name')
 
     def save_user(self):
+        if Config().is_cluster_enabled():
+            return self.cluster.set_user_cookie(self.key, self.session.cookies)
         with open(self.get_cookie_path(), 'wb') as f:
             pickle.dump(self.session.cookies, f)
 
@@ -166,7 +201,7 @@ class UserJob:
         恢复用户成功
         :return:
         """
-        UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name))
+        UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name)).flush()
         if self.check_user_is_login() and self.get_user_info():
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
             UserLog.print_welcome_user(self)
@@ -183,16 +218,41 @@ class UserJob:
         return None
 
     def load_user(self):
+        if Config().is_cluster_enabled(): return
         cookie_path = self.get_cookie_path()
+
         if path.exists(cookie_path):
             with open(self.get_cookie_path(), 'rb') as f:
-                self.session.cookies.update(pickle.load(f))
+                cookie = pickle.load(f)
+                self.cookie = True
+                self.session.cookies.update(cookie)
                 self.did_loaded_user()
                 return True
         return None
 
+    def load_user_from_remote(self):
+        cookie = self.cluster.get_user_cookie(self.key)
+        if not cookie and Config().is_slave():
+            while True:  # 子节点只能取
+                UserLog.add_quick_log(UserLog.MESSAGE_USER_COOKIE_NOT_FOUND_FROM_REMOTE.format(self.user_name)).flush()
+                stay_second(self.retry_time)
+                return self.load_user_from_remote()
+        self.session.cookies.update(cookie)
+        if not self.cookie:  # 第一次加载
+            self.cookie = True
+            self.did_loaded_user()
+        return True
+
     def check_is_ready(self):
         return self.is_ready
+
+    def destroy(self):
+        """
+        退出用户
+        :return:
+        """
+        UserLog.add_quick_log(UserLog.MESSAGE_USER_BEING_DESTROY.format(self.user_name)).flush()
+        sys.exit()
 
     def get_user_passengers(self):
         if self.passengers: return self.passengers

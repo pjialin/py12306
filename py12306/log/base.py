@@ -1,5 +1,7 @@
 import os
 import sys
+import io
+from contextlib import redirect_stdout
 
 from py12306.config import Config
 from py12306.helpers.func import *
@@ -23,14 +25,23 @@ class BaseLog:
         return self
 
     @classmethod
-    def flush(cls, sep='\n', end='\n', file=None, exit=False):
+    def flush(cls, sep='\n', end='\n', file=None, exit=False, publish=True):
+        from py12306.cluster.cluster import Cluster
         self = cls()
         logs = self.get_logs()
         # 输出到文件
         if file == None and Config().OUT_PUT_LOG_TO_FILE_ENABLED:  # TODO 文件无法写入友好提示
-            file = open(Config().OUT_PUT_LOG_TO_FILE_PATH, 'a')
+            file = open(Config().OUT_PUT_LOG_TO_FILE_PATH, 'a', encoding='utf-8')
         if not file: file = None
-        print(*logs, sep=sep, end=end, file=file)
+        # 输出日志到各个节点
+        if publish and self.quick_log and Config().is_cluster_enabled() and Cluster().is_ready:  #
+            f = io.StringIO()
+            with redirect_stdout(f):
+                print(*logs, sep=sep, end='' if end == '\n' else end)
+            out = f.getvalue()
+            Cluster().publish_log_message(out)
+        else:
+            print(*logs, sep=sep, end=end, file=file)
         self.empty_logs(logs)
         if exit:
             sys.exit()

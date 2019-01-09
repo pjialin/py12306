@@ -3,6 +3,7 @@ import time
 
 from requests.exceptions import SSLError
 
+from py12306.config import Config
 from py12306.helpers.OCR import OCR
 from py12306.helpers.api import API_AUTH_CODE_DOWNLOAD, API_AUTH_CODE_CHECK
 from py12306.helpers.request import Request
@@ -20,7 +21,7 @@ class AuthCode:
     retry_time = 5
 
     def __init__(self, session):
-        self.data_path = config.RUNTIME_DIR
+        self.data_path = Config().RUNTIME_DIR
         self.session = session
 
     @classmethod
@@ -66,6 +67,7 @@ class AuthCode:
             UserLog.add_quick_log(UserLog.MESSAGE_CODE_AUTH_SUCCESS).flush()
             return True
         else:
+            # {'result_message': '验证码校验失败', 'result_code': '5'}
             UserLog.add_quick_log(
                 UserLog.MESSAGE_CODE_AUTH_FAIL.format(result.get('result_message'))).flush()
             self.session.cookies.clear_session_cookies()

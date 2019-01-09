@@ -2,12 +2,12 @@ import datetime
 import random
 import threading
 import functools
+import time
 
 from time import sleep
 from types import MethodType
 
 
-# from py12306 import config
 
 
 def singleton(cls):
@@ -88,11 +88,16 @@ def current_thread_id():
 def time_now():
     return datetime.datetime.now()
 
+def str_to_time(str):
+    return datetime.datetime.strptime(str, '%Y-%m-%d %H:%M:%S.%f')
+
+def time_int():
+    return int(time.time())
+
 
 def create_thread_and_run(jobs, callback_name, wait=True, daemon=True):
     threads = []
-    if not isinstance(jobs, list):
-        jobs = [jobs]
+    if not isinstance(jobs, list): jobs = [jobs]
     for job in jobs:
         thread = threading.Thread(target=getattr(job, callback_name))
         thread.setDaemon(daemon)
@@ -100,6 +105,12 @@ def create_thread_and_run(jobs, callback_name, wait=True, daemon=True):
         threads.append(thread)
     if wait:
         for thread in threads: thread.join()
+
+
+def jobs_do(jobs, do):
+    if not isinstance(jobs, list): jobs = [jobs]
+    for job in jobs:
+        getattr(job, do)()
 
 
 def dict_find_key_by_value(data, value, default=None):

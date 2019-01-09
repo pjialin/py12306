@@ -40,13 +40,14 @@ class App:
     @classmethod
     def did_start(cls):
         self = cls()
-        if Config.is_cluster_enabled():
-            from py12306.cluster.cluster import Distributed
-            Distributed().join_cluster()
+        # if Config.is_cluster_enabled():
+        #     from py12306.cluster.cluster import Cluster
+        #     Cluster().run()
 
     def init_class(self):
-        from py12306.cluster.cluster import Distributed
-        if Config.is_cluster_enabled(): Distributed()
+        from py12306.cluster.cluster import Cluster
+        if Config.is_cluster_enabled():
+            Cluster().run()
 
     def handler_exit(self, *args, **kwargs):
         """
@@ -56,8 +57,8 @@ class App:
         :return:
         """
         if Config.is_cluster_enabled():
-            from py12306.cluster.cluster import Distributed
-            Distributed().left_cluster()
+            from py12306.cluster.cluster import Cluster
+            Cluster().left_cluster()
 
         sys.exit()
 

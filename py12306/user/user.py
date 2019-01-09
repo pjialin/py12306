@@ -1,4 +1,5 @@
 from py12306.app import *
+from py12306.cluster.cluster import Cluster
 from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
 from py12306.user.job import UserJob
@@ -8,11 +9,26 @@ from py12306.user.job import UserJob
 class User:
     heartbeat = 60 * 2
     users = []
+    user_accounts = []
 
     retry_time = 3
+    cluster = None
 
     def __init__(self):
-        self.interval = config.USER_HEARTBEAT_INTERVAL
+        self.cluster = Cluster()
+        self.heartbeat = Config().USER_HEARTBEAT_INTERVAL
+        self.update_interval()
+        self.update_user_accounts()
+
+    def update_user_accounts(self, auto=False, old=None):
+        self.user_accounts = Config().USER_ACCOUNTS
+        if auto:
+            UserLog.add_quick_log(UserLog.MESSAGE_USERS_DID_CHANGED).flush()
+            self.refresh_users(old)
+
+    def update_interval(self, auto=False):
+        self.interval = Config().USER_HEARTBEAT_INTERVAL
+        if auto: jobs_do(self.users, 'update_user')
 
     @classmethod
     def run(cls):
@@ -28,17 +44,32 @@ class User:
         create_thread_and_run(jobs=self.users, callback_name='run', wait=Const.IS_TEST)
 
     def init_users(self):
-        accounts = config.USER_ACCOUNTS
-        for account in accounts:
-            user = UserJob(info=account, user=self)
-            self.users.append(user)
+        for account in self.user_accounts:
+            self.init_user(account)
+
+    def init_user(self, info):
+        user = UserJob(info=info)
+        self.users.append(user)
+
+    def refresh_users(self, old):
+        for account in self.user_accounts:
+            key = account.get('key')
+            old_account = array_dict_find_by_key_value(old, 'key', key)
+            if old_account and account != old_account:
+                user = self.get_user(key)
+                user.init_data(account)
+            elif not old_account:
+                self.init_user(account)
+        for account in old:  # 退出已删除的用户
+            if not array_dict_find_by_key_value(self.user_accounts, 'key', account.get('key')):
+                user = self.get_user(account.get('key'))
+                user.destroy()
 
     @classmethod
-    def get_user(cls, key):
+    def get_user(cls, key) -> UserJob:
         self = cls()
         for user in self.users:
-            if user.key == key:
-                return user
+            if user.key == key: return user
         return None
 
     @classmethod

@@ -44,6 +44,7 @@ class Config:
 
     # 集群配置
     CLUSTER_ENABLED = 1
+    NODE_SLAVE_CAN_BE_MASTER = 1
     NODE_IS_MASTER = 1
     NODE_NAME = ''
     REDIS_HOST = ''
@@ -52,6 +53,20 @@ class Config:
 
     envs = []
     retry_time = 5
+
+    disallow_update_cofigs = [
+        'CLUSTER_ENABLED',
+        'NODE_IS_MASTER',
+        'NODE_NAME',
+        'REDIS_HOST',
+        'REDIS_PORT',
+        'REDIS_PASSWORD',
+    ]
+
+    def __init__(self):
+        self.init_envs()
+        if Config().is_slave():
+            self.refresh_configs(True)
 
     @classmethod
     def run(cls):
@@ -63,27 +78,26 @@ class Config:
     #     self = cls()
 
     def start(self):
-        self.init_envs()
         self.save_to_remote()
-        # self.refresh_configs()
         create_thread_and_run(self, 'refresh_configs', wait=False)
 
-    def refresh_configs(self):
+    def refresh_configs(self, once=False):
         if not self.is_cluster_enabled(): return
         while True:
             remote_configs = self.get_remote_config()
-            self.update_configs_from_remote(remote_configs)
+            self.update_configs_from_remote(remote_configs, once)
+            if once: break
             stay_second(self.retry_time)
 
     def get_remote_config(self):
         if not self.is_cluster_enabled(): return
-        from py12306.cluster.cluster import Distributed
-        return Distributed().session.get_pickle(Distributed().KEY_CONFIGS, {})
+        from py12306.cluster.cluster import Cluster
+        return Cluster().session.get_pickle(Cluster().KEY_CONFIGS, {})
 
     def save_to_remote(self):
         if not self.is_master(): return
-        from py12306.cluster.cluster import Distributed
-        Distributed().session.set_pickle(Distributed().KEY_CONFIGS, self.envs)
+        from py12306.cluster.cluster import Cluster
+        Cluster().session.set_pickle(Cluster().KEY_CONFIGS, self.envs)
 
     def init_envs(self):
         self.envs = EnvLoader.load_with_file(self.CONFIG_FILE)
@@ -93,31 +107,36 @@ class Config:
         for key, value in envs:
             setattr(self, key, value)
 
-    def update_configs_from_remote(self, envs):
+    def update_configs_from_remote(self, envs, first=False):
         if envs == self.envs: return
         from py12306.query.query import Query
+        from py12306.user.user import User
         for key, value in envs:
-            if key == 'USER_ACCOUNTS' and value != self.USER_ACCOUNTS:  # 用户修改
-                setattr(self, key, value)
-                print('用户修改了') # TODO
-            elif key == 'QUERY_JOBS' and value != self.QUERY_JOBS:  # 任务修改
-                setattr(self, key, value) and Query().update_query_jobs(auto=True)
-            elif key == 'QUERY_INTERVAL' and value != self.QUERY_INTERVAL:  # 任务修改
-                setattr(self, key, value) and Query().update_query_interval(auto=True)
+            if key in self.disallow_update_cofigs: continue
             if value != -1:
+                old = getattr(self, key)
                 setattr(self, key, value)
+                if not first:
+                    if key == 'USER_ACCOUNTS' and old != value:
+                        # 用户修改 print('用户修改了')
+                        User.update_user_accounts(auto=True, old=old)
+                    elif key == 'QUERY_JOBS' and old != value:
+                        Query().update_query_jobs(auto=True)  # 任务修改
+                    elif key == 'QUERY_INTERVAL' and old != value:
+                        Query().update_query_interval(auto=True)
 
     @staticmethod
     def is_master():  # 是不是 主
-        return Config.CLUSTER_ENABLED and Config.NODE_IS_MASTER
+        from py12306.cluster.cluster import Cluster
+        return Config().CLUSTER_ENABLED and (Config().NODE_IS_MASTER or Cluster().is_master)
 
     @staticmethod
     def is_slave():  # 是不是 从
-        return Config.CLUSTER_ENABLED and not Config.NODE_IS_MASTER
+        return Config().CLUSTER_ENABLED and not Config.is_master()
 
     @staticmethod
     def is_cluster_enabled():
-        return Config.CLUSTER_ENABLED
+        return Config().CLUSTER_ENABLED
 
     # @staticmethod
     # def get_members():

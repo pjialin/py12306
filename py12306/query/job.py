@@ -88,11 +88,11 @@ class Job:
                 self.handle_response(response)
                 self.safe_stay()
                 if is_main_thread():
-                    QueryLog.flush(sep='\t\t')
+                    QueryLog.flush(sep='\t\t', publish=False)
         if is_main_thread():
-            QueryLog.add_quick_log('').flush()
+            QueryLog.add_quick_log('').flush(publish=False)
         else:
-            QueryLog.add_log('\n').flush(sep='\t\t')
+            QueryLog.add_log('\n').flush(sep='\t\t',publish=False)
 
     def query_by_date(self, date):
         """

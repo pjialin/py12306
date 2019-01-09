@@ -4,7 +4,7 @@ import sys
 from os import path
 
 from py12306.config import Config
-from py12306.cluster.cluster import Distributed
+from py12306.cluster.cluster import Cluster
 from py12306.log.base import BaseLog
 from py12306.helpers.func import *
 
@@ -36,10 +36,11 @@ class QueryLog(BaseLog):
     def __init__(self):
         super().__init__()
         self.data_path = Config().QUERY_DATA_DIR + 'status.json'
-        self.cluster = Distributed()
-        self.init_data()
+        self.cluster = Cluster()
 
-    def init_data(self):
+    @classmethod
+    def init_data(cls):
+        self = cls()
         # 获取上次记录
         if Const.IS_TEST: return
         result = False
@@ -57,16 +58,16 @@ class QueryLog(BaseLog):
             self.print_data_restored()
 
     def get_data_from_cluster(self):
-        query_count = self.cluster.session.get(Distributed.KEY_QUERY_COUNT, 0)
-        last_time = self.cluster.session.get(Distributed.KEY_QUERY_LAST_TIME, '')
+        query_count = self.cluster.session.get(Cluster.KEY_QUERY_COUNT, 0)
+        last_time = self.cluster.session.get(Cluster.KEY_QUERY_LAST_TIME, '')
         if query_count and last_time:
             return {'query_count': query_count, 'last_time': last_time}
         return False
 
     def refresh_data_of_cluster(self):
         return {
-            'query_count': self.cluster.session.incr(Distributed.KEY_QUERY_COUNT),
-            'last_time': self.cluster.session.set(Distributed.KEY_QUERY_LAST_TIME, time_now()),
+            'query_count': self.cluster.session.incr(Cluster.KEY_QUERY_COUNT),
+            'last_time': self.cluster.session.set(Cluster.KEY_QUERY_LAST_TIME, time_now()),
         }
 
     @classmethod
@@ -144,7 +145,7 @@ class QueryLog(BaseLog):
         self.add_log('=== 正在进行第 {query_count} 次查询 === {time}'.format(query_count=self.data.get('query_count'),
                                                                      time=datetime.datetime.now()))
         if is_main_thread():
-            self.flush()
+            self.flush(publish=False)
         return self
 
     @classmethod
@@ -158,7 +159,7 @@ class QueryLog(BaseLog):
         self.add_quick_log('|=== 查询记录恢复成功 上次查询 {last_date} ===|'.format(last_date=self.data.get('last_time')))
         self.add_quick_log('============================================================')
         self.add_quick_log('')
-        self.flush()
+        self.flush(publish=False)
         return self
 
     def refresh_data(self):

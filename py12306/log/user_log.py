@@ -24,6 +24,11 @@ class UserLog(BaseLog):
 
     MESSAGE_WAIT_USER_INIT_COMPLETE = '未找到可用账号或用户正在初始化，{} 秒后重试'
 
+    MESSAGE_USERS_DID_CHANGED = '\n用户信息已更新，正在重新加载...'
+
+    MESSAGE_USER_BEING_DESTROY = '用户 {} 已退出'
+    MESSAGE_USER_COOKIE_NOT_FOUND_FROM_REMOTE = '用户 {} 状态加载中...'
+
     def __init__(self):
         super().__init__()
         self.init_data()
@@ -38,14 +43,14 @@ class UserLog(BaseLog):
         :return:
         """
         self = cls()
-        self.add_log('# 发现 {} 个用户 #'.format(len(users)))
+        self.add_quick_log('# 发现 {} 个用户 #'.format(len(users)))
         self.flush()
         return self
 
     @classmethod
     def print_welcome_user(cls, user):
         self = cls()
-        self.add_log('# 欢迎回来，{} #'.format(user.get_name()))
+        self.add_quick_log('# 欢迎回来，{} #'.format(user.get_name()))
         self.flush()
         return self
 
