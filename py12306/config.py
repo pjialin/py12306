@@ -118,8 +118,7 @@ class Config:
                 setattr(self, key, value)
                 if not first:
                     if key == 'USER_ACCOUNTS' and old != value:
-                        # 用户修改 print('用户修改了')
-                        User.update_user_accounts(auto=True, old=old)
+                        User().update_user_accounts(auto=True, old=old)
                     elif key == 'QUERY_JOBS' and old != value:
                         Query().update_query_jobs(auto=True)  # 任务修改
                     elif key == 'QUERY_INTERVAL' and old != value:

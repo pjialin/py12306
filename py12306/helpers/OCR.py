@@ -35,13 +35,14 @@ class OCR:
 
     def get_image_position_by_offset(self, offsets):
         positions = []
-        width = 70
-        height = 70
-        random_num = random.randint(0, 8)
+        width = 75
+        height = 75
         for offset in offsets:
+            random_x = random.randint(-5, 5)
+            random_y = random.randint(-5, 5)
             offset = int(offset)
-            x = width * (offset % 5) - width / 2 + random_num
-            y = height * math.ceil(offset / 4) - height / 2 - random_num
+            x = width * ((offset - 1) % 4 + 1) - width / 2 + random_x
+            y = height * math.ceil(offset / 4) - height / 2 + random_y
             positions.append(int(x))
             positions.append(int(y))
         return positions

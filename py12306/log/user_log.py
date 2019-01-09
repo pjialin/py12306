@@ -57,7 +57,7 @@ class UserLog(BaseLog):
     @classmethod
     def print_start_login(cls, user):
         self = cls()
-        self.add_log('正在登录用户 {}'.format(user.user_name))
+        self.add_quick_log('正在登录用户 {}'.format(user.user_name))
         self.flush()
         return self
 

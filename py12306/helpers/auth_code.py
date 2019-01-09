@@ -60,7 +60,7 @@ class AuthCode:
         校验验证码
         :return:
         """
-        url = API_AUTH_CODE_CHECK.get('url').format(answer=answer, random=random.random())
+        url = API_AUTH_CODE_CHECK.get('url').format(answer=answer, random=time_int())
         response = self.session.get(url)
         result = response.json()
         if result.get('result_code') == '4':

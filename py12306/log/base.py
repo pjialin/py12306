@@ -63,7 +63,7 @@ class BaseLog:
             if is_main_thread():
                 self.logs = []
             else:
-                if logs: del self.thread_logs[current_thread_id()]
+                if logs and self.thread_logs.get(current_thread_id()): del self.thread_logs[current_thread_id()]
 
     @classmethod
     def add_quick_log(cls, content=''):

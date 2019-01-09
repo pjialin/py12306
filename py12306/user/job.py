@@ -14,6 +14,7 @@ from py12306.log.user_log import UserLog
 class UserJob:
     # heartbeat = 60 * 2  # 心跳保持时长
     heartbeat_interval = 60 * 2
+    check_interval = 5
     key = None
     user_name = ''
     password = ''
@@ -67,7 +68,7 @@ class UserJob:
                 if Config().is_master() and not self.cookie: self.load_user_from_remote()  # 主节点加载一次 Cookie
                 self.check_heartbeat()
             if Const.IS_TEST: return
-            sleep(self.heartbeat_interval)
+            sleep(self.check_interval)
 
     def check_heartbeat(self):
         # 心跳检测
@@ -75,7 +76,7 @@ class UserJob:
             return True
         # 只有主节点才能走到这
         if self.is_first_time() or not self.check_user_is_login():
-            self.handle_login()
+            if not self.handle_login(): return
 
         self.is_ready = True
         message = UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), self.heartbeat_interval)
@@ -130,6 +131,7 @@ class UserJob:
             user_name = self.auth_uamauthclient(new_tk)
             self.update_user_info({'user_name': user_name})
             self.login_did_success()
+            return True
         elif result.get('result_code') == 2:  # 账号之内错误
             # 登录失败，用户名或密码为空
             # 密码输入错误
@@ -237,11 +239,13 @@ class UserJob:
                 UserLog.add_quick_log(UserLog.MESSAGE_USER_COOKIE_NOT_FOUND_FROM_REMOTE.format(self.user_name)).flush()
                 stay_second(self.retry_time)
                 return self.load_user_from_remote()
-        self.session.cookies.update(cookie)
-        if not self.cookie:  # 第一次加载
-            self.cookie = True
-            self.did_loaded_user()
-        return True
+        if cookie:
+            self.session.cookies.update(cookie)
+            if not self.cookie:  # 第一次加载
+                self.cookie = True
+                self.did_loaded_user()
+            return True
+        return False
 
     def check_is_ready(self):
         return self.is_ready
