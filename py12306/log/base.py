@@ -1,6 +1,7 @@
 import os
 import sys
 
+from py12306.config import Config
 from py12306.helpers.func import *
 
 
@@ -26,8 +27,8 @@ class BaseLog:
         self = cls()
         logs = self.get_logs()
         # 输出到文件
-        if file == None and config.OUT_PUT_LOG_TO_FILE_ENABLED:  # TODO 文件无法写入友好提示
-            file = open(config.OUT_PUT_LOG_TO_FILE_PATH, 'a')
+        if file == None and Config().OUT_PUT_LOG_TO_FILE_ENABLED:  # TODO 文件无法写入友好提示
+            file = open(Config().OUT_PUT_LOG_TO_FILE_PATH, 'a')
         if not file: file = None
         print(*logs, sep=sep, end=end, file=file)
         self.empty_logs(logs)

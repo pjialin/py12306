@@ -37,9 +37,9 @@ class CommonLog(BaseLog):
         if Const.IS_TEST:
             self.add_quick_log()
             self.add_quick_log('当前为测试模式，程序运行完成后自动结束')
-        if not Const.IS_TEST and config.OUT_PUT_LOG_TO_FILE_ENABLED:
+        if not Const.IS_TEST and Config().OUT_PUT_LOG_TO_FILE_ENABLED:
             self.add_quick_log()
-            self.add_quick_log('日志已输出到文件中: {}'.format(config.OUT_PUT_LOG_TO_FILE_PATH))
+            self.add_quick_log('日志已输出到文件中: {}'.format(Config().OUT_PUT_LOG_TO_FILE_PATH))
 
         self.add_quick_log()
         self.flush(file=False)
@@ -52,10 +52,10 @@ class CommonLog(BaseLog):
         enable = '已开启'
         disable = '未开启'
         self.add_quick_log('**** 当前配置 ****')
-        self.add_quick_log('多线程查询: {}'.format(get_true_false_text(config.QUERY_JOB_THREAD_ENABLED, enable, disable)))
-        self.add_quick_log('语音验证码: {}'.format(get_true_false_text(config.NOTIFICATION_BY_VOICE_CODE, enable, disable)))
-        self.add_quick_log('查询间隔: {} 秒'.format(config.QUERY_INTERVAL))
-        self.add_quick_log('用户心跳检测间隔: {} 秒'.format(config.USER_HEARTBEAT_INTERVAL))
+        self.add_quick_log('多线程查询: {}'.format(get_true_false_text(Config().QUERY_JOB_THREAD_ENABLED, enable, disable)))
+        self.add_quick_log('语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
+        self.add_quick_log('查询间隔: {} 秒'.format(Config().QUERY_INTERVAL))
+        self.add_quick_log('用户心跳检测间隔: {} 秒'.format(Config().USER_HEARTBEAT_INTERVAL))
         self.add_quick_log()
         self.flush()
         return self

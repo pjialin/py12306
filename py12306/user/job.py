@@ -1,11 +1,7 @@
-import json
 import pickle
-import re
-from os import path
 
-from py12306.config import *
 from py12306.helpers.api import *
-from py12306.helpers.app import *
+from py12306.app import *
 from py12306.helpers.auth_code import AuthCode
 from py12306.helpers.func import *
 from py12306.helpers.request import Request

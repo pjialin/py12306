@@ -1,4 +1,4 @@
-from py12306.helpers.app import *
+from py12306.app import *
 from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
 from py12306.user.job import UserJob

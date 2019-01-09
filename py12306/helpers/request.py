@@ -1,4 +1,3 @@
-from py12306.helpers.app import *
 from py12306.helpers.func import *
 from requests_html import HTMLSession, HTMLResponse
 
@@ -38,7 +37,7 @@ class Request(HTMLSession):
         重写 json 方法，拦截错误
         :return:
         """
-        from py12306.helpers.app import Dict
+        from py12306.app import Dict
         try:
             result = self.old_json()
             return Dict(result)
