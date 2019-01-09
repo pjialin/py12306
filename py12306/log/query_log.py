@@ -2,6 +2,9 @@ import datetime
 import json
 import sys
 from os import path
+
+from py12306.config import Config
+from py12306.cluster.cluster import Distributed
 from py12306.log.base import BaseLog
 from py12306.helpers.func import *
 
@@ -17,7 +20,7 @@ class QueryLog(BaseLog):
         'query_count': 1,
         'last_time': '',
     }
-    data_path = config.QUERY_DATA_DIR + 'status.json'
+    data_path = None
 
     LOG_INIT_JOBS = ''
 
@@ -26,20 +29,45 @@ class QueryLog(BaseLog):
     MESSAGE_QUERY_LOG_OF_TRAIN_INFO = '{} {}'
     MESSAGE_QUERY_START_BY_DATE = '出发日期 {}: {} - {}'
 
+    MESSAGE_JOBS_DID_CHANGED = '\n任务已更新，正在重新加载...'
+
+    cluster = None
+
     def __init__(self):
         super().__init__()
+        self.data_path = Config().QUERY_DATA_DIR + 'status.json'
+        self.cluster = Distributed()
         self.init_data()
 
     def init_data(self):
         # 获取上次记录
         if Const.IS_TEST: return
-        if path.exists(self.data_path):
+        result = False
+        if not Config.is_cluster_enabled() and path.exists(self.data_path):
             with open(self.data_path, encoding='utf-8') as f:
                 result = f.read()
                 if result:
                     result = json.loads(result)
-                    self.data = {**self.data, **result}
-                    self.print_data_restored()
+
+        if Config.is_cluster_enabled():
+            result = self.get_data_from_cluster()
+
+        if result:
+            self.data = {**self.data, **result}
+            self.print_data_restored()
+
+    def get_data_from_cluster(self):
+        query_count = self.cluster.session.get(Distributed.KEY_QUERY_COUNT, 0)
+        last_time = self.cluster.session.get(Distributed.KEY_QUERY_LAST_TIME, '')
+        if query_count and last_time:
+            return {'query_count': query_count, 'last_time': last_time}
+        return False
+
+    def refresh_data_of_cluster(self):
+        return {
+            'query_count': self.cluster.session.incr(Distributed.KEY_QUERY_COUNT),
+            'last_time': self.cluster.session.set(Distributed.KEY_QUERY_LAST_TIME, time_now()),
+        }
 
     @classmethod
     def print_init_jobs(cls, jobs):
@@ -112,9 +140,9 @@ class QueryLog(BaseLog):
     @classmethod
     def print_job_start(cls):
         self = cls()
+        self.refresh_data()
         self.add_log('=== 正在进行第 {query_count} 次查询 === {time}'.format(query_count=self.data.get('query_count'),
                                                                      time=datetime.datetime.now()))
-        self.refresh_data()
         if is_main_thread():
             self.flush()
         return self
@@ -134,9 +162,12 @@ class QueryLog(BaseLog):
         return self
 
     def refresh_data(self):
-        self.data['query_count'] += 1
-        self.data['last_time'] = str(datetime.datetime.now())
-        self.save_data()
+        if Config.is_cluster_enabled():
+            self.data = {**self.data, **self.refresh_data_of_cluster()}
+        else:
+            self.data['query_count'] += 1
+            self.data['last_time'] = str(datetime.datetime.now())
+            self.save_data()
 
     def save_data(self):
         with open(self.data_path, 'w') as file:

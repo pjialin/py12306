@@ -1,5 +1,8 @@
+import signal
+import sys
+
 from py12306.helpers.func import *
-from py12306.config import *
+from py12306.config import Config
 from py12306.helpers.notification import Notification
 from py12306.log.common_log import CommonLog
 from py12306.log.order_log import OrderLog
@@ -17,6 +20,7 @@ def app_available_check():
     return True
 
 
+@singleton
 class App:
     """
     程序主类
@@ -24,24 +28,58 @@ class App:
     """
 
     @classmethod
+    def run(cls):
+        self = cls()
+        self.start()
+
+    def start(self):
+        Config().run()
+        for sign in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]: signal.signal(sign, self.handler_exit)
+        self.init_class()
+
+    @classmethod
+    def did_start(cls):
+        self = cls()
+        if Config.is_cluster_enabled():
+            from py12306.cluster.cluster import Distributed
+            Distributed().join_cluster()
+
+    def init_class(self):
+        from py12306.cluster.cluster import Distributed
+        if Config.is_cluster_enabled(): Distributed()
+
+    def handler_exit(self, *args, **kwargs):
+        """
+        程序退出
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        if Config.is_cluster_enabled():
+            from py12306.cluster.cluster import Distributed
+            Distributed().left_cluster()
+
+        sys.exit()
+
+    @classmethod
     def check_auto_code(cls):
-        if not config.AUTO_CODE_ACCOUNT.get('user') or not config.AUTO_CODE_ACCOUNT.get('pwd'):
+        if not Config().AUTO_CODE_ACCOUNT.get('user') or not Config().AUTO_CODE_ACCOUNT.get('pwd'):
             return False
         return True
 
     @classmethod
     def check_user_account_is_empty(cls):
-        if config.USER_ACCOUNTS:
-            for account in config.USER_ACCOUNTS:
+        if Config().USER_ACCOUNTS:
+            for account in Config().USER_ACCOUNTS:
                 if account:
                     return True
         return False
 
     @classmethod
     def test_send_notifications(cls):
-        if config.NOTIFICATION_BY_VOICE_CODE:  # 语音通知
+        if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_VOICE_CODE).flush()
-            Notification.voice_code(config.NOTIFICATION_VOICE_CODE_PHONE, '张三',
+            Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, '张三',
                                     OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format('北京',
                                                                                                              '深圳'))
 

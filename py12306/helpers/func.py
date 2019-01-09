@@ -6,7 +6,8 @@ import functools
 from time import sleep
 from types import MethodType
 
-from py12306 import config
+
+# from py12306 import config
 
 
 def singleton(cls):
@@ -34,13 +35,13 @@ def singleton(cls):
     return cls
 
 
-# 座位
-def get_seat_number_by_name(name):
-    return config.SEAT_TYPES[name]
+# 座位 # TODO
+# def get_number_by_name(name):
+#     return config.SEAT_TYPES[name]
 
 
-def get_seat_name_by_number(number):
-    return [k for k, v in config.SEAT_TYPES.items() if v == number].pop()
+# def get_seat_name_by_number(number): # TODO remove config
+# return [k for k, v in config.SEAT_TYPES.items() if v == number].pop()
 
 
 # 初始化间隔
@@ -106,6 +107,16 @@ def dict_find_key_by_value(data, value, default=None):
     return result.pop() if len(result) else default
 
 
+def dict_count_key_num(data: dict, key, like=False):
+    count = 0
+    for k in data.keys():
+        if like:
+            if k.find(key) >= 0: count += 1
+        elif k == key:
+            count += 1
+    return count
+
+
 def array_dict_find_by_key_value(data, key, value, default=None):
     result = [v for k, v in enumerate(data) if key in v and v[key] == value]
     return result.pop() if len(result) else default
@@ -125,6 +136,12 @@ def expand_class(cls, key, value, keep_old=True):
         setattr(cls, 'old_' + key, getattr(cls, key))
     setattr(cls, key, MethodType(value, cls))
     return cls
+
+
+def available_value(value):
+    if isinstance(value, str) or isinstance(value, bytes):
+        return value
+    return str(value)
 
 
 @singleton

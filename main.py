@@ -1,20 +1,18 @@
 # encoding=utf8
 import sys
-from time import sleep
 
-from py12306.helpers.func import *
-from py12306.helpers.app import *
+from py12306.app import *
 from py12306.log.common_log import CommonLog
 from py12306.query.query import Query
-from py12306.user.user import User
 
 
 def main():
     if '--test' in sys.argv or '-t' in sys.argv: test()
+    App.run()
     CommonLog.print_welcome().print_configs()
-
-    App.run_check()
-    User.run()
+    App.did_start()
+    # App.run_check()
+    # User.run()
     Query.run()
     if not Const.IS_TEST:
         while True:
@@ -34,7 +32,7 @@ def test():
     :return:
     """
     Const.IS_TEST = True
-    config.OUT_PUT_LOG_TO_FILE_ENABLED = False
+    Config.OUT_PUT_LOG_TO_FILE_ENABLED = False
     if '--test-notification' in sys.argv or '-n' in sys.argv:
         Const.IS_TEST_NOTIFICATION = True
     pass

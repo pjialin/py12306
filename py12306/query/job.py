@@ -1,5 +1,7 @@
+from py12306.config import Config
 from py12306.helpers.api import LEFT_TICKETS
 from py12306.helpers.station import Station
+from py12306.helpers.type import OrderSeatType, SeatType
 from py12306.log.query_log import QueryLog
 from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
@@ -97,10 +99,9 @@ class Job:
         通过日期进行查询
         :return:
         """
-        QueryLog.add_log(
-            ('\n' if not is_main_thread() else '') + QueryLog.MESSAGE_QUERY_START_BY_DATE.format(date,
-                                                                                                 self.left_station,
-                                                                                                 self.arrive_station))
+        QueryLog.add_log(('\n' if not is_main_thread() else '') + QueryLog.MESSAGE_QUERY_START_BY_DATE.format(date,
+                                                                                                              self.left_station,
+                                                                                                              self.arrive_station))
         url = LEFT_TICKETS.get('url').format(left_date=date, left_station=self.left_station_code,
                                              arrive_station=self.arrive_station_code, type='leftTicket/queryZ')
 
@@ -128,7 +129,7 @@ class Job:
             if not self.is_has_ticket(ticket_info):
                 continue
             allow_seats = self.allow_seats if self.allow_seats else list(
-                config.SEAT_TYPES.values())  # 未设置 则所有可用 TODO  合法检测
+                Config.SEAT_TYPES.values())  # 未设置 则所有可用 TODO  合法检测
             self.handle_seats(allow_seats, ticket_info)
 
     def handle_seats(self, allow_seats, ticket_info):
@@ -192,8 +193,8 @@ class Job:
         self.passengers = passengers
 
     def set_seat(self, seat):
-        self.current_seat = get_seat_number_by_name(seat)
-        self.current_order_seat = config.ORDER_SEAT_TYPES[seat]
+        self.current_seat = SeatType.dicts.get(seat)
+        self.current_order_seat = OrderSeatType.dicts.get(seat)
 
     def get_user(self):
         user = User.get_user(self.account_key)

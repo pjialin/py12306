@@ -16,10 +16,11 @@ class AuthCode:
     验证码类
     """
     session = None
-    data_path = config.RUNTIME_DIR
+    data_path = None
     retry_time = 5
 
     def __init__(self, session):
+        self.data_path = config.RUNTIME_DIR
         self.session = session
 
     @classmethod

@@ -1,4 +1,6 @@
 from os import path
+
+from py12306.config import Config
 from py12306.helpers.func import *
 
 
@@ -7,8 +9,8 @@ class Station:
     stations = []
 
     def __init__(self):
-        if path.exists(config.STATION_FILE):
-            result = open(config.STATION_FILE, encoding='utf-8').read()
+        if path.exists(Config().STATION_FILE):
+            result = open(Config().STATION_FILE, encoding='utf-8').read()
             result = result.lstrip('@').split('@')
             for i in result:
                 tmp_info = i.split('|')

@@ -1,13 +1,10 @@
 import urllib
-import random
 
-from py12306.config import UserType
+# from py12306.config import UserType
 from py12306.helpers.api import *
-from py12306.helpers.app import *
 from py12306.helpers.func import *
 from py12306.helpers.notification import Notification
 from py12306.log.order_log import OrderLog
-from py12306.log.user_log import UserLog
 
 
 # from py12306.query.job import Job
