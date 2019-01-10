@@ -1,3 +1,4 @@
+import os
 import signal
 import sys
 
@@ -41,7 +42,7 @@ class App:
     def did_start(cls):
         self = cls()
         from py12306.helpers.station import Station
-        Station() # 防止多线程时初始化出现问题
+        Station()  # 防止多线程时初始化出现问题
         # if Config.is_cluster_enabled():
         #     from py12306.cluster.cluster import Cluster
         #     Cluster().run()
@@ -78,6 +79,11 @@ class App:
                     return False
         return True
 
+    @staticmethod
+    def check_data_dir_exists():
+        os.makedirs(Config().QUERY_DATA_DIR, exist_ok=True)
+        os.makedirs(Config().USER_DATA_DIR, exist_ok=True)
+
     @classmethod
     def test_send_notifications(cls):
         if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
@@ -92,6 +98,7 @@ class App:
         待优化
         :return:
         """
+        cls.check_data_dir_exists()
         if not cls.check_user_account_is_empty():
             # CommonLog.add_quick_log(CommonLog.MESSAGE_CHECK_EMPTY_USER_ACCOUNT).flush(exit=True, publish=False) # 不填写用户则不自动下单
             if not cls.check_auto_code():
