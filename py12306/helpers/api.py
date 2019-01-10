@@ -20,6 +20,7 @@ API_USER_CHECK = {
 API_AUTH_CODE_DOWNLOAD = {
     'url': BASE_URL_OF_12306 + '/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&_={random}'
 }
+API_AUTH_CODE_BASE64_DOWNLOAD = BASE_URL_OF_12306 + '/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand&_={random}'
 API_AUTH_CODE_CHECK = {
     'url': BASE_URL_OF_12306 + '/passport/captcha/captcha-check?answer={answer}&rand=sjrand&login_site=E&_={random}'
 }
