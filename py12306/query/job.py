@@ -182,7 +182,6 @@ class Job:
             if Config().is_cluster_enabled():
                 if self.cluster.get_lock(lock_id, Cluster.lock_do_order_time,
                                          {'node': self.cluster.node_name}):  # 获得下单锁
-                    QueryLog.add_quick_log('拿到锁' + lock_id).flush()
                     order_result = self.do_order(user)
                     if not order_result:  # 下单失败，解锁
                         self.cluster.release_lock(lock_id)
