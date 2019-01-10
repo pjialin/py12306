@@ -15,23 +15,24 @@ from py12306.log.cluster_log import ClusterLog
 
 @singleton
 class Cluster():
-    KEY_QUERY_COUNT = 'query_count'
-    KEY_QUERY_LAST_TIME = 'query_last_time'
-    KEY_CONFIGS = 'configs'
-    KEY_NODES = 'nodes'
-    KEY_CHANNEL_LOG = 'channel_log'
-    KEY_CHANNEL_EVENT = 'channel_even'
-    KEY_USER_COOKIES = 'user_cookies'
-    KEY_USER_LAST_HEARTBEAT = 'user_last_heartbeat'
-    KEY_NODES_ALIVE = 'nodes_alive'
+    KEY_PREFIX = 'py12306_'  # 目前只能手动
+    KEY_QUERY_COUNT = KEY_PREFIX + 'query_count'
+    KEY_QUERY_LAST_TIME = KEY_PREFIX + 'query_last_time'
+    KEY_CONFIGS = KEY_PREFIX + 'configs'
+    KEY_NODES = KEY_PREFIX + 'nodes'
+    KEY_CHANNEL_LOG = KEY_PREFIX + 'channel_log'
+    KEY_CHANNEL_EVENT = KEY_PREFIX + 'channel_even'
+    KEY_USER_COOKIES = KEY_PREFIX + 'user_cookies'
+    KEY_USER_LAST_HEARTBEAT = KEY_PREFIX + 'user_last_heartbeat'
+    KEY_NODES_ALIVE = KEY_PREFIX + 'nodes_alive'
 
     # 锁
-    KEY_LOCK_INIT_USER = 'lock_init_user'  # 暂未使用
-    KEY_LOCK_DO_ORDER = 'lock_do_order'  # 订单锁
+    KEY_LOCK_INIT_USER = KEY_PREFIX + 'lock_init_user'  # 暂未使用
+    KEY_LOCK_DO_ORDER = KEY_PREFIX + 'lock_do_order'  # 订单锁
     lock_do_order_time = 60 * 1  # 订单锁超时时间
 
-    lock_prefix = 'lock_'  # 锁键前缀
-    lock_info_prefix = 'info_'
+    lock_prefix = KEY_PREFIX + 'lock_'  # 锁键前缀
+    lock_info_prefix = KEY_PREFIX + 'info_'
 
     KEY_MASTER = 1
     KEY_SLAVE = 0
@@ -220,20 +221,20 @@ class Cluster():
         if method:
             create_thread_and_run(Event(), event_name, Const.IS_TEST, kwargs={'data': data, 'callback': True})
 
-    def get_lock(self, key, timeout=1, info={}):
+    def get_lock(self, key: str, timeout=1, info={}):
         timeout = int(time.time()) + timeout
         res = self.session.setnx(key, timeout)
         if res:
-            if info: self.session.set_dict(self.lock_info_prefix + key, info)  # 存储额外信息
+            if info: self.session.set_dict(self.lock_info_prefix + key.replace(self.KEY_PREFIX, ''), info)  # 存储额外信息
             return True
         return False
 
     def get_lock_info(self, key, default={}):
-        return self.session.get_dict(self.lock_info_prefix + key, default=default)
+        return self.session.get_dict(self.lock_info_prefix + key.replace(self.KEY_PREFIX, ''), default=default)
 
     def release_lock(self, key):
         self.session.delete(key)
-        self.session.delete(self.lock_info_prefix + key)
+        self.session.delete(self.lock_info_prefix + key.replace(self.KEY_PREFIX, ''))
 
     def check_locks(self):
         locks = self.session.keys(self.lock_prefix + '*')
