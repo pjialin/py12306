@@ -11,6 +11,7 @@ from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
 from py12306.order.order import Order
 from py12306.user.user import User
+from py12306.helpers.event import Event
 
 
 class Job:
@@ -184,8 +185,7 @@ class Job:
 
             # 任务已成功 通知集群停止任务
             if order_result:
-                self.cluster.publish_event(Cluster.KEY_EVENT_JOB_DESTROY, {'name': self.job_name})
-                self.destroy()
+                Event().job_destroy({'name': self.job_name})
 
     def do_order(self, user):
         self.check_passengers()
@@ -248,8 +248,8 @@ class Job:
 
     def check_passengers(self):
         if not self.passengers:
+            QueryLog.add_quick_log(QueryLog.MESSAGE_CHECK_PASSENGERS).flush()
             self.set_passengers(User.get_passenger_for_members(self.members, self.account_key))
-            QueryLog.add_quick_log(QueryLog.MESSAGE_INIT_PASSENGERS_SUCCESS)
         return True
 
     def refresh_station(self, station):

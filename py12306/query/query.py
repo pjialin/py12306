@@ -54,7 +54,10 @@ class Query:
         if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
             create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
         else:
-            while True: jobs_do(self.jobs, 'run')
+            while True:
+                jobs_do(self.jobs, 'run')
+                if Const.IS_TEST: return
+
         # while True:
         #     app_available_check()
         #     if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
@@ -83,9 +86,9 @@ class Query:
         return objects_find_object_by_key_value(self.jobs, 'job_name', name)
 
     @classmethod
-    def job_by_account_id(cls, account_id) -> Job:
+    def job_by_account_key(cls, account_key) -> Job:
         self = cls()
-        return objects_find_object_by_key_value(self.jobs, 'account_id', account_id)
+        return objects_find_object_by_key_value(self.jobs, 'account_key', account_key)
 
 
 # def get_jobs_from_cluster(self):

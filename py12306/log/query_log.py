@@ -36,6 +36,7 @@ class QueryLog(BaseLog):
     MESSAGE_QUERY_JOB_BEING_DESTROY = '当前查询任务 {} 已结束'
 
     MESSAGE_INIT_PASSENGERS_SUCCESS = '初始化乘客成功'
+    MESSAGE_CHECK_PASSENGERS = '正在验证乘客信息'
 
     cluster = None
 

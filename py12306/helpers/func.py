@@ -95,11 +95,11 @@ def time_int():
     return int(time.time())
 
 
-def create_thread_and_run(jobs, callback_name, wait=True, daemon=True, args=()):
+def create_thread_and_run(jobs, callback_name, wait=True, daemon=True, args=(), kwargs={}):
     threads = []
     if not isinstance(jobs, list): jobs = [jobs]
     for job in jobs:
-        thread = threading.Thread(target=getattr(job, callback_name), args=args)
+        thread = threading.Thread(target=getattr(job, callback_name), args=args, kwargs=kwargs)
         thread.setDaemon(daemon)
         thread.start()
         threads.append(thread)

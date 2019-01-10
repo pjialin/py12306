@@ -7,6 +7,7 @@ from py12306.cluster.cluster import Cluster
 from py12306.helpers.api import *
 from py12306.app import *
 from py12306.helpers.auth_code import AuthCode
+from py12306.helpers.event import Event
 from py12306.helpers.func import *
 from py12306.helpers.request import Request
 from py12306.helpers.type import UserType
@@ -213,7 +214,8 @@ class UserJob:
         UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name)).flush()
         if self.check_user_is_login() and self.get_user_info():
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
-            self.cluster.publish_event(Cluster.KEY_EVENT_USER_LOADED, {'key': self.key})  # 发布通知
+            Event().user_loaded({'key': self.key}) # 发布通知
+            self.is_ready = True
             UserLog.print_welcome_user(self)
         else:
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
