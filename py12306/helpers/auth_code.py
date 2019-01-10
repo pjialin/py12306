@@ -5,7 +5,7 @@ from requests.exceptions import SSLError
 
 from py12306.config import Config
 from py12306.helpers.OCR import OCR
-from py12306.helpers.api import API_AUTH_CODE_DOWNLOAD, API_AUTH_CODE_CHECK
+from py12306.helpers.api import *
 from py12306.helpers.request import Request
 from py12306.helpers.func import *
 from py12306.log.common_log import CommonLog
@@ -27,8 +27,8 @@ class AuthCode:
     @classmethod
     def get_auth_code(cls, session):
         self = cls(session)
-        img_path = self.download_code()
-        position = OCR.get_img_position(img_path)
+        img = self.download_code()
+        position = OCR.get_img_position(img)
         if not position:  # 打码失败
             return self.retry_get_auth_code()
 
@@ -43,17 +43,21 @@ class AuthCode:
         return self.get_auth_code(self.session)
 
     def download_code(self):
-        url = API_AUTH_CODE_DOWNLOAD.get('url').format(random=random.random())
-        code_path = self.data_path + 'code.png'
+        url = API_AUTH_CODE_BASE64_DOWNLOAD.format(random=random.random())
+        # code_path = self.data_path + 'code.png'
         try:
             UserLog.add_quick_log(UserLog.MESSAGE_DOWNLAODING_THE_CODE).flush()
-            response = self.session.save_to_file(url, code_path)  # TODO 返回错误情况
+            # response = self.session.save_to_file(url, code_path)  # TODO 返回错误情况
+            response = self.session.get(url)
+            result = response.json()
+            if result.get('image'):
+                return result.get('image')
+            raise SSLError
         except SSLError as e:
             UserLog.add_quick_log(
                 UserLog.MESSAGE_DOWNLAOD_AUTH_CODE_FAIL.format(e, self.retry_time)).flush()
             time.sleep(self.retry_time)
             return self.download_code()
-        return code_path
 
     def check_code(self, answer):
         """

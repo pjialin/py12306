@@ -83,7 +83,6 @@ python main.py
 
 
 ## Docker 使用
-！！发现请求会有问题，正在调试中 01-10 18:54
 **1. 将配置文件下载到本地***
 ```bash
 docker run --rm pjialin/py12306 cat /config/env.py > env.py

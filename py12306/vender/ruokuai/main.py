@@ -21,7 +21,7 @@ class RKClient(object):
             'User-Agent': 'ben',
         }
 
-    def rk_create(self, im, im_type, timeout=60):
+    def rk_create(self, image, im_type, timeout=20):
         """
         im: 图片字节
         im_type: 题目类型
@@ -29,10 +29,10 @@ class RKClient(object):
         params = {
             'typeid': im_type,
             'timeout': timeout,
+            'image': image
         }
         params.update(self.base_params)
-        files = {'image': ('a.jpg', im)}
-        r = requests.post('http://api.ruokuai.com/create.json', data=params, files=files, headers=self.headers)
+        r = requests.post('http://api.ruokuai.com/create.json', data=params, timeout=timeout)
         return r.json()
 
     def rk_report_error(self, im_id):
@@ -49,6 +49,6 @@ class RKClient(object):
 
 if __name__ == '__main__':
     rc = RKClient('username', 'password', 'soft_id', 'soft_key')
-    im = open('a.jpg', 'rb').read()
+    # im = open('a.jpg', 'rb').read()
     # print rc.rk_create(im, 3040)
 
