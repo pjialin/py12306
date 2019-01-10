@@ -83,7 +83,6 @@ class UserJob:
             return True
         # 只有主节点才能走到这
         if self.is_first_time() or not self.check_user_is_login():
-            a = 1
             self.is_ready = False
             if not self.handle_login(): return
 
