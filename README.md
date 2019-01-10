@@ -99,6 +99,8 @@ docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 ## 更新
 ### 19-01-10
 * 支持分布式集群
+### 19-01-11
+* 配置文件支持动态修改
 
 ## 下单成功截图
 ![下单成功图片](./data/images/order_success.png)

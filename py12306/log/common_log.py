@@ -23,6 +23,8 @@ class CommonLog(BaseLog):
 
     MESSAGE_TEST_SEND_VOICE_CODE = '正在测试发送语音验证码...'
 
+    MESSAGE_CONFIG_FILE_DID_CHANGED = '配置文件已修改，正在重新加载中'
+
     def __init__(self):
         super().__init__()
         self.init_data()

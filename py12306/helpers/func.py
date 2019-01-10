@@ -1,4 +1,7 @@
 import datetime
+import hashlib
+import json
+import os
 import random
 import threading
 import functools
@@ -87,6 +90,16 @@ def time_now():
     return datetime.datetime.now()
 
 
+def timestamp_to_time(timestamp):
+    time_struct = time.localtime(timestamp)
+    return time.strftime('%Y-%m-%d %H:%M:%S', time_struct)
+
+
+def get_file_modify_time(filePath):
+    timestamp = os.path.getmtime(filePath)
+    return timestamp_to_time(timestamp)
+
+
 def str_to_time(str):
     return datetime.datetime.strptime(str, '%Y-%m-%d %H:%M:%S.%f')
 
@@ -158,6 +171,10 @@ def available_value(value):
     if isinstance(value, str) or isinstance(value, bytes):
         return value
     return str(value)
+
+
+def md5(value):
+    return hashlib.md5(json.dumps(value).encode()).hexdigest()
 
 
 @singleton

@@ -45,7 +45,7 @@ class Config:
     NOTIFICATION_API_APP_CODE = ''
 
     # 集群配置
-    CLUSTER_ENABLED = 1
+    CLUSTER_ENABLED = 0
     NODE_SLAVE_CAN_BE_MASTER = 1
     NODE_IS_MASTER = 1
     NODE_NAME = ''
@@ -55,6 +55,7 @@ class Config:
 
     envs = []
     retry_time = 5
+    last_modify_time = 0
 
     disallow_update_cofigs = [
         'CLUSTER_ENABLED',
@@ -67,8 +68,11 @@ class Config:
 
     def __init__(self):
         self.init_envs()
+        self.last_modify_time = get_file_modify_time(self.CONFIG_FILE)
         if Config().is_slave():
             self.refresh_configs(True)
+        else:
+            create_thread_and_run(self, 'watch_file_change', False)
 
     @classmethod
     def run(cls):
@@ -109,6 +113,24 @@ class Config:
         for key, value in envs:
             setattr(self, key, value)
 
+    def watch_file_change(self):
+        """
+        监听配置文件修改
+        :return:
+        """
+        if Config().is_slave(): return
+        from py12306.log.common_log import CommonLog
+        while True:
+            value = get_file_modify_time(self.CONFIG_FILE)
+            if value > self.last_modify_time:
+                self.last_modify_time = value
+                CommonLog.add_quick_log(CommonLog.MESSAGE_CONFIG_FILE_DID_CHANGED).flush()
+                envs = EnvLoader.load_with_file(self.CONFIG_FILE)
+                self.update_configs_from_remote(envs)
+                if Config().is_master():  # 保存配置
+                    self.save_to_remote()
+            stay_second(self.retry_time)
+
     def update_configs_from_remote(self, envs, first=False):
         if envs == self.envs: return
         from py12306.query.query import Query
@@ -148,8 +170,11 @@ class Config:
     #     return members
 
 
-class EnvLoader():
+class EnvLoader:
     envs = []
+
+    def __init__(self):
+        self.envs = []  # 不是单例不初始化怎么还会有值
 
     @classmethod
     def load_with_file(cls, file):
@@ -161,4 +186,6 @@ class EnvLoader():
         return self.envs
 
     def __setattr__(self, key, value):
-        self.envs.append(([key, value]))
+        super().__setattr__(key, value)
+        if re.search(r'^[A-Z]+_', key):
+            self.envs.append(([key, value]))
