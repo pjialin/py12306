@@ -48,13 +48,13 @@ class Query:
         # return # DEBUG
         self.init_jobs()
         QueryLog.init_data()
-        app_available_check()
         stay_second(3)
         # 多线程
         if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
             create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
         else:
             while True:
+                if not self.jobs: break
                 jobs_do(self.jobs, 'run')
                 if Const.IS_TEST: return
 
@@ -89,7 +89,6 @@ class Query:
     def job_by_account_key(cls, account_key) -> Job:
         self = cls()
         return objects_find_object_by_key_value(self.jobs, 'account_key', account_key)
-
 
 # def get_jobs_from_cluster(self):
 #     jobs = self.cluster.session.get_dict(Cluster.KEY_JOBS)

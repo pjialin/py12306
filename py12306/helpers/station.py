@@ -7,6 +7,7 @@ from py12306.helpers.func import *
 @singleton
 class Station:
     stations = []
+    station_kvs = {}
 
     def __init__(self):
         if path.exists(Config().STATION_FILE):
@@ -20,6 +21,7 @@ class Station:
                     'pinyin': tmp_info[3],
                     'id': tmp_info[5]
                 })
+                self.station_kvs[tmp_info[1]] = tmp_info[2]
 
     @classmethod
     def get_station_by_name(cls, name):
@@ -35,7 +37,8 @@ class Station:
 
     @classmethod
     def get_station_key_by_name(cls, name):
-        return cls.get_station_by_name(name).get('key')
+        self = cls()
+        return self.station_kvs[name]
 
     @classmethod
     def get_station_name_by_key(cls, key):

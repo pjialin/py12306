@@ -83,6 +83,7 @@ class UserJob:
             return True
         # 只有主节点才能走到这
         if self.is_first_time() or not self.check_user_is_login():
+            a = 1
             self.is_ready = False
             if not self.handle_login(): return
 
@@ -103,7 +104,7 @@ class UserJob:
     def set_last_heartbeat(self):
         if Config().is_cluster_enabled():
             return self.cluster.session.set(Cluster.KEY_USER_LAST_HEARTBEAT, time_int())
-        self.last_heartbeat = time_now()
+        self.last_heartbeat = time_int()
 
     # def init_cookies
     def is_first_time(self):
@@ -227,6 +228,7 @@ class UserJob:
         # 子节点访问会导致主节点登录失效 TODO 可快考虑实时同步 cookie
         if user_data:
             self.update_user_info({**user_data, **{'user_name': user_data.get('name')}})
+            self.save_user()
             return True
         return None
 
