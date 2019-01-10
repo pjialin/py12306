@@ -96,6 +96,7 @@ class Job:
                     self.left_date = date
                     response = self.query_by_date(date)
                     self.handle_response(response)
+                    if not self.is_alive: return
                     self.safe_stay()
                     if is_main_thread():
                         QueryLog.flush(sep='\t\t', publish=False)
@@ -143,6 +144,7 @@ class Job:
             allow_seats = self.allow_seats if self.allow_seats else list(
                 Config.SEAT_TYPES.values())  # 未设置 则所有可用 TODO  合法检测
             self.handle_seats(allow_seats, ticket_info)
+            if not self.is_alive: return
 
     def handle_seats(self, allow_seats, ticket_info):
         for seat in allow_seats:  # 检查座位是否有票
@@ -166,12 +168,21 @@ class Job:
             QueryLog.print_ticket_available(left_date=self.get_info_of_left_date(),
                                             train_number=self.get_info_of_train_number(),
                                             rest_num=ticket_of_seat)
+            if User.is_empty():
+                QueryLog.add_quick_log(QueryLog.MESSAGE_USER_IS_EMPTY_WHEN_DO_ORDER.format(self.retry_time))
+                return stay_second(self.retry_time)
+
             order_result = False
             user = self.get_user()
+            if not user:
+                QueryLog.add_quick_log(QueryLog.MESSAGE_ORDER_USER_IS_EMPTY.format(self.retry_time))
+                return stay_second(self.retry_time)
+
             lock_id = Cluster.KEY_LOCK_DO_ORDER + '_' + user.key
             if Config().is_cluster_enabled():
                 if self.cluster.get_lock(lock_id, Cluster.lock_do_order_time,
                                          {'node': self.cluster.node_name}):  # 获得下单锁
+                    QueryLog.add_quick_log('拿到锁' + lock_id).flush()
                     order_result = self.do_order(user)
                     if not order_result:  # 下单失败，解锁
                         self.cluster.release_lock(lock_id)
@@ -222,9 +233,13 @@ class Job:
         退出任务
         :return:
         """
+        from py12306.query.query import Query
         QueryLog.add_quick_log(QueryLog.MESSAGE_QUERY_JOB_BEING_DESTROY.format(self.job_name)).flush()
         # sys.exit(1) # 无法退出线程...
         self.is_alive = False
+        # 手动移出jobs 防止单线程死循环
+        index = Query().jobs.index(self)
+        Query().jobs.pop(index)
 
     def safe_stay(self):
         interval = get_interval_num(self.interval)
@@ -241,9 +256,9 @@ class Job:
 
     def get_user(self):
         user = User.get_user(self.account_key)
-        if not user.check_is_ready():
-            # TODO user is not ready
-            pass
+        # if not user.check_is_ready(): # 这里不需要检测了，后面获取乘客时已经检测过
+        #     #
+        #     pass
         return user
 
     def check_passengers(self):

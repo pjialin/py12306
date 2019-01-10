@@ -9,8 +9,6 @@ from py12306.helpers.type import UserType
 from py12306.log.order_log import OrderLog
 
 
-
-
 class Order:
     """
     处理下单
@@ -51,6 +49,9 @@ class Order:
         下单模式  暂时不清楚，使用正常步骤下单
         :return:
         """
+        # Debug
+        if Config().IS_DEBUG:
+            return random.randint(0, 10) > 7
         return self.normal_order()
 
     def normal_order(self):

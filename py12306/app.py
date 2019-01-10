@@ -40,6 +40,8 @@ class App:
     @classmethod
     def did_start(cls):
         self = cls()
+        from py12306.helpers.station import Station
+        Station() # 防止多线程时初始化出现问题
         # if Config.is_cluster_enabled():
         #     from py12306.cluster.cluster import Cluster
         #     Cluster().run()
@@ -73,8 +75,8 @@ class App:
         if Config().USER_ACCOUNTS:
             for account in Config().USER_ACCOUNTS:
                 if account:
-                    return True
-        return False
+                    return False
+        return True
 
     @classmethod
     def test_send_notifications(cls):
@@ -90,10 +92,10 @@ class App:
         待优化
         :return:
         """
-        if not cls.check_auto_code():
-            CommonLog.add_quick_log(CommonLog.MESSAGE_CHECK_AUTO_CODE_FAIL).flush(exit=True)
         if not cls.check_user_account_is_empty():
-            CommonLog.add_quick_log(CommonLog.MESSAGE_CHECK_EMPTY_USER_ACCOUNT).flush(exit=True)
+            # CommonLog.add_quick_log(CommonLog.MESSAGE_CHECK_EMPTY_USER_ACCOUNT).flush(exit=True, publish=False) # 不填写用户则不自动下单
+            if not cls.check_auto_code():
+                CommonLog.add_quick_log(CommonLog.MESSAGE_CHECK_AUTO_CODE_FAIL).flush(exit=True, publish=False)
         if Const.IS_TEST_NOTIFICATION: cls.test_send_notifications()
 
 

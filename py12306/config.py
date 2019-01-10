@@ -8,6 +8,8 @@ from py12306.helpers.func import *
 
 @singleton
 class Config:
+    IS_DEBUG = False
+
     USER_ACCOUNTS = []
     # 查询任务
     QUERY_JOBS = []

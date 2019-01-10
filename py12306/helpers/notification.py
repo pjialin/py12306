@@ -44,16 +44,11 @@ class Notification():
                                         method='GET', headers={
                 'Authorization': 'APPCODE {}'.format(appcode)
             })
-        response_message = '-'
-        result = {}
-        try:
-            result = response.json()
-            response_message = result['showapi_res_body']['remark']
-        except:
-            pass
-        if response.status_code == 401 or response.status_code == 403:
+        result = response.json()
+        response_message = result.get('showapi_res_body.remark')
+        if response.status_code in [400, 401, 403]:
             return CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_FORBID).flush()
-        if response.status_code == 200 and 'showapi_res_body' in result and result['showapi_res_body'].get('flag'):
+        if response.status_code == 200 and result.get('showapi_res_body.flag'):
             CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_SEND_SUCCESS.format(response_message)).flush()
             return True
         else:

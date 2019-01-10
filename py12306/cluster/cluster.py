@@ -30,6 +30,9 @@ class Cluster():
     KEY_LOCK_DO_ORDER = 'lock_do_order'  # 订单锁
     lock_do_order_time = 60 * 1  # 订单锁超时时间
 
+    lock_prefix = 'lock_'  # 锁键前缀
+    lock_info_prefix = 'info_'
+
     KEY_MASTER = 1
     KEY_SLAVE = 0
 
@@ -40,7 +43,6 @@ class Cluster():
     keep_alive_time = 3  # 报告存活间隔
     lost_alive_time = keep_alive_time * 2
 
-    locks = []
     nodes = {}
     node_name = None
     is_ready = False
@@ -222,25 +224,23 @@ class Cluster():
         timeout = int(time.time()) + timeout
         res = self.session.setnx(key, timeout)
         if res:
-            self.locks.append((key, timeout))
-            if info: self.session.set_dict(key + '_info', info)  # 存储额外信息
+            if info: self.session.set_dict(self.lock_info_prefix + key, info)  # 存储额外信息
             return True
         return False
 
     def get_lock_info(self, key, default={}):
-        return self.session.get_dict(key + '_info', default=default)
+        return self.session.get_dict(self.lock_info_prefix + key, default=default)
 
     def release_lock(self, key):
         self.session.delete(key)
-        self.session.delete(key + '_info')
+        self.session.delete(self.lock_info_prefix + key)
 
     def check_locks(self):
-        index = 0
-        for key, timeout in self.locks:
-            if timeout >= int(time.time()):
-                del self.locks[index]
+        locks = self.session.keys(self.lock_prefix + '*')
+        for key in locks:
+            val = self.session.get(key)
+            if val and int(val) <= time_int():
                 self.release_lock(key)
-            index += 1
 
     @classmethod
     def get_user_cookie(cls, key, default=None):

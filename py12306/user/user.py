@@ -69,6 +69,11 @@ class User:
                 Event().user_job_destroy({'key': account.get('key')})
 
     @classmethod
+    def is_empty(cls):
+        self = cls()
+        return not bool(self.users)
+
+    @classmethod
     def get_user(cls, key) -> UserJob:
         self = cls()
         for user in self.users:
