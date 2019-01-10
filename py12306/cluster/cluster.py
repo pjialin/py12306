@@ -30,10 +30,6 @@ class Cluster():
     KEY_LOCK_DO_ORDER = 'lock_do_order'  # 订单锁
     lock_do_order_time = 60 * 1  # 订单锁超时时间
 
-    # 事件
-    KEY_EVENT_JOB_DESTROY = 'job_destroy'
-    KEY_EVENT_USER_LOADED = 'user_loaded'
-
     KEY_MASTER = 1
     KEY_SLAVE = 0
 
@@ -104,7 +100,7 @@ class Cluster():
         node_name = node_name if node_name else self.node_name
         self.session.hdel(self.KEY_NODES, node_name)
         message = ClusterLog.MESSAGE_LEFT_CLUSTER.format(node_name, ClusterLog.get_print_nodes(self.get_nodes()))
-        self.publish_log_message(message)
+        self.publish_log_message(message, node_name)
 
     def make_nodes_as_slave(self):
         """
@@ -114,12 +110,13 @@ class Cluster():
         for node in self.nodes:
             self.session.hset(self.KEY_NODES, node, self.KEY_SLAVE)
 
-    def publish_log_message(self, message):
+    def publish_log_message(self, message, node_name=None):
         """
         发布订阅消息
         :return:
         """
-        message = ClusterLog.MESSAGE_SUBSCRIBE_NOTIFICATION.format(self.node_name, message)
+        node_name = node_name if node_name else self.node_name
+        message = ClusterLog.MESSAGE_SUBSCRIBE_NOTIFICATION.format(node_name, message)
         self.session.publish(self.KEY_CHANNEL_LOG, message)
 
     def publish_event(self, name, data={}):
@@ -216,16 +213,10 @@ class Cluster():
         result = json.loads(message.get('data', {}))
         event_name = result.get('event')
         data = result.get('data')
-
-        from py12306.query.query import Query
-        from py12306.user.user import User
-        if event_name == self.KEY_EVENT_JOB_DESTROY:  # 停止查询任务
-            job = Query.job_by_name(data['name'])
-            if job: job.destroy()
-        elif event_name == self.KEY_EVENT_USER_LOADED:  # 用户初始化完成
-            query_job = Query.job_by_account_id(data['key'])
-            if query_job:
-                create_thread_and_run(query_job, 'check_passengers', Const.IS_TEST)  # 检查乘客信息 防止提交订单时才检查
+        from py12306.helpers.event import Event
+        method = getattr(Event(), event_name)
+        if method:
+            create_thread_and_run(Event(), event_name, Const.IS_TEST, kwargs={'data': data, 'callback': True})
 
     def get_lock(self, key, timeout=1, info={}):
         timeout = int(time.time()) + timeout

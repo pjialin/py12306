@@ -1,5 +1,6 @@
 from py12306.app import *
 from py12306.cluster.cluster import Cluster
+from py12306.helpers.event import Event
 from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
 from py12306.user.job import UserJob
@@ -65,8 +66,7 @@ class User:
 
         for account in old:  # 退出已删除的用户
             if not array_dict_find_by_key_value(self.user_accounts, 'key', account.get('key')):
-                user = self.get_user(account.get('key'))
-                user.destroy()
+                Event().user_job_destroy({'key': account.get('key')})
 
     @classmethod
     def get_user(cls, key) -> UserJob:

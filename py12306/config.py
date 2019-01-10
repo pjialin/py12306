@@ -79,14 +79,14 @@ class Config:
 
     def start(self):
         self.save_to_remote()
-        create_thread_and_run(self, 'refresh_configs', wait=False)
+        create_thread_and_run(self, 'refresh_configs', wait=Const.IS_TEST)
 
     def refresh_configs(self, once=False):
         if not self.is_cluster_enabled(): return
         while True:
             remote_configs = self.get_remote_config()
             self.update_configs_from_remote(remote_configs, once)
-            if once: break
+            if once or Const.IS_TEST: return
             stay_second(self.retry_time)
 
     def get_remote_config(self):

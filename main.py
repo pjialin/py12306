@@ -20,7 +20,8 @@ def main():
     if not Const.IS_TEST:
         while True:
             sleep(10000)
-
+    else:
+        if Config().is_cluster_enabled(): stay_second(5) # 等待接受完通知
     CommonLog.print_test_complete()
 
 
