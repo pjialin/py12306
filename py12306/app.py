@@ -11,6 +11,8 @@ from py12306.log.order_log import OrderLog
 
 def app_available_check():
     # return True  # Debug
+    if Config().IS_DEBUG:
+        return True
     now = time_now()
     if now.hour >= 23 or now.hour < 6:
         CommonLog.add_quick_log(CommonLog.MESSAGE_12306_IS_CLOSED.format(time_now())).flush()

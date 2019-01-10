@@ -8,7 +8,6 @@ from py12306.user.job import UserJob
 
 @singleton
 class User:
-    heartbeat = 60 * 2
     users = []
     user_accounts = []
 
@@ -17,7 +16,6 @@ class User:
 
     def __init__(self):
         self.cluster = Cluster()
-        self.heartbeat = Config().USER_HEARTBEAT_INTERVAL
         self.update_interval()
         self.update_user_accounts()
 

@@ -52,7 +52,7 @@ class QueryLog(BaseLog):
     def init_data(cls):
         self = cls()
         # 获取上次记录
-        if Const.IS_TEST: return
+        # if Const.IS_TEST: return
         result = False
         if not Config.is_cluster_enabled() and path.exists(self.data_path):
             with open(self.data_path, encoding='utf-8') as f:
@@ -152,10 +152,10 @@ class QueryLog(BaseLog):
     @classmethod
     def print_job_start(cls, job_name):
         self = cls()
-        self.refresh_data()
         self.add_log(
-            '=== 正在进行第 {query_count} 次查询 {job_name} === {time}'.format(query_count=self.data.get('query_count'),
+            '=== 正在进行第 {query_count} 次查询 {job_name} === {time}'.format(query_count=self.data.get('query_count') + 1,
                                                                        job_name=job_name, time=datetime.datetime.now()))
+        self.refresh_data()
         if is_main_thread():
             self.flush(publish=False)
         return self

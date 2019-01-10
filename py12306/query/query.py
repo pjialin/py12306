@@ -21,6 +21,9 @@ class Query:
     interval = {}
     cluster = None
 
+    is_in_thread = False
+    retry_time = 3
+
     def __init__(self):
         self.session = Request()
         self.cluster = Cluster()
@@ -29,13 +32,14 @@ class Query:
 
     def update_query_interval(self, auto=False):
         self.interval = init_interval_by_number(Config().QUERY_INTERVAL)
+        if auto:
+            jobs_do(self.jobs, 'update_interval')
 
     def update_query_jobs(self, auto=False):
         self.query_jobs = Config().QUERY_JOBS
         if auto:
-            self.jobs = []
             QueryLog.add_quick_log(QueryLog.MESSAGE_JOBS_DID_CHANGED).flush()
-            self.init_jobs()
+            self.refresh_jobs()
 
     @classmethod
     def run(cls):
@@ -50,11 +54,15 @@ class Query:
         QueryLog.init_data()
         stay_second(3)
         # 多线程
-        if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
-            create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
-        else:
-            while True:
+        while True:
+            if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
+                if not self.is_in_thread:
+                    self.is_in_thread = True
+                    create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
+                stay_second(self.retry_time)
+            else:
                 if not self.jobs: break
+                self.is_in_thread = False
                 jobs_do(self.jobs, 'run')
                 if Const.IS_TEST: return
 
@@ -67,11 +75,35 @@ class Query:
         #     if Const.IS_TEST: return
         # self.refresh_jobs()  # 刷新任务
 
+    def refresh_jobs(self):
+        """
+        更新任务
+        :return:
+        """
+        allow_jobs = []
+        for job in self.query_jobs:
+            id = md5(job)
+            job_ins = objects_find_object_by_key_value(self.jobs, 'id', id)  # [1 ,2]
+            if not job_ins:
+                job_ins = self.init_job(job)
+                if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程重新添加
+                    create_thread_and_run(jobs=job_ins, callback_name='run', wait=Const.IS_TEST)
+            allow_jobs.append(job_ins)
+
+        for job in self.jobs:  # 退出已删除 Job
+            if job not in allow_jobs: job.destroy()
+
+        QueryLog.print_init_jobs(jobs=self.jobs)
+
     def init_jobs(self):
         for job in self.query_jobs:
-            job = Job(info=job, query=self)
-            self.jobs.append(job)
+            self.init_job(job)
         QueryLog.print_init_jobs(jobs=self.jobs)
+
+    def init_job(self, job):
+        job = Job(info=job, query=self)
+        self.jobs.append(job)
+        return job
 
     @classmethod
     def job_by_name(cls, name) -> Job:

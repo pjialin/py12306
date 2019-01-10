@@ -18,7 +18,6 @@ from py12306.log.user_log import UserLog
 class UserJob:
     # heartbeat = 60 * 2  # 心跳保持时长
     is_alive = True
-    heartbeat_interval = 60 * 2
     check_interval = 5
     key = None
     user_name = ''
@@ -53,7 +52,6 @@ class UserJob:
     def update_user(self):
         from py12306.user.user import User
         self.user = User()
-        self.heartbeat_interval = self.user.heartbeat
         # if not Const.IS_TEST:  测试模块下也可以从文件中加载用户
         self.load_user()
 
@@ -79,7 +77,7 @@ class UserJob:
 
     def check_heartbeat(self):
         # 心跳检测
-        if self.get_last_heartbeat() and (time_int() - self.get_last_heartbeat()) < self.heartbeat_interval:
+        if self.get_last_heartbeat() and (time_int() - self.get_last_heartbeat()) < Config().USER_HEARTBEAT_INTERVAL:
             return True
         # 只有主节点才能走到这
         if self.is_first_time() or not self.check_user_is_login():
@@ -87,7 +85,7 @@ class UserJob:
             if not self.handle_login(): return
 
         self.is_ready = True
-        message = UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), self.heartbeat_interval)
+        message = UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), Config().USER_HEARTBEAT_INTERVAL)
         if not Config.is_cluster_enabled():
             UserLog.add_quick_log(message).flush()
         else:

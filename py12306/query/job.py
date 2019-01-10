@@ -18,6 +18,7 @@ class Job:
     """
     查询任务
     """
+    id = 0
     is_alive = True
     job_name = None
     left_dates = []
@@ -56,15 +57,18 @@ class Job:
 
     def __init__(self, info, query):
         self.cluster = Cluster()
+        self.query = query
+        self.init_data(info)
+        self.update_interval()
+
+    def init_data(self, info):
+        self.id = md5(info)
         self.left_dates = info.get('left_dates')
-        # 多车站已放在下面处理
-        # self.left_station = info.get('stations').get('left')
-        # self.arrive_station = info.get('stations').get('arrive')
-        # self.left_station_code = Station.get_station_key_by_name(self.left_station)
-        # self.arrive_station_code = Station.get_station_key_by_name(self.arrive_station)
         self.stations = info.get('stations')
         self.stations = [self.stations] if isinstance(self.stations, dict) else self.stations
-        self.job_name = info.get('job_name', '{} -> {}'.format(self.stations[0]['left'], self.stations[0]['arrive']))
+        if not self.job_name:  # name 不能被修改
+            self.job_name = info.get('job_name',
+                                     '{} -> {}'.format(self.stations[0]['left'], self.stations[0]['arrive']))
 
         self.account_key = str(info.get('account_key'))
         self.allow_seats = info.get('seats')
@@ -74,8 +78,8 @@ class Job:
         self.member_num_take = self.member_num
         self.allow_less_member = bool(info.get('allow_less_member'))
 
-        self.interval = query.interval
-        self.query = query
+    def update_interval(self):
+        self.interval = self.query.interval
 
     def run(self):
         self.start()
@@ -100,7 +104,7 @@ class Job:
                     self.safe_stay()
                     if is_main_thread():
                         QueryLog.flush(sep='\t\t', publish=False)
-            if is_main_thread():
+            if not Config().QUERY_JOB_THREAD_ENABLED:
                 QueryLog.add_quick_log('').flush(publish=False)
                 break
             else:
@@ -233,9 +237,9 @@ class Job:
         :return:
         """
         from py12306.query.query import Query
+        self.is_alive = False
         QueryLog.add_quick_log(QueryLog.MESSAGE_QUERY_JOB_BEING_DESTROY.format(self.job_name)).flush()
         # sys.exit(1) # 无法退出线程...
-        self.is_alive = False
         # 手动移出jobs 防止单线程死循环
         index = Query().jobs.index(self)
         Query().jobs.pop(index)
