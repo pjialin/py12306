@@ -13,7 +13,7 @@
 - [x] 多账号、多任务、多线程支持
 - [x] 单个任务多站点查询 
 - [x] 分布式运行
-- [ ] Docker 支持 
+- [x] Docker 支持
 - [ ] 邮件通知
 - [ ] Web 管理页面
 
@@ -90,7 +90,7 @@ docker run --rm pjialin/py12306 cat /config/env.py > env.py
 curl https://raw.githubusercontent.com/pjialin/py12306/master/env.docker.py.example -o env.py
 ```
 
-**2. 修改好配置后运行 **
+**2. 修改好配置后运行**
 ```bash
 docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 ```
