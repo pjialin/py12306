@@ -20,6 +20,11 @@ class Notification():
         self = cls()
         self.send_voice_code_of_yiyuan(phone, name=name, content=content)
 
+    @classmethod
+    def send_email(cls, to, title='', content=''):
+        self = cls()
+        self.send_email_by_smtp(to, title, content)
+
     def send_voice_code_of_yiyuan(self, phone, name='', content=''):
         """
         发送语音验证码
@@ -54,6 +59,27 @@ class Notification():
         else:
             return CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_SEND_FAIL.format(response_message)).flush()
 
+    def send_email_by_smtp(self, to, title, content):
+        import smtplib
+        from email.message import EmailMessage
+        to = to if isinstance(to, list) else [to]
+        message = EmailMessage()
+        message['Subject'] = title
+        message['From'] = 'service@pjialin.com'
+        message['To'] = to
+        message.set_content(content)
+        try:
+            server = smtplib.SMTP(Config().EMAIL_SERVER_HOST)
+            server.login(Config().EMAIL_SERVER_USER, Config().EMAIL_SERVER_PASSWORD)
+            server.send_message(message)
+            server.quit()
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_SUCCESS).flush()
+        except Exception as e:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_FAIL.format(e)).flush()
+
 
 if __name__ == '__main__':
-    Notification.voice_code('13065667742', '张三', '你的车票 广州 到 深圳 购买成功，请登录 12306 进行支付')
+    name = '张三3'
+    content = '你的车票 广州 到 深圳 购买成功，请登录 12306 进行支付'
+    # Notification.voice_code('13800138000', name, content)
+    Notification.send_email('admin@pjialin.com', name, content)

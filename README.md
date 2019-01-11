@@ -15,7 +15,7 @@
 - [x] 分布式运行
 - [x] Docker 支持
 - [x] 动态修改配置文件
-- [ ] 邮件通知
+- [x] 邮件通知
 - [ ] Web 管理页面
 
 ## 使用
@@ -49,7 +49,7 @@ cp env.py.example env.py
 python main.py -t
 ```
 
-测试语音通知 -t -n
+测试通知消息 (语音, 邮件) -t -n
 ```bash
 # 默认不会进行通知测试，要对通知进行测试需要加上 -n 参数 
 python main.py -t -n

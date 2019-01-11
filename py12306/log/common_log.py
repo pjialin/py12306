@@ -22,8 +22,13 @@ class CommonLog(BaseLog):
     MESSAGE_CHECK_EMPTY_USER_ACCOUNT = '请配置 12306 账号密码'
 
     MESSAGE_TEST_SEND_VOICE_CODE = '正在测试发送语音验证码...'
+    MESSAGE_TEST_SEND_EMAIL = '正在测试发送邮件...'
 
     MESSAGE_CONFIG_FILE_DID_CHANGED = '配置文件已修改，正在重新加载中\n'
+    MESSAGE_API_RESPONSE_CAN_NOT_BE_HANDLE = '接口返回错误'
+
+    MESSAGE_SEND_EMAIL_SUCCESS = '邮件发送成功，请检查收件箱'
+    MESSAGE_SEND_EMAIL_FAIL = '邮件发送失败，请手动检查配置，错误原因 {}'
 
     def __init__(self):
         super().__init__()
