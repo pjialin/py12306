@@ -26,6 +26,7 @@ class UserJob:
     info = {}  # 用户信息
     last_heartbeat = None
     is_ready = False
+    user_loaded = False  # 用户是否已加载成功
     passengers = []
     retry_time = 3
 
@@ -47,7 +48,6 @@ class UserJob:
         self.key = str(info.get('key'))
         self.user_name = info.get('user_name')
         self.password = info.get('password')
-        self.update_user()
 
     def update_user(self):
         from py12306.user.user import User
@@ -57,6 +57,7 @@ class UserJob:
 
     def run(self):
         # load user
+        self.update_user()
         self.start()
 
     def start(self):
@@ -85,6 +86,7 @@ class UserJob:
             if not self.handle_login(): return
 
         self.is_ready = True
+        self.user_did_load()
         message = UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), Config().USER_HEARTBEAT_INTERVAL)
         if not Config.is_cluster_enabled():
             UserLog.add_quick_log(message).flush()
@@ -212,11 +214,20 @@ class UserJob:
         UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name)).flush()
         if self.check_user_is_login() and self.get_user_info():
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
-            Event().user_loaded({'key': self.key}) # 发布通知
             self.is_ready = True
             UserLog.print_welcome_user(self)
+            self.user_did_load()
         else:
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
+
+    def user_did_load(self):
+        """
+        用户已经加载成功
+        :return:
+        """
+        if self.user_loaded: return
+        self.user_loaded = True
+        Event().user_loaded({'key': self.key})  # 发布通知
 
     def get_user_info(self):
         response = self.session.get(API_USER_INFO.get('url'))

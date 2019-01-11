@@ -29,7 +29,7 @@ class QueryLog(BaseLog):
     MESSAGE_QUERY_LOG_OF_TRAIN_INFO = '{} {}'
     MESSAGE_QUERY_START_BY_DATE = '出发日期 {}: {} - {}'
 
-    MESSAGE_JOBS_DID_CHANGED = '\n任务已更新，正在重新加载...'
+    MESSAGE_JOBS_DID_CHANGED = '任务已更新，正在重新加载...\n'
 
     MESSAGE_SKIP_ORDER = '跳过本次请求，节点 {} 用户 {} 正在处理该订单\n'
 

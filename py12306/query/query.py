@@ -23,6 +23,7 @@ class Query:
 
     is_in_thread = False
     retry_time = 3
+    is_ready = False
 
     def __init__(self):
         self.session = Request()
@@ -48,9 +49,14 @@ class Query:
         self.start()
         pass
 
+    @classmethod
+    def check_before_fun(cls):
+        self = cls()
+        self.init_jobs()
+        self.is_ready = True
+
     def start(self):
         # return # DEBUG
-        self.init_jobs()
         QueryLog.init_data()
         stay_second(3)
         # 多线程
@@ -59,6 +65,7 @@ class Query:
                 if not self.is_in_thread:
                     self.is_in_thread = True
                     create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
+                if Const.IS_TEST: return
                 stay_second(self.retry_time)
             else:
                 if not self.jobs: break
@@ -104,6 +111,13 @@ class Query:
         job = Job(info=job, query=self)
         self.jobs.append(job)
         return job
+
+    @classmethod
+    def wait_for_ready(cls):
+        self = cls()
+        if self.is_ready: return self
+        stay_second(self.retry_time)
+        return self.wait_for_ready()
 
     @classmethod
     def job_by_name(cls, name) -> Job:

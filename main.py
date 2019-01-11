@@ -15,6 +15,9 @@ def main():
     App.did_start()
 
     App.run_check()
+    Query.check_before_fun()
+
+    ####### 运行任务
     User.run()
     Query.run()
     if not Const.IS_TEST:
