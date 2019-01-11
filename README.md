@@ -14,6 +14,7 @@
 - [x] 单个任务多站点查询 
 - [x] 分布式运行
 - [x] Docker 支持
+- [x] 动态修改配置文件
 - [ ] 邮件通知
 - [ ] Web 管理页面
 
@@ -104,6 +105,9 @@ docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 
 ## 下单成功截图
 ![下单成功图片](./data/images/order_success.png)
+
+### 关于防封
+目前查询和登录操作是分开的，查询是不依赖用户是否登录，放在 A 云 T 云容易被限制 ip，建议在其它网络环境下运行
 
 ## Thanks
 感谢大佬 [testerSunshine](https://github.com/testerSunshine/12306)，借鉴了部分实现
