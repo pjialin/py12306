@@ -27,13 +27,15 @@ class Event():
             job.destroy()
 
     def user_loaded(self, data={}, callback=False):  # 用户初始化完成
-        from py12306.query.query import Query
         if Config().is_cluster_enabled() and not callback:
             return self.cluster.publish_event(self.KEY_USER_LOADED, data)  # 通知其它节点退出
+        from py12306.query.query import Query
 
-        query_job = Query.job_by_account_key(data.get('key'))
-        if query_job and Config().is_master():
-            create_thread_and_run(query_job, 'check_passengers', Const.IS_TEST)  # 检查乘客信息 防止提交订单时才检查
+        if not Config().is_cluster_enabled() or Config().is_master():
+            query = Query.wait_for_ready()
+            for job in query.jobs:
+                if job.account_key == data.get('key'):
+                    create_thread_and_run(job, 'check_passengers', Const.IS_TEST)  # 检查乘客信息 防止提交订单时才检查
 
     def user_job_destroy(self, data={}, callback=False):
         from py12306.user.user import User
