@@ -53,6 +53,14 @@ class Config:
     REDIS_PORT = '6379'
     REDIS_PASSWORD = ''
 
+    # 邮箱配置
+    EMAIL_ENABLED = 0
+    EMAIL_SENDER = ''
+    EMAIL_RECEIVER = ''
+    EMAIL_SERVER_HOST = ''
+    EMAIL_SERVER_USER = ''
+    EMAIL_SERVER_PASSWORD = ''
+
     envs = []
     retry_time = 5
     last_modify_time = 0

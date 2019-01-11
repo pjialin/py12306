@@ -5,7 +5,8 @@ from py12306.config import Config
 from py12306.helpers.api import *
 from py12306.helpers.func import *
 from py12306.helpers.notification import Notification
-from py12306.helpers.type import UserType
+from py12306.helpers.type import UserType, SeatType
+from py12306.log.common_log import CommonLog
 from py12306.log.order_log import OrderLog
 
 
@@ -51,6 +52,8 @@ class Order:
         """
         # Debug
         if Config().IS_DEBUG:
+            self.order_id = 'test'
+            self.order_did_success()
             return random.randint(0, 10) > 7
         return self.normal_order()
 
@@ -76,6 +79,9 @@ class Order:
     def send_notification(self):
         num = 0  # 通知次数
         sustain_time = self.notification_sustain_time
+        if Config().EMAIL_ENABLED:  # 邮件通知
+            Notification.send_email(Config().EMAIL_RECEIVER, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
+                                    OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
         while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
             num += 1
             if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
@@ -83,10 +89,12 @@ class Order:
                 Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(),
                                         OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format(
                                             self.query_ins.left_station, self.query_ins.arrive_station))
+            else:
+                break
             sustain_time -= self.notification_interval
             sleep(self.notification_interval)
 
-        OrderLog.add_quick_log(OrderLog.MESSAGE_JOB_CLOSED)
+        OrderLog.add_quick_log(OrderLog.MESSAGE_JOB_CLOSED).flush()
 
     def submit_order_request(self):
         data = {
@@ -136,15 +144,23 @@ class Order:
         response = self.session.post(API_CHECK_ORDER_INFO, data)
         result = response.json()
         if result.get('data.submitStatus'):  # 成功
+            # ifShowPassCode 需要验证码
             OrderLog.add_quick_log(OrderLog.MESSAGE_CHECK_ORDER_INFO_SUCCESS).flush()
             if result.get('data.ifShowPassCode') != 'N':
                 self.is_need_auth_code = True
+
+            # if ( ticketInfoForPassengerForm.isAsync == ticket_submit_order.request_flag.isAsync & & ticketInfoForPassengerForm.queryLeftTicketRequestDTO.ypInfoDetail != "") { 不需要排队检测 js TODO
             return True
         else:
-            result_data = result.get('data', {})
-            OrderLog.add_quick_log(OrderLog.MESSAGE_CHECK_ORDER_INFO_FAIL.format(
-                result_data.get('errMsg', result.get('messages', '-'))
-            )).flush()
+            error = CommonLog.MESSAGE_API_RESPONSE_CAN_NOT_BE_HANDLE
+            if not result.get('data.isNoActive'):
+                error = result.get('data.errMsg')
+            else:
+                if result.get('data.checkSeatNum'):
+                    error = '无法提交您的订单! ' + result.get('data.errMsg')
+                else:
+                    error = '出票失败! ' + result.get('data.errMsg')
+            OrderLog.add_quick_log(OrderLog.MESSAGE_CHECK_ORDER_INFO_FAIL.format(error)).flush()
         return False
 
     def get_queue_count(self):
@@ -182,7 +198,7 @@ class Order:
         }
         response = self.session.post(API_GET_QUEUE_COUNT, data)
         result = response.json()
-        if result.get('data.countT') or result.get('data.ticket'):  # 成功
+        if result.get('status', False):  # 成功
             """
             "data": { 
                 "count": "66",
@@ -191,10 +207,22 @@ class Order:
                 "countT": "0",
                 "op_1": "true"
             }
+            
             """
-            ticket = result.get('data.ticket').split(',')  # 暂不清楚具体作用
-            ticket_number = sum(map(int, ticket))
-            current_position = int(data.get('countT', 0))
+            # if result.get('isRelogin') == 'Y': # 重新登录 TODO
+
+            ticket = result.get('data.ticket').split(',')  # 余票列表
+            # 这里可以判断 是真实是 硬座还是无座，避免自动分配到无座
+            ticket_number = ticket[0]  # 余票
+            if ticket_number != '充足' or int(ticket_number) <= 0:
+                if self.query_ins.current_seat == SeatType.NO_SEAT:  # 允许无座
+                    ticket_number = ticket[1]
+
+            if result.get('data.op_2') == 'true':
+                OrderLog.add_quick_log(OrderLog.MESSAGE_GET_QUEUE_LESS_TICKET).flush()
+                return False
+
+            current_position = int(result.get('data.countT', 0))
             OrderLog.add_quick_log(
                 OrderLog.MESSAGE_GET_QUEUE_COUNT_SUCCESS.format(current_position, ticket_number)).flush()
             return True
@@ -275,7 +303,7 @@ class Order:
         """
         self.current_queue_wait = self.max_queue_wait
         while self.current_queue_wait:
-            self.current_queue_wait -= 1
+            self.current_queue_wait -= self.wait_queue_interval
             # TODO 取消超时订单，待优化
             data = {  #
                 'random': str(random.random())[2:],
@@ -303,9 +331,10 @@ class Order:
                 order_id = result_data.get('orderId')
                 if order_id:  # 成功
                     return order_id
-                elif result_data.get('waitTime') and result_data.get('waitTime') >= 0:
+                elif result_data.get('waitTime') != -100:
                     OrderLog.add_quick_log(
-                        OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_WAITING.format(result_data.get('waitTime'))).flush()
+                        OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_WAITING.format(result_data.get('waitCount', 0),
+                                                                              result_data.get('waitTime'))).flush()
                 elif result_data.get('msg'):  # 失败 对不起，由于您取消次数过多，今日将不能继续受理您的订票请求。1月8日您可继续使用订票功能。
                     # TODO 需要增加判断 直接结束
                     OrderLog.add_quick_log(

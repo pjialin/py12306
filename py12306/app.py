@@ -93,6 +93,9 @@ class App:
             Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, '张三',
                                     OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format('北京',
                                                                                                              '深圳'))
+        if Config().EMAIL_ENABLED:  # 语音通知
+            CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_EMAIL).flush()
+            Notification.send_email(Config().EMAIL_RECEIVER, '测试发送邮件', 'By py12306')
 
     @classmethod
     def run_check(cls):
