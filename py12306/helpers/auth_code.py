@@ -52,7 +52,7 @@ class AuthCode:
             result = response.json()
             if result.get('image'):
                 return result.get('image')
-            raise SSLError
+            raise SSLError('返回数据为空')
         except SSLError as e:
             UserLog.add_quick_log(
                 UserLog.MESSAGE_DOWNLAOD_AUTH_CODE_FAIL.format(e, self.retry_time)).flush()
