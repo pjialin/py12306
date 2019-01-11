@@ -109,6 +109,8 @@ docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 ### 关于防封
 目前查询和登录操作是分开的，查询是不依赖用户是否登录，放在 A 云 T 云容易被限制 ip，建议在其它网络环境下运行
 
+交流群 [274781597](http://shang.qq.com/wpa/qunwpa?idkey=8eab0b6402096266a62263c1cd452149926adb5cba7a2b7a98a5adc65869addf)
+
 ## Thanks
 感谢大佬 [testerSunshine](https://github.com/testerSunshine/12306)，借鉴了部分实现
 
