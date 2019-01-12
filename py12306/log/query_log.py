@@ -17,7 +17,7 @@ class QueryLog(BaseLog):
     quick_log = []
 
     data = {
-        'query_count': 1,
+        'query_count': 0,
         'last_time': '',
     }
     data_path = None

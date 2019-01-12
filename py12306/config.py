@@ -61,6 +61,9 @@ class Config:
     EMAIL_SERVER_USER = ''
     EMAIL_SERVER_PASSWORD = ''
 
+    WEB_ENABLE = 0
+    WEB_USER = {}
+
     envs = []
     retry_time = 5
     last_modify_time = 0
