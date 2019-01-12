@@ -26,6 +26,8 @@ def convert_job_to_info(job: Job):
         'name': job.job_name,
         'left_dates': job.left_dates,
         'stations': job.stations,
+        'members': job.members,
+        'member_num': job.member_num,
         'allow_seats': job.allow_seats,
         'allow_train_numbers': job.allow_train_numbers,
         'passengers': job.passengers,

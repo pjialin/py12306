@@ -200,7 +200,7 @@ class UserJob:
         self.info = {**self.info, **info}
 
     def get_name(self):
-        return self.info.get('user_name')
+        return self.info.get('user_name', '')
 
     def save_user(self):
         if Config().is_cluster_enabled():

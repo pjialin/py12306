@@ -72,7 +72,7 @@ class BaseLog:
         return self
 
     def notification(self, title, content=''):
-        if sys.platform == 'darwin':
-            os.system(
-                'osascript -e \'tell app "System Events" to display notification "{content}" with title "{title}"\''.format(
-                    title=title, content=content))
+        # if sys.platform == 'darwin': # 不太友好 先关闭，之前没考虑到 mac 下会请求权限
+        #     os.system( 'osascript -e \'tell app "System Events" to display notification "{content}" with title "{title}"\''.format(
+        #             title=title, content=content))
+        pass

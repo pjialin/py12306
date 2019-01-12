@@ -30,6 +30,8 @@ class CommonLog(BaseLog):
     MESSAGE_SEND_EMAIL_SUCCESS = '邮件发送成功，请检查收件箱'
     MESSAGE_SEND_EMAIL_FAIL = '邮件发送失败，请手动检查配置，错误原因 {}'
 
+    MESSAGE_OUTPUT_TO_FILE_IS_UN_ENABLE = '请先打开配置：输出到文件'
+
     def __init__(self):
         super().__init__()
         self.init_data()
