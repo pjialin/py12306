@@ -65,7 +65,7 @@ class Notification():
         to = to if isinstance(to, list) else [to]
         message = EmailMessage()
         message['Subject'] = title
-        message['From'] = 'service@pjialin.com'
+        message['From'] = Config().EMAIL_SENDER
         message['To'] = to
         message.set_content(content)
         try:
@@ -79,7 +79,7 @@ class Notification():
 
 
 if __name__ == '__main__':
-    name = '张三3'
+    name = '张三4'
     content = '你的车票 广州 到 深圳 购买成功，请登录 12306 进行支付'
     # Notification.voice_code('13800138000', name, content)
-    Notification.send_email('admin@pjialin.com', name, content)
+    Notification.send_email('user@email.com', name, content)
