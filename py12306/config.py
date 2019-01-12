@@ -64,6 +64,7 @@ class Config:
     WEB_ENABLE = 0
     WEB_USER = {}
     WEB_PORT = 8080
+    WEB_ENTER_HTML_PATH = PROJECT_DIR + 'py12306/web/static/index.html'
 
     envs = []
     retry_time = 5
