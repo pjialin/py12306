@@ -1,8 +1,6 @@
 from flask import Blueprint, request
 from flask.json import jsonify
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity)
+from flask_jwt_extended import (jwt_required, create_access_token)
 
 from py12306.config import Config
 from py12306.user.job import UserJob
@@ -27,13 +25,14 @@ def login():
 
 
 @user.route('/users', methods=['GET'])
+@jwt_required
 def users():
     """
     用户任务列表
     :return:
     """
     jobs = User().users
-    result = map(convert_job_to_info, jobs)
+    result = list(map(convert_job_to_info, jobs))
     return jsonify(result)
 
 
