@@ -56,9 +56,10 @@ class App:
 
     def register_sign(self):
         is_windows = os.name == 'nt'
-        signs = [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]
         if is_windows:
             signs = [signal.SIGINT, signal.SIGTERM]
+        else:
+            signs = [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]
         for sign in signs:
             signal.signal(sign, self.handler_exit)
 
