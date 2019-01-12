@@ -33,11 +33,11 @@ class App:
     @classmethod
     def run(cls):
         self = cls()
+        self.register_sign()
         self.start()
 
     def start(self):
         Config().run()
-        for sign in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]: signal.signal(sign, self.handler_exit)
         self.init_class()
 
     @classmethod
@@ -54,6 +54,15 @@ class App:
         if Config.is_cluster_enabled():
             Cluster().run()
 
+    def register_sign(self):
+        is_windows = os.name == 'nt'
+        signs = [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]
+        if is_windows:
+            signs = [signal.SIGINT, signal.SIGTERM]
+        for sign in signs:
+            signal.signal(sign, self.handler_exit)
+
+        pass
     def handler_exit(self, *args, **kwargs):
         """
         程序退出

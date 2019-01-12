@@ -92,7 +92,7 @@ class UserJob:
             UserLog.add_quick_log(message).flush()
         else:
             self.cluster.publish_log_message(message)
-        self.set_last_heartbeat()
+        # self.set_last_heartbeat()
 
     def get_last_heartbeat(self):
         if Config().is_cluster_enabled():
@@ -157,6 +157,7 @@ class UserJob:
         is_login = response.json().get('data.flag', False)
         if is_login:
             self.save_user()
+            self.set_last_heartbeat()
             # self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用
 
         return is_login
