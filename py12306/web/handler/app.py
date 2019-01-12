@@ -1,8 +1,6 @@
 from flask import Blueprint, request
 from flask.json import jsonify
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity)
+from flask_jwt_extended import (jwt_required)
 
 from py12306.config import Config
 from py12306.query.query import Query
