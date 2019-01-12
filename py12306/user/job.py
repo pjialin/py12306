@@ -84,6 +84,7 @@ class UserJob:
         if self.is_first_time() or not self.check_user_is_login():
             self.is_ready = False
             if not self.handle_login(): return
+            self.set_last_heartbeat()
 
         self.is_ready = True
         self.user_did_load()
@@ -113,7 +114,7 @@ class UserJob:
 
     def handle_login(self):
         UserLog.print_start_login(user=self)
-        self.login()
+        return self.login()
 
     def login(self):
         """
