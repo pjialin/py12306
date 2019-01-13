@@ -154,7 +154,7 @@ class QueryLog(BaseLog):
         self = cls()
         self.add_log(
             '=== 正在进行第 {query_count} 次查询 {job_name} === {time}'.format(
-                query_count=(self.data.get('query_count', 0)) + 1,
+                query_count=int(self.data.get('query_count', 0)) + 1,
                 job_name=job_name, time=datetime.datetime.now()))
         self.refresh_data()
         if is_main_thread():
