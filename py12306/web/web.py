@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import timedelta
 
 from flask import Flask, request
@@ -13,9 +14,13 @@ from py12306.helpers.func import *
 class Web:
     session = None
     jwt = None
+    log = None
 
     def __init__(self):
         self.session = Flask(__name__)
+        self.log = logging.getLogger('werkzeug')
+        self.log.setLevel(logging.ERROR)
+
         self.register_blueprint()
         self.session.config['JWT_SECRET_KEY'] = 'secret'  # 目前都是本地，暂不用放配置文件
         self.session.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=60 * 60 * 24 * 7)  # Token 超时时间 7 天

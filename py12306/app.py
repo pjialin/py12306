@@ -56,10 +56,10 @@ class App:
 
     def register_sign(self):
         is_windows = os.name == 'nt'
-        if is_windows:
-            signs = [signal.SIGINT, signal.SIGTERM]
-        else:
-            signs = [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]
+        # if is_windows:
+        signs = [signal.SIGINT, signal.SIGTERM]
+        # else:
+        #     signs = [signal.SIGINT, signal.SIGHUP, signal.SIGTERM] # SIGHUP 会导致终端退出，程序也退出，暂时去掉
         for sign in signs:
             signal.signal(sign, self.handler_exit)
 

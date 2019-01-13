@@ -302,8 +302,10 @@ class Order:
         :return:
         """
         self.current_queue_wait = self.max_queue_wait
+        self.queue_num = 0
         while self.current_queue_wait:
             self.current_queue_wait -= self.wait_queue_interval
+            self.queue_num += 1
             # TODO 取消超时订单，待优化
             data = {  #
                 'random': str(random.random())[2:],
@@ -346,7 +348,7 @@ class Order:
                     result.get('messages', result.get('validateMessages')))).flush()
             else:
                 pass
-            OrderLog.add_quick_log(OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_INFO.format(self.current_queue_wait)).flush()
+            OrderLog.add_quick_log(OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_INFO.format(self.queue_num)).flush()
             stay_second(self.wait_queue_interval)
 
         return False
