@@ -64,6 +64,7 @@ class App:
             signal.signal(sign, self.handler_exit)
 
         pass
+
     def handler_exit(self, *args, **kwargs):
         """
         程序退出
@@ -79,6 +80,7 @@ class App:
 
     @classmethod
     def check_auto_code(cls):
+        if Config().AUTO_CODE_PLATFORM == 'free': return True
         if not Config().AUTO_CODE_ACCOUNT.get('user') or not Config().AUTO_CODE_ACCOUNT.get('pwd'):
             return False
         return True

@@ -2,6 +2,8 @@ import math
 import random
 
 from py12306.config import Config
+from py12306.helpers.api import *
+from py12306.helpers.request import Request
 from py12306.log.common_log import CommonLog
 from py12306.vender.ruokuai.main import RKClient
 
@@ -10,6 +12,10 @@ class OCR:
     """
     图片识别
     """
+    session = None
+
+    def __init__(self):
+        self.session = Request()
 
     @classmethod
     def get_img_position(cls, img):
@@ -19,6 +25,8 @@ class OCR:
         :return:
         """
         self = cls()
+        if Config().AUTO_CODE_PLATFORM == 'free':
+            return self.get_image_by_free_site(img)
         return self.get_img_position_by_ruokuai(img)
 
     def get_img_position_by_ruokuai(self, img):
@@ -45,6 +53,28 @@ class OCR:
             positions.append(int(x))
             positions.append(int(y))
         return positions
+
+    def get_image_by_free_site(self, img):
+        data = {
+            'base64': img
+        }
+        response = self.session.post(API_FREE_CODE_QCR_API, json=data)
+        result = response.json()
+        if result.get('success') and result.get('check'):
+            check_data = {
+                'check': result.get('check'),
+                'img_buf': img,
+                'logon': 1,
+                'type': 'D'
+            }
+            check_response = self.session.post(API_FREE_CODE_QCR_API_CHECK, json=check_data)
+            check_result = check_response.json()
+            if check_result.get('res'):
+                position = check_result.get('res')
+                return position.replace('(', '').replace(')', '').split(',')
+
+        CommonLog.print_auto_code_fail(result.get("Error", '-'))
+        return None
 
 
 if __name__ == '__main__':

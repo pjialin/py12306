@@ -17,6 +17,7 @@
 - [x] 动态修改配置文件
 - [x] 邮件通知
 - [ ] Web 管理页面
+- [ ] 微信消息通知
 
 ## 使用
 py12306 需要运行在 python 3.6 以上版本（其它版本暂未测试)
@@ -34,7 +35,9 @@ cp env.py.example env.py
 ```
 自动打码
 
-打码依赖于若快平台，需要先到 [http://www.ruokuai.com](http://www.ruokuai.com/login) 注册一个账号后填写到配置中
+目前支持免费打码，和若快打码
+
+注：免费打码无法保证持续可用，如失效请手动切换到若快平台，需要先到 [http://www.ruokuai.com](http://www.ruokuai.com/login) 注册一个账号后填写到配置中
 
 语音通知
 
@@ -102,6 +105,8 @@ docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 * 支持分布式集群
 ### 19-01-11
 * 配置文件支持动态修改
+### 19-01-12
+* 新增免费打码
 
 ## 下单成功截图
 ![下单成功图片](./data/images/order_success.png)
