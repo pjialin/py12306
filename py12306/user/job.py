@@ -324,8 +324,8 @@ class UserJob:
                 passenger = array_dict_find_by_key_value(self.passengers, 'passenger_name', member)
                 if not passenger:
                     UserLog.add_quick_log(
-                        UserLog.MESSAGE_USER_PASSENGERS_IS_INVALID.format(self.user_name, member)).flush(
-                        exit=True)  # TODO 需要优化
+                        UserLog.MESSAGE_USER_PASSENGERS_IS_INVALID.format(self.user_name, member)).flush()
+                    return False
                 new_member = {
                     'name': passenger.get('passenger_name'),
                     'id_card': passenger.get('passenger_id_no'),

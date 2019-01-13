@@ -49,6 +49,9 @@ class CommonLog(BaseLog):
         if not Const.IS_TEST and Config().OUT_PUT_LOG_TO_FILE_ENABLED:
             self.add_quick_log()
             self.add_quick_log('日志已输出到文件中: {}'.format(Config().OUT_PUT_LOG_TO_FILE_PATH))
+        if Config().WEB_ENABLE:
+            self.add_quick_log()
+            self.add_quick_log('WEB 管理页面已开启，请访问 主机地址 + 端口 {} 进行查看'.format(Config().WEB_PORT))
 
         self.add_quick_log()
         self.flush(file=False, publish=False)
@@ -64,8 +67,10 @@ class CommonLog(BaseLog):
         self.add_quick_log('多线程查询: {}'.format(get_true_false_text(Config().QUERY_JOB_THREAD_ENABLED, enable, disable)))
         self.add_quick_log(
             '语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
+        self.add_quick_log('邮件通知: {}'.format(get_true_false_text(Config().EMAIL_ENABLED, enable, disable)))
         self.add_quick_log('查询间隔: {} 秒'.format(Config().QUERY_INTERVAL))
         self.add_quick_log('用户心跳检测间隔: {} 秒'.format(Config().USER_HEARTBEAT_INTERVAL))
+        self.add_quick_log('WEB 管理页面: {}'.format(get_true_false_text(Config().WEB_ENABLE, enable, disable)))
         if Config().is_cluster_enabled():
             from py12306.cluster.cluster import Cluster
             self.add_quick_log('分布式查询: {}'.format(get_true_false_text(Config().is_cluster_enabled(), enable, enable)))

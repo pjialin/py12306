@@ -266,8 +266,12 @@ class Job:
 
     def check_passengers(self):
         if not self.passengers:
-            QueryLog.add_quick_log(QueryLog.MESSAGE_CHECK_PASSENGERS).flush()
-            self.set_passengers(User.get_passenger_for_members(self.members, self.account_key))
+            QueryLog.add_quick_log(QueryLog.MESSAGE_CHECK_PASSENGERS.format(self.job_name)).flush()
+            passengers = User.get_passenger_for_members(self.members, self.account_key)
+            if passengers:
+                self.set_passengers(passengers)
+            else:  # 退出当前查询任务
+                self.destroy()
         return True
 
     def refresh_station(self, station):

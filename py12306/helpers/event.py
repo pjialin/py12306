@@ -36,6 +36,7 @@ class Event():
             for job in query.jobs:
                 if job.account_key == data.get('key'):
                     create_thread_and_run(job, 'check_passengers', Const.IS_TEST)  # 检查乘客信息 防止提交订单时才检查
+                    stay_second(1)
 
     def user_job_destroy(self, data={}, callback=False):
         from py12306.user.user import User
