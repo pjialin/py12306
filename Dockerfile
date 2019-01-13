@@ -1,6 +1,7 @@
 FROM python:3.6.6-slim
 
 MAINTAINER <pjialin admin@pjialin.com>
+ENV TZ Asia/Shanghai
 
 WORKDIR /code
 
