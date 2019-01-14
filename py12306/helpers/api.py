@@ -46,4 +46,3 @@ API_NOTIFICATION_BY_VOICE_CODE = 'http://ali-voice.showapi.com/sendVoice?'
 
 API_FREE_CODE_QCR_API = 'http://60.205.200.159/api'
 API_FREE_CODE_QCR_API_CHECK = 'http://check.huochepiao.360.cn/img_vcode'
-

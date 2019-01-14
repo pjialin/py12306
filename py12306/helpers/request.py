@@ -1,3 +1,5 @@
+from requests.exceptions import *
+
 from py12306.helpers.func import *
 from requests_html import HTMLSession, HTMLResponse
 
@@ -43,3 +45,15 @@ class Request(HTMLSession):
             return Dict(result)
         except:
             return Dict(default)
+
+    def request(self, *args, **kwargs):  # 拦截所有错误
+        try:
+            return super().request(*args, **kwargs)
+        except RequestException as e:
+            if e.response:
+                response = e.response
+            else:
+                response = HTMLResponse(HTMLSession)
+                response.status_code = 500
+                expand_class(response, 'json', Request.json)
+            return response

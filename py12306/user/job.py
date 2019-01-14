@@ -69,7 +69,7 @@ class UserJob:
             app_available_check()
             if Config().is_slave():
                 self.load_user_from_remote()
-                pass  # 虽然同一个 cookie，同时请求之后会导致失效，暂时不在子节点中加载用户
+                pass
             else:
                 if Config().is_master() and not self.cookie: self.load_user_from_remote()  # 主节点加载一次 Cookie
                 self.check_heartbeat()
@@ -203,8 +203,9 @@ class UserJob:
         return self.info.get('user_name', '')
 
     def save_user(self):
-        if Config().is_cluster_enabled():
-            return self.cluster.set_user_cookie(self.key, self.session.cookies)
+        if Config().is_master():
+            self.cluster.set_user_cookie(self.key, self.session.cookies)
+            self.cluster.set_user_info(self.key, self.info)
         with open(self.get_cookie_path(), 'wb') as f:
             pickle.dump(self.session.cookies, f)
 
@@ -257,16 +258,21 @@ class UserJob:
 
     def load_user_from_remote(self):
         cookie = self.cluster.get_user_cookie(self.key)
-        if not cookie and Config().is_slave():
+        info = self.cluster.get_user_info(self.key)
+        if Config().is_slave() and (not cookie or not info):
             while True:  # 子节点只能取
                 UserLog.add_quick_log(UserLog.MESSAGE_USER_COOKIE_NOT_FOUND_FROM_REMOTE.format(self.user_name)).flush()
                 stay_second(self.retry_time)
                 return self.load_user_from_remote()
+        if info: self.info = info
         if cookie:
             self.session.cookies.update(cookie)
             if not self.cookie:  # 第一次加载
                 self.cookie = True
-                self.did_loaded_user()
+                if not Config().is_slave():
+                    self.did_loaded_user()
+                else:
+                    UserLog.print_welcome_user(self)
             return True
         return False
 

@@ -23,6 +23,7 @@ class Cluster():
     KEY_CHANNEL_LOG = KEY_PREFIX + 'channel_log'
     KEY_CHANNEL_EVENT = KEY_PREFIX + 'channel_even'
     KEY_USER_COOKIES = KEY_PREFIX + 'user_cookies'
+    KEY_USER_INFOS = KEY_PREFIX + 'user_infos'
     KEY_USER_LAST_HEARTBEAT = KEY_PREFIX + 'user_last_heartbeat'
     KEY_NODES_ALIVE = KEY_PREFIX + 'nodes_alive'
 
@@ -253,3 +254,14 @@ class Cluster():
     def set_user_cookie(cls, key, value):
         self = cls()
         return self.session.hset(Cluster.KEY_USER_COOKIES, key, pickle.dumps(value, 0).decode())
+
+    @classmethod
+    def set_user_info(cls, key, info):
+        self = cls()
+        return self.session.hset(Cluster.KEY_USER_INFOS, key, pickle.dumps(info, 0).decode())
+
+    @classmethod
+    def get_user_info(cls, key, default=None):
+        self = cls()
+        res = self.session.hget(Cluster.KEY_USER_INFOS, key)
+        return pickle.loads(res.encode()) if res else default

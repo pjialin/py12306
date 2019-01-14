@@ -32,6 +32,8 @@ class CommonLog(BaseLog):
 
     MESSAGE_OUTPUT_TO_FILE_IS_UN_ENABLE = '请先打开配置：输出到文件'
 
+    MESSAGE_GET_RESPONSE_FROM_FREE_AUTO_CODE = '从免费打码获取结果失败'
+
     def __init__(self):
         super().__init__()
         self.init_data()
