@@ -21,6 +21,11 @@ class Notification():
         self.send_voice_code_of_yiyuan(phone, name=name, content=content)
 
     @classmethod
+    def dingtalk_webhook(cls, content=''):
+        self = cls()
+        self.send_dingtalk_by_webbook(content=content)
+
+    @classmethod
     def send_email(cls, to, title='', content=''):
         self = cls()
         self.send_email_by_smtp(to, title, content)
@@ -77,9 +82,17 @@ class Notification():
         except Exception as e:
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_FAIL.format(e)).flush()
 
+    def send_dingtalk_by_webbook(self,content):
+        from dingtalkchatbot.chatbot import DingtalkChatbot
+        webhook = Config().DINGTALK_WEBHOOK
+        dingtalk = DingtalkChatbot(webhook)
+        dingtalk.send_text(msg=content, is_at_all=True)
+        pass
+
 
 if __name__ == '__main__':
     name = '张三4'
     content = '你的车票 广州 到 深圳 购买成功，请登录 12306 进行支付'
     # Notification.voice_code('13800138000', name, content)
     Notification.send_email('user@email.com', name, content)
+    Notification.dingtalk_webhook(content)
