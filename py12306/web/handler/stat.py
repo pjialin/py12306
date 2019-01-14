@@ -27,3 +27,25 @@ def dashboard():
         'user_job_count': user_job_count,
         'query_count': query_count
     })
+
+
+@stat.route('/stat/cluster', methods=['GET'])
+@jwt_required
+def clusters():
+    """
+    节点统计
+    节点数量，主节点，子节点列表
+    :return:
+    """
+    from py12306.cluster.cluster import Cluster
+    nodes = Cluster().nodes
+    count = len(nodes)
+    node_lists = list(nodes)
+    master = [key for key, val in nodes.items() if int(val) == Cluster.KEY_MASTER]
+    master = master[0] if master else ''
+
+    return jsonify({
+        'master': master,
+        'count': count,
+        'node_lists': ', '.join(node_lists)
+    })
