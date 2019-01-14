@@ -109,6 +109,10 @@ class App:
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_EMAIL).flush()
             Notification.send_email(Config().EMAIL_RECEIVER, '测试发送邮件', 'By py12306')
 
+        if Config().DINGTALK_ENABLED:  # 钉钉通知
+            CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_DINGTALK).flush()
+            Notification.dingtalk_webhook('测试发送信息')
+
     @classmethod
     def run_check(cls):
         """
