@@ -23,6 +23,7 @@ class CommonLog(BaseLog):
 
     MESSAGE_TEST_SEND_VOICE_CODE = '正在测试发送语音验证码...'
     MESSAGE_TEST_SEND_EMAIL = '正在测试发送邮件...'
+    MESSAGE_TEST_SEND_DINGTALK = '正在测试发送钉钉消息...'
 
     MESSAGE_CONFIG_FILE_DID_CHANGED = '配置文件已修改，正在重新加载中\n'
     MESSAGE_API_RESPONSE_CAN_NOT_BE_HANDLE = '接口返回错误'
@@ -70,6 +71,7 @@ class CommonLog(BaseLog):
         self.add_quick_log(
             '语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
         self.add_quick_log('邮件通知: {}'.format(get_true_false_text(Config().EMAIL_ENABLED, enable, disable)))
+        self.add_quick_log('钉钉通知: {}'.format(get_true_false_text(Config().DINGTALK_ENABLED, enable, disable)))
         self.add_quick_log('查询间隔: {} 秒'.format(Config().QUERY_INTERVAL))
         self.add_quick_log('用户心跳检测间隔: {} 秒'.format(Config().USER_HEARTBEAT_INTERVAL))
         self.add_quick_log('WEB 管理页面: {}'.format(get_true_false_text(Config().WEB_ENABLE, enable, disable)))
