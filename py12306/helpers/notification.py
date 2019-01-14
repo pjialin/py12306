@@ -30,6 +30,11 @@ class Notification():
         self = cls()
         self.send_email_by_smtp(to, title, content)
 
+    @classmethod
+    def send_to_telegram(cls, content=''):
+        self = cls()
+        self.send_to_telegram_bot(content=content)
+
     def send_voice_code_of_yiyuan(self, phone, name='', content=''):
         """
         发送语音验证码
@@ -82,12 +87,28 @@ class Notification():
         except Exception as e:
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_FAIL.format(e)).flush()
 
-    def send_dingtalk_by_webbook(self,content):
+    def send_dingtalk_by_webbook(self, content):
         from dingtalkchatbot.chatbot import DingtalkChatbot
         webhook = Config().DINGTALK_WEBHOOK
         dingtalk = DingtalkChatbot(webhook)
         dingtalk.send_text(msg=content, is_at_all=True)
         pass
+
+    def send_to_telegram_bot(self, content):
+        bot_api_url = Config().TELEGRAM_BOT_API_URL
+        if not bot_api_url:
+            return False
+        data = {
+            'text': content
+        }
+        response = self.session.request(url=bot_api_url, method='POST', data=data)
+        result = response.json().get('result')
+        response_status = result.get('statusCode')
+        if response_status == 200:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_TELEGRAM_SUCCESS).flush()
+        else:
+            response_error_message = result.get('description')
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_TELEGRAM_FAIL.format(response_error_message)).flush()
 
 
 if __name__ == '__main__':

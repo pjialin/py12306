@@ -58,6 +58,10 @@ class Config:
     DINGTALK_ENABLED = 0
     DINGTALK_WEBHOOK = ''
 
+    # Telegram推送配置
+    TELEGRAM_ENABLED = 0
+    TELEGRAM_BOT_API_URL = ''
+
     # 邮箱配置
     EMAIL_ENABLED = 0
     EMAIL_SENDER = ''
