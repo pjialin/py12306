@@ -82,6 +82,8 @@ class Order:
         if Config().EMAIL_ENABLED:  # 邮件通知
             Notification.send_email(Config().EMAIL_RECEIVER, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                     OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
+        if Config().DINGTALK_ENABLED:  # 钉钉通知
+            Notification.dingtalk_webhook(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
         while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
             num += 1
             if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
