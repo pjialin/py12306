@@ -73,7 +73,7 @@ class OCR:
                 position = check_result.get('res')
                 return position.replace('(', '').replace(')', '').split(',')
 
-        CommonLog.print_auto_code_fail(result.get("Error", '-'))
+        CommonLog.print_auto_code_fail(CommonLog.MESSAGE_GET_RESPONSE_FROM_FREE_AUTO_CODE)
         return None
 
 
