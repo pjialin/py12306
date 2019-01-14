@@ -29,6 +29,7 @@ class UserJob:
     user_loaded = False  # 用户是否已加载成功
     passengers = []
     retry_time = 3
+    login_num = 0  # 尝试登录次数
 
     # Init page
     global_repeat_submit_token = None
@@ -101,9 +102,9 @@ class UserJob:
 
         return self.last_heartbeat
 
-    def set_last_heartbeat(self):
+    def set_last_heartbeat(self, time=None):
         if Config().is_cluster_enabled():
-            return self.cluster.session.set(Cluster.KEY_USER_LAST_HEARTBEAT, time_int())
+            return self.cluster.session.set(Cluster.KEY_USER_LAST_HEARTBEAT, time if time != None else time_int())
         self.last_heartbeat = time_int()
 
     # def init_cookies
@@ -184,6 +185,7 @@ class UserJob:
         用户登录成功
         :return:
         """
+        self.login_num += 1
         self.welcome_user()
         self.save_user()
         self.get_user_info()
@@ -222,6 +224,7 @@ class UserJob:
             self.user_did_load()
         else:
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
+            self.set_last_heartbeat(0)
 
     def user_did_load(self):
         """
