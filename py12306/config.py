@@ -54,6 +54,10 @@ class Config:
     REDIS_PORT = '6379'
     REDIS_PASSWORD = ''
 
+    # 钉钉配置
+    DINGTALK_ENABLED = 0
+    DINGTALK_WEBHOOK = ''
+
     # 邮箱配置
     EMAIL_ENABLED = 0
     EMAIL_SENDER = ''
