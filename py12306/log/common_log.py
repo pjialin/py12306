@@ -24,12 +24,16 @@ class CommonLog(BaseLog):
     MESSAGE_TEST_SEND_VOICE_CODE = '正在测试发送语音验证码...'
     MESSAGE_TEST_SEND_EMAIL = '正在测试发送邮件...'
     MESSAGE_TEST_SEND_DINGTALK = '正在测试发送钉钉消息...'
+    MESSAGE_TEST_SEND_TELEGRAM = '正在测试推送到Telegram...'
 
     MESSAGE_CONFIG_FILE_DID_CHANGED = '配置文件已修改，正在重新加载中\n'
     MESSAGE_API_RESPONSE_CAN_NOT_BE_HANDLE = '接口返回错误'
 
     MESSAGE_SEND_EMAIL_SUCCESS = '邮件发送成功，请检查收件箱'
     MESSAGE_SEND_EMAIL_FAIL = '邮件发送失败，请手动检查配置，错误原因 {}'
+
+    MESSAGE_SEND_TELEGRAM_SUCCESS = 'Telegram推送成功'
+    MESSAGE_SEND_TELEGRAM_FAIL = 'Telegram推送失败，错误原因 {}'
 
     MESSAGE_OUTPUT_TO_FILE_IS_UN_ENABLE = '请先打开配置：输出到文件'
 
@@ -72,6 +76,7 @@ class CommonLog(BaseLog):
             '语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
         self.add_quick_log('邮件通知: {}'.format(get_true_false_text(Config().EMAIL_ENABLED, enable, disable)))
         self.add_quick_log('钉钉通知: {}'.format(get_true_false_text(Config().DINGTALK_ENABLED, enable, disable)))
+        self.add_quick_log('Telegram通知: {}'.format(get_true_false_text(Config().TELEGRAM_ENABLED, enable, disable)))
         self.add_quick_log('查询间隔: {} 秒'.format(Config().QUERY_INTERVAL))
         self.add_quick_log('用户心跳检测间隔: {} 秒'.format(Config().USER_HEARTBEAT_INTERVAL))
         self.add_quick_log('WEB 管理页面: {}'.format(get_true_false_text(Config().WEB_ENABLE, enable, disable)))

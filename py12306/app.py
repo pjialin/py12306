@@ -113,6 +113,10 @@ class App:
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_DINGTALK).flush()
             Notification.dingtalk_webhook('测试发送信息')
 
+        if Config().TELEGRAM_ENABLED:  # Telegram通知
+            CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_TELEGRAM).flush()
+            Notification.send_to_telegram('测试发送信息')
+
     @classmethod
     def run_check(cls):
         """
