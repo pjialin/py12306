@@ -123,7 +123,7 @@ class App:
 
         if Config().PUSHBEAR_ENABLED:  # PushBear通知
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_PUSH_BEAR).flush()
-            Notification.push_bear(Config().S_KEY, '测试发送消息', 'By py12306')
+            Notification.push_bear(Config().SC_KEY, '测试发送消息', 'By py12306')
 
     @classmethod
     def run_check(cls):
