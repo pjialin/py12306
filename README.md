@@ -110,24 +110,17 @@ docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 
 ## 更新
 - 19-01-10
-
-支持分布式集群
-
+    - 支持分布式集群
 - 19-01-11
-
-配置文件支持动态修改
-
+    - 配置文件支持动态修改
 - 19-01-12
-
-新增免费打码
-
+    - 新增免费打码
 - 19-01-14
-
-新增 Web 页面支持
-
+    - 新增 Web 页面支持
 - 19-01-15
-
-新增ServerChan和PushBear支持
+    - 新增 钉钉通知
+    - 新增 Telegram 通知
+    - 新增 ServerChan 和 PushBear 微信推送
 
 
 ## 截图
@@ -143,8 +136,10 @@ docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 交流群 [274781597](http://shang.qq.com/wpa/qunwpa?idkey=8eab0b6402096266a62263c1cd452149926adb5cba7a2b7a98a5adc65869addf)
 
 ## Thanks
-感谢大佬 [testerSunshine](https://github.com/testerSunshine/12306)，借鉴了部分实现
+- 感谢大佬 [testerSunshine](https://github.com/testerSunshine/12306)，借鉴了部分实现
+- 感谢所有提供 pr 的大佬 
 
 ## License
 
 [Apache License.](https://github.com/pjialin/py12306/blob/master/LICENSE)
+
