@@ -17,7 +17,7 @@
 - [x] 动态修改配置文件
 - [x] 邮件通知
 - [x] Web 管理页面
-- [ ] 微信消息通知
+- [x] 微信消息通知
 
 ## 使用
 py12306 需要运行在 python 3.6 以上版本（其它版本暂未测试)
@@ -124,6 +124,10 @@ docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 - 19-01-14
 
 新增 Web 页面支持
+
+- 19-01-15
+
+新增ServerChan和PushBear支持
 
 
 ## 截图
