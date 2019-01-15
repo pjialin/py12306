@@ -91,7 +91,7 @@ class Order:
             Notification.server_chan(Config().S_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                      OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
         if Config().PUSHBEAR_ENABLED:  # PushBear通知
-            Notification.push_bear(Config().S_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
+            Notification.push_bear(Config().SC_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                    OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
         while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
             num += 1
