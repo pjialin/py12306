@@ -17,6 +17,7 @@ class OrderLog(BaseLog):
     MESSAGE_CHECK_ORDER_INFO_FAIL = '检查订单失败，错误原因 {} \n'
     MESSAGE_CHECK_ORDER_INFO_SUCCESS = '检查订单成功'
 
+    MESSAGE_GET_QUEUE_INFO_SUCCESS = '获取排队信息成功，目前排队人数 {}, 余票还剩余 {} 张'
     MESSAGE_GET_QUEUE_COUNT_SUCCESS = '排队成功，你当前排在第 {} 位, 余票还剩余 {} 张'
     MESSAGE_GET_QUEUE_LESS_TICKET = '排队失败，目前排队人数已经超过余票张数'
     MESSAGE_GET_QUEUE_COUNT_FAIL = '排队失败，错误原因 {}'
