@@ -90,6 +90,8 @@ class Notification():
         try:
             server = smtplib.SMTP(Config().EMAIL_SERVER_HOST)
             server.login(Config().EMAIL_SERVER_USER, Config().EMAIL_SERVER_PASSWORD)
+            server.ehlo()
+            server.starttls()
             server.send_message(message)
             server.quit()
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_SUCCESS).flush()
