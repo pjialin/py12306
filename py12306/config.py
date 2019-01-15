@@ -62,6 +62,11 @@ class Config:
     TELEGRAM_ENABLED = 0
     TELEGRAM_BOT_API_URL = ''
 
+    # ServerChan和PushBear配置
+    SERVERCHAN_ENABLED = 0
+    PUSHBEAR_ENABLED = 0
+    S_KEY = ''
+
     # 邮箱配置
     EMAIL_ENABLED = 0
     EMAIL_SENDER = ''

@@ -105,7 +105,7 @@ class App:
             Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, '张三',
                                     OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format('北京',
                                                                                                              '深圳'))
-        if Config().EMAIL_ENABLED:  # 语音通知
+        if Config().EMAIL_ENABLED:  # 邮件通知
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_EMAIL).flush()
             Notification.send_email(Config().EMAIL_RECEIVER, '测试发送邮件', 'By py12306')
 
@@ -116,6 +116,14 @@ class App:
         if Config().TELEGRAM_ENABLED:  # Telegram通知
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_TELEGRAM).flush()
             Notification.send_to_telegram('测试发送信息')
+
+        if Config().SERVERCHAN_ENABLED:  # ServerChan通知
+            CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_SERVER_CHAN).flush()
+            Notification.server_chan(Config().S_KEY, '测试发送消息', 'By py12306')
+
+        if Config().PUSHBEAR_ENABLED:  # PushBear通知
+            CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_PUSH_BEAR).flush()
+            Notification.push_bear(Config().S_KEY, '测试发送消息', 'By py12306')
 
     @classmethod
     def run_check(cls):

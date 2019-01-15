@@ -5,7 +5,6 @@ from py12306.helpers.api import *
 from py12306.helpers.request import Request
 from py12306.log.common_log import CommonLog
 
-
 class Notification():
     """
     通知类
@@ -34,6 +33,16 @@ class Notification():
     def send_to_telegram(cls, content=''):
         self = cls()
         self.send_to_telegram_bot(content=content)
+
+    @classmethod
+    def server_chan(cls, skey='', title='', content=''):
+        self = cls()
+        self.send_serverchan(skey=skey, title=title, content=content)
+
+    @classmethod
+    def push_bear(cls, skey='', title='', content=''):
+        self = cls()
+        self.send_pushbear(skey=skey, title=title, content=content)
 
     def send_voice_code_of_yiyuan(self, phone, name='', content=''):
         """
@@ -109,6 +118,26 @@ class Notification():
         else:
             response_error_message = result.get('description')
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_TELEGRAM_FAIL.format(response_error_message)).flush()
+
+    def send_serverchan(self, skey, title, content):
+        from lightpush import lightpush
+        lgp = lightpush()
+        lgp.set_single_push(key=skey)
+        try:
+            lgp.single_push(title, content)
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_SERVER_CHAN_SUCCESS).flush()
+        except Exception as e:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_SERVER_CHAN_FAIL.format(e)).flush()
+
+    def send_pushbear(self, skey, title, content):
+        from lightpush import lightpush
+        lgp = lightpush()
+        lgp.set_group_push(key=skey)
+        try:
+            lgp.group_push(title, content)
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_PUSH_BEAR_SUCCESS).flush()
+        except Exception as e:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_PUSH_BEAR_SUCCESS.format(e)).flush()
 
 
 if __name__ == '__main__':
