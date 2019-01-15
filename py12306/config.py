@@ -65,7 +65,7 @@ class Config:
     # ServerChan和PushBear配置
     SERVERCHAN_ENABLED = 0
     PUSHBEAR_ENABLED = 0
-    SKEY = ''
+    S_KEY = ''
 
     # 邮箱配置
     EMAIL_ENABLED = 0
