@@ -29,7 +29,7 @@ class UserLog(BaseLog):
     MESSAGE_USER_BEING_DESTROY = '用户 {} 已退出'
     MESSAGE_USER_COOKIE_NOT_FOUND_FROM_REMOTE = '用户 {} 状态加载中...'
 
-    MESSAGE_WAIT_USER_INIT_COMPLETE = '账号正在初始化，{} 秒后自动重试'
+    MESSAGE_WAIT_USER_INIT_COMPLETE = '账号正在登录中，{} 秒后自动重试'
 
     def __init__(self):
         super().__init__()

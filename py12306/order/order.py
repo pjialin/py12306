@@ -83,8 +83,9 @@ class Order:
             Notification.send_email(Config().EMAIL_RECEIVER, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                     OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
         if Config().DINGTALK_ENABLED:  # 钉钉通知
-            Notification.dingtalk_webhook(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
-        if Config().TELEGRAM_ENABLED:   # Telegram推送
+            Notification.dingtalk_webhook(
+                OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
+        if Config().TELEGRAM_ENABLED:  # Telegram推送
             Notification.send_to_telegram(
                 OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
         if Config().SERVERCHAN_ENABLED:  # ServerChan通知
@@ -235,12 +236,12 @@ class Order:
 
             current_position = int(result.get('data.countT', 0))
             OrderLog.add_quick_log(
-                OrderLog.MESSAGE_GET_QUEUE_COUNT_SUCCESS.format(current_position, ticket_number)).flush()
+                OrderLog.MESSAGE_GET_QUEUE_INFO_SUCCESS.format(current_position, ticket_number)).flush()
             return True
         else:
             # 加入小黑屋
             OrderLog.add_quick_log(OrderLog.MESSAGE_GET_QUEUE_COUNT_FAIL.format(
-                result.get('messages', result.get('validateMessages', '-')))).flush()
+                result.get('messages', result.get('validateMessages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)))).flush()
         return False
 
     def confirm_single_for_queue(self):
@@ -297,10 +298,11 @@ class Order:
             else:
                 # 加入小黑屋 TODO
                 OrderLog.add_quick_log(
-                    OrderLog.MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_ERROR.format(result.get('data.errMsg', '-'))).flush()
+                    OrderLog.MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_ERROR.format(
+                        result.get('data.errMsg', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
         else:
             OrderLog.add_quick_log(OrderLog.MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_FAIL.format(
-                result.get('messages', '-'))).flush()
+                result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
         return False
 
     def query_order_wait_time(self):
@@ -344,14 +346,31 @@ class Order:
                 order_id = result_data.get('orderId')
                 if order_id:  # 成功
                     return order_id
-                elif result_data.get('waitTime') != -100:
-                    OrderLog.add_quick_log(
-                        OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_WAITING.format(result_data.get('waitCount', 0),
-                                                                              result_data.get('waitTime'))).flush()
+                elif 'waitTime' in result_data:
+                    # 计算等待时间
+                    wait_time = int(result_data.get('waitTime'))
+                    if wait_time == -1 or wait_time == -100:  # 成功
+                        # /otn/confirmPassenger/resultOrderForDcQueue 请求订单状态 目前不需要
+                        # 不应该走到这
+                        return order_id
+                    elif wait_time >= 0:  # 等待
+                        OrderLog.add_quick_log(
+                            OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_WAITING.format(result_data.get('waitCount', 0),
+                                                                                  wait_time)).flush()
+                    else:
+                        if wait_time == -2 or wait_time == -3:  # -2 失败 -3 订单已撤销
+                            OrderLog.add_quick_log(
+                                OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(result_data.get('msg'))).flush()
+                        else: # 未知原因
+                            OrderLog.add_quick_log(
+                                OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(
+                                    result_data.get('msg', wait_time))).flush()
+
                 elif result_data.get('msg'):  # 失败 对不起，由于您取消次数过多，今日将不能继续受理您的订票请求。1月8日您可继续使用订票功能。
                     # TODO 需要增加判断 直接结束
                     OrderLog.add_quick_log(
-                        OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(result_data.get('msg', '-'))).flush()
+                        OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(
+                            result_data.get('msg', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
                     stay_second(self.retry_time)
                     return False
             elif result.get('messages') or result.get('validateMessages'):

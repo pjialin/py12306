@@ -47,6 +47,8 @@ class CommonLog(BaseLog):
 
     MESSAGE_GET_RESPONSE_FROM_FREE_AUTO_CODE = '从免费打码获取结果失败'
 
+    MESSAGE_RESPONSE_EMPTY_ERROR = '网络错误'
+
     def __init__(self):
         super().__init__()
         self.init_data()

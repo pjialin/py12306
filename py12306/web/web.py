@@ -45,10 +45,10 @@ class Web:
 
     def start(self):
         if not Config().WEB_ENABLE or Config().is_slave(): return
-        if Config().IS_DEBUG:
-            self.run_session()
-        else:
-            create_thread_and_run(self, 'run_session', wait=False)
+        # if Config().IS_DEBUG:
+        #     self.run_session()
+        # else:
+        create_thread_and_run(self, 'run_session', wait=False)
 
     def run_session(self):
         debug = False
