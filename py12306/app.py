@@ -119,11 +119,11 @@ class App:
 
         if Config().SERVERCHAN_ENABLED:  # ServerChan通知
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_SERVER_CHAN).flush()
-            Notification.server_chan(Config().S_KEY, '测试发送消息', 'By py12306')
+            Notification.server_chan(Config().SERVERCHAN_KEY, '测试发送消息', 'By py12306')
 
         if Config().PUSHBEAR_ENABLED:  # PushBear通知
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_PUSH_BEAR).flush()
-            Notification.push_bear(Config().SC_KEY, '测试发送消息', 'By py12306')
+            Notification.push_bear(Config().PUSHBEAR_KEY, '测试发送消息', 'By py12306')
 
     @classmethod
     def run_check(cls):
