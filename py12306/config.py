@@ -64,9 +64,9 @@ class Config:
 
     # ServerChan和PushBear配置
     SERVERCHAN_ENABLED = 0
-    S_KEY = ''
+    SERVERCHAN_KEY = '8474-ca071ADSFADSF'
     PUSHBEAR_ENABLED = 0
-    SC_KEY = ''
+    PUSHBEAR_KEY = 'SCUdafadsfasfdafdf45234234234'
 
     # 邮箱配置
     EMAIL_ENABLED = 0
