@@ -103,9 +103,10 @@ class UserJob:
         return self.last_heartbeat
 
     def set_last_heartbeat(self, time=None):
+        time = time if time != None else time_int()
         if Config().is_cluster_enabled():
-            return self.cluster.session.set(Cluster.KEY_USER_LAST_HEARTBEAT, time if time != None else time_int())
-        self.last_heartbeat = time_int()
+            return self.cluster.session.set(Cluster.KEY_USER_LAST_HEARTBEAT, time)
+        self.last_heartbeat = time
 
     # def init_cookies
     def is_first_time(self):
