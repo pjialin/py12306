@@ -38,6 +38,7 @@ def test():
         座位验证
         乘客验证
         语音验证码验证
+        通知验证
     :return:
     """
     Const.IS_TEST = True
