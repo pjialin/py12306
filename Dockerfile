@@ -9,7 +9,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-RUN mkdir /data
 RUN mkdir -p /data/query /data/user
 VOLUME /data
 
