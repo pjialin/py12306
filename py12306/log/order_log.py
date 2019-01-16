@@ -9,7 +9,6 @@ class OrderLog(BaseLog):
     thread_logs = {}
     quick_log = []
 
-
     MESSAGE_REQUEST_INIT_DC_PAGE_FAIL = '请求初始化订单页面失败'
 
     MESSAGE_SUBMIT_ORDER_REQUEST_FAIL = '提交订单失败，错误原因 {} \n'
@@ -36,8 +35,7 @@ class OrderLog(BaseLog):
     MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND = '正在发送语音通知, 第 {} 次'
     MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT = '你的车票 {} 到 {} 购买成功，请登录 12306 进行支付'
 
-    MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT = '订单号 {}，请及时器登录12306，打开 \'未完成订单\'，在30分钟内完成支付!'
-
+    MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT = '订单号 {}，请及时登录12306，打开 \'未完成订单\'，在30分钟内完成支付!'
 
     MESSAGE_JOB_CLOSED = '当前任务已结束'
 
