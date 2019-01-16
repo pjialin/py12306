@@ -105,6 +105,10 @@ def get_file_total_line_num(file, encoding='utf-8'):
         return len(f.readlines())
 
 
+def touch_file(path):
+    with open(path, 'a'): pass
+
+
 def pick_file_lines(file, lines):
     return [x for i, x in enumerate(file) if i in lines]
 
