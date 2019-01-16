@@ -13,6 +13,7 @@ from py12306.helpers.request import Request
 from py12306.helpers.type import UserType
 from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
+from py12306.log.common_log import CommonLog
 
 
 class UserJob:
@@ -149,7 +150,7 @@ class UserJob:
             UserLog.add_quick_log(UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message'))).flush()
         else:
             UserLog.add_quick_log(
-                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message', '-')))).flush()
+                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)))).flush()
 
         return False
 
@@ -306,7 +307,7 @@ class UserJob:
             return self.passengers
         else:
             UserLog.add_quick_log(
-                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(result.get('messages', '-'), self.retry_time)).flush()
+                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), self.retry_time)).flush()
             stay_second(self.retry_time)
             return self.get_user_passengers()
 

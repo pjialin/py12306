@@ -127,7 +127,7 @@ class Order:
             if (str(result.get('messages', '')).find('未处理') >= 0):  # 未处理订单
                 stay_second(self.retry_time)
             OrderLog.add_quick_log(
-                OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(result.get('messages', '-'))).flush()
+                OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
         return False
 
     def check_order_info(self):
@@ -166,7 +166,7 @@ class Order:
         else:
             error = CommonLog.MESSAGE_API_RESPONSE_CAN_NOT_BE_HANDLE
             if not result.get('data.isNoActive'):
-                error = result.get('data.errMsg')
+                error = result.get('data.errMsg', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)
             else:
                 if result.get('data.checkSeatNum'):
                     error = '无法提交您的订单! ' + result.get('data.errMsg')
