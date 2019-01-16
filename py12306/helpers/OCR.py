@@ -37,7 +37,7 @@ class OCR:
         result = rc.rk_create(img, 6113)
         if "Result" in result:
             return self.get_image_position_by_offset(list(result['Result']))
-        CommonLog.print_auto_code_fail(result.get("Error", '-'))
+        CommonLog.print_auto_code_fail(result.get("Error", CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))
         return None
 
     def get_image_position_by_offset(self, offsets):
