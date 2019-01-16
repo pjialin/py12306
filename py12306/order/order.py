@@ -193,7 +193,7 @@ class Order:
         """
         data = {  #
             'train_date': '{} 00:00:00 GMT+0800 (China Standard Time)'.format(
-                datetime.datetime.today().strftime("%a %h %d %Y")),
+                datetime.datetime.strptime(self.query_ins.left_date, '%Y-%m-%d').strftime("%a %h %d %Y")),
             'train_no': self.user_ins.ticket_info_for_passenger_form['queryLeftTicketRequestDTO']['train_no'],
             'stationTrainCode': self.user_ins.ticket_info_for_passenger_form['queryLeftTicketRequestDTO'][
                 'station_train_code'],
@@ -361,7 +361,7 @@ class Order:
                         if wait_time == -2 or wait_time == -3:  # -2 失败 -3 订单已撤销
                             OrderLog.add_quick_log(
                                 OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(result_data.get('msg'))).flush()
-                        else: # 未知原因
+                        else:  # 未知原因
                             OrderLog.add_quick_log(
                                 OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(
                                     result_data.get('msg', wait_time))).flush()
