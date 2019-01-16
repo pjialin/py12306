@@ -96,7 +96,7 @@ curl https://raw.githubusercontent.com/pjialin/py12306/master/env.docker.py.exam
 
 **2. 修改好配置后运行**
 ```bash
-docker run -d -v $(pwd):/config -v py12306:/data pjialin/py12306
+docker run --rm --name py12306 -p 8008:8008 -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 ```
 当前目录会多一个 12306.log 的日志文件， `tail -f 12306.log`
 
