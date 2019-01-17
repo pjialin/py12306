@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import datetime
 import json
 import sys
@@ -57,8 +58,10 @@ class QueryLog(BaseLog):
         if not Config.is_cluster_enabled() and path.exists(self.data_path):
             with open(self.data_path, encoding='utf-8') as f:
                 result = f.read()
-                if result:
+                try:
                     result = json.loads(result)
+                except json.JSONDecodeError as e:
+                    print("Loads status.json error, raw_content:{}.".format(repr(result)))
 
         if Config.is_cluster_enabled():
             result = self.get_data_from_cluster()
