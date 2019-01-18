@@ -79,27 +79,35 @@ class Order:
     def send_notification(self):
         # num = 0  # 通知次数
         # sustain_time = self.notification_sustain_time
+        info_message = OrderLog.get_order_success_notification_info(self.query_ins)
+        normal_message = OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id)
         if Config().EMAIL_ENABLED:  # 邮件通知
             Notification.send_email(Config().EMAIL_RECEIVER, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
-                                    OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
+                                    normal_message + info_message)
         if Config().DINGTALK_ENABLED:  # 钉钉通知
-            Notification.dingtalk_webhook(
-                OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
+            Notification.dingtalk_webhook(normal_message + info_message)
         if Config().TELEGRAM_ENABLED:  # Telegram推送
-            Notification.send_to_telegram(
-                OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
+            Notification.send_to_telegram(normal_message + info_message)
         if Config().SERVERCHAN_ENABLED:  # ServerChan通知
             Notification.server_chan(Config().SERVERCHAN_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
-                                     OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
+                                     normal_message + info_message)
         if Config().PUSHBEAR_ENABLED:  # PushBear通知
             Notification.push_bear(Config().PUSHBEAR_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
-                                   OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
+                                   normal_message + info_message)
 
         if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
-            OrderLog.add_quick_log(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND.format(num))
-            Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(),
-                                    OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format(
-                                        self.query_ins.left_station, self.query_ins.arrive_station))
+            if Config().NOTIFICATION_VOICE_CODE_TYPE == 'dingxin':
+                voice_info = {
+                    'left_station': self.query_ins.left_station,
+                    'arrive_station': self.query_ins.arrive_station,
+                    'set_type': self.query_ins.current_seat,
+                    'orderno': self.order_id
+                }
+            else:
+                voice_info = OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format(
+                    self.query_ins.left_station, self.query_ins.arrive_station)
+            OrderLog.add_quick_log(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND)
+            Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(), voice_info)
         # 取消循环发送通知
         # while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
         #     num += 1

@@ -31,8 +31,9 @@ class OrderLog(BaseLog):
 
     MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE = '车票购买成功！'
     MESSAGE_ORDER_SUCCESS_NOTIFICATION_CONTENT = '请及时登录12306，打开 \'未完成订单\'，在30分钟内完成支付!'
+    MESSAGE_ORDER_SUCCESS_NOTIFICATION_INFO = '\t\t车次信息：{} -> {} ( {} )，乘车日期 {}，席位：{}'
 
-    MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND = '正在发送语音通知, 第 {} 次'
+    MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND = '正在发送语音通知...'
     MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT = '你的车票 {} 到 {} 购买成功，请登录 12306 进行支付'
 
     MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT = '订单号 {}，请及时登录12306，打开 \'未完成订单\'，在30分钟内完成支付!'
@@ -53,3 +54,12 @@ class OrderLog(BaseLog):
         self.add_quick_log('# 车票购买成功，订单号 {} #'.format(order_id))
         self.flush()
         return self
+
+    @classmethod
+    def get_order_success_notification_info(cls, query):
+        from py12306.query.job import Job
+        assert isinstance(query, Job)
+        return cls.MESSAGE_ORDER_SUCCESS_NOTIFICATION_INFO.format(query.get_info_of_left_station(),
+                                                                  query.get_info_of_arrive_station(),
+                                                                  query.get_info_of_train_number(),
+                                                                  query.get_info_of_left_date(), query.current_seat)

@@ -44,6 +44,7 @@ API_CONFIRM_SINGLE_FOR_QUEUE = BASE_URL_OF_12306 + '/otn/confirmPassenger/confir
 API_QUERY_ORDER_WAIT_TIME = BASE_URL_OF_12306 + '/otn/confirmPassenger/queryOrderWaitTime?{}'  # 排队查询
 
 API_NOTIFICATION_BY_VOICE_CODE = 'http://ali-voice.showapi.com/sendVoice?'
+API_NOTIFICATION_BY_VOICE_CODE_DINGXIN = 'http://yuyin2.market.alicloudapi.com/dx/voice_notice'
 
 API_FREE_CODE_QCR_API = 'http://60.205.200.159/api'
 API_FREE_CODE_QCR_API_CHECK = 'http://check.huochepiao.360.cn/img_vcode'
