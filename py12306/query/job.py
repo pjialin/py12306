@@ -32,6 +32,7 @@ class Job:
     account_key = 0
     allow_seats = []
     current_seat = None
+    current_seat_name = ''
     current_order_seat = None
     allow_train_numbers = []
     except_train_numbers = []
@@ -266,6 +267,7 @@ class Job:
         self.passengers = passengers
 
     def set_seat(self, seat):
+        self.current_seat_name = seat
         self.current_seat = SeatType.dicts.get(seat)
         self.current_order_seat = OrderSeatType.dicts.get(seat)
 
