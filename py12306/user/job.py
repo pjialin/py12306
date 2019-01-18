@@ -278,6 +278,7 @@ class UserJob:
                 if not Config().is_slave():
                     self.did_loaded_user()
                 else:
+                    self.is_ready = True # 设置子节点用户 已准备好
                     UserLog.print_welcome_user(self)
             return True
         return False
