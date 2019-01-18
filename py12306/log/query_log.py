@@ -64,7 +64,6 @@ class QueryLog(BaseLog):
                     # self.add_quick_log('加载status.json失败, 文件内容为: {}.'.format(repr(result)))
                     # self.flush()  # 这里可以用不用提示
 
-
         if Config.is_cluster_enabled():
             result = self.get_data_from_cluster()
 
@@ -157,9 +156,9 @@ class QueryLog(BaseLog):
     @classmethod
     def print_job_start(cls, job_name):
         self = cls()
-        message = '=== 正在进行第 {query_count} 次查询 {job_name} === {time}'.format(
+        message = '>> 第 {query_count} 次查询 {job_name} {time}'.format(
             query_count=int(self.data.get('query_count', 0)) + 1,
-            job_name=job_name, time=datetime.datetime.now())
+            job_name=job_name, time=time_now().strftime("%Y-%m-%d %H:%M:%S"))
         self.add_log(message)
         self.refresh_data()
         if is_main_thread():
@@ -167,9 +166,13 @@ class QueryLog(BaseLog):
         return self
 
     @classmethod
+    def add_query_time_log(cls, start, end, is_cdn):
+        return cls().add_log(('*' if is_cdn else '') + '耗时 %.2f' % (end - start))
+
+    @classmethod
     def add_stay_log(cls, second):
         self = cls()
-        self.add_log('安全停留 {}'.format(second))
+        self.add_log('停留 {}'.format(second))
         return self
 
     def print_data_restored(self):

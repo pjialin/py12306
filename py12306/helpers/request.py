@@ -1,7 +1,10 @@
+import requests
 from requests.exceptions import *
 
 from py12306.helpers.func import *
 from requests_html import HTMLSession, HTMLResponse
+
+requests.packages.urllib3.disable_warnings()
 
 
 class Request(HTMLSession):
@@ -57,3 +60,11 @@ class Request(HTMLSession):
                 response.status_code = 500
                 expand_class(response, 'json', Request.json)
             return response
+
+    def cdn_request(self, url: str, cdn=None, method='GET', **kwargs):
+        from py12306.helpers.api import HOST_URL_OF_12306
+        from py12306.helpers.cdn import Cdn
+        if not cdn: cdn = Cdn.get_cdn()
+        url = url.replace(HOST_URL_OF_12306, cdn)
+
+        return self.request(method,url, headers={'Host': HOST_URL_OF_12306}, verify=False, **kwargs)

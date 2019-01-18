@@ -2,7 +2,8 @@
 # 查询余票
 import time
 
-BASE_URL_OF_12306 = 'https://kyfw.12306.cn'
+HOST_URL_OF_12306 = 'kyfw.12306.cn'
+BASE_URL_OF_12306 = 'https://' + HOST_URL_OF_12306
 
 LEFT_TICKETS = {
     "url": BASE_URL_OF_12306 + "/otn/{type}?leftTicketDTO.train_date={left_date}&leftTicketDTO.from_station={left_station}&leftTicketDTO.to_station={arrive_station}&purpose_codes=ADULT",
@@ -46,3 +47,5 @@ API_NOTIFICATION_BY_VOICE_CODE = 'http://ali-voice.showapi.com/sendVoice?'
 
 API_FREE_CODE_QCR_API = 'http://60.205.200.159/api'
 API_FREE_CODE_QCR_API_CHECK = 'http://check.huochepiao.360.cn/img_vcode'
+
+API_CHECK_CDN_AVAILABLE = 'https://{}/otn/dynamicJs/omseuuq'

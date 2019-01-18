@@ -23,7 +23,7 @@ class Order:
 
     is_need_auth_code = False
 
-    max_queue_wait = 120
+    max_queue_wait = 60 * 5 # 最大排队时长
     current_queue_wait = 0
     retry_time = 3
     wait_queue_interval = 3
