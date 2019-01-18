@@ -51,7 +51,7 @@ class Query:
         pass
 
     @classmethod
-    def check_before_fun(cls):
+    def check_before_run(cls):
         self = cls()
         self.init_jobs()
         self.is_ready = True
