@@ -101,7 +101,11 @@ class QueryLog(BaseLog):
             self.add_log('乘车日期：{}'.format(job.left_dates))
             self.add_log('坐席：{}'.format('，'.join(job.allow_seats)))
             self.add_log('乘车人：{}'.format('，'.join(job.members)))
-            self.add_log('筛选车次：{}'.format('，'.join(job.allow_train_numbers if job.allow_train_numbers else ['不筛选'])))
+            if job.except_train_numbers:
+                train_number_message = '排除 ' + '，'.join(job.allow_train_numbers)
+            else:
+                train_number_message = '，'.join(job.allow_train_numbers if job.allow_train_numbers else ['不筛选'])
+            self.add_log('筛选车次：{}'.format(train_number_message))
             self.add_log('任务名称：{}'.format(job.job_name))
             # 乘车日期：['2019-01-24', '2019-01-25', '2019-01-26', '2019-01-27']
             self.add_log('')

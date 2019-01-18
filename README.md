@@ -121,7 +121,8 @@ docker run --rm --name py12306 -p 8008:8008 -d -v $(pwd):/config -v py12306:/dat
     - 新增 钉钉通知
     - 新增 Telegram 通知
     - 新增 ServerChan 和 PushBear 微信推送
-
+- 19-01-18
+    - 新增 CDN 查询
 
 ## 截图
 ### Web 管理页面
