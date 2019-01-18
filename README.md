@@ -87,7 +87,7 @@ python main.py
 
 
 ## Docker 使用
-**1. 将配置文件下载到本地***
+**1. 将配置文件下载到本地**
 ```bash
 docker run --rm pjialin/py12306 cat /config/env.py > env.py
 # 或
@@ -101,7 +101,7 @@ docker run --rm --name py12306 -p 8008:8008 -d -v $(pwd):/config -v py12306:/dat
 当前目录会多一个 12306.log 的日志文件， `tail -f 12306.log`
 
 ## Docker-compose 使用
-**1. 在py12306目录下创建config目录***
+**1. 在py12306目录下创建config目录**
 ```mkdir config```
 
 **2. 修改配置文件**
