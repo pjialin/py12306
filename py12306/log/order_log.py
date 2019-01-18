@@ -62,4 +62,4 @@ class OrderLog(BaseLog):
         return cls.MESSAGE_ORDER_SUCCESS_NOTIFICATION_INFO.format(query.get_info_of_left_station(),
                                                                   query.get_info_of_arrive_station(),
                                                                   query.get_info_of_train_number(),
-                                                                  query.get_info_of_left_date(), query.current_seat)
+                                                                  query.get_info_of_left_date(), query.current_seat_name)

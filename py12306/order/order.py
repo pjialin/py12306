@@ -100,7 +100,7 @@ class Order:
                 voice_info = {
                     'left_station': self.query_ins.left_station,
                     'arrive_station': self.query_ins.arrive_station,
-                    'set_type': self.query_ins.current_seat,
+                    'set_type': self.query_ins.current_seat_name,
                     'orderno': self.order_id
                 }
             else:
