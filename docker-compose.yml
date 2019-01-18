@@ -1,0 +1,8 @@
+version: "2"
+services:
+  go_home:
+    build: .
+    volumes:
+      - ./config:/config
+    ports:
+      - 18008:8008
