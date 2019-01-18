@@ -66,7 +66,7 @@ class Cdn:
         pass
 
     def start(self):
-        if not Config.is_cdn_enabled() or Config().is_slave(): return
+        if not Config.is_cdn_enabled(): return
         self.load_items()
         CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_START_TO_CHECK.format(len(self.items))).flush()
         self.restore_items()

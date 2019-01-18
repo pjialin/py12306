@@ -379,10 +379,12 @@ class Order:
                         if wait_time == -2 or wait_time == -3:  # -2 失败 -3 订单已撤销
                             OrderLog.add_quick_log(
                                 OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(result_data.get('msg'))).flush()
+                            return False
                         else:  # 未知原因
                             OrderLog.add_quick_log(
                                 OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(
                                     result_data.get('msg', wait_time))).flush()
+                            return False
 
                 elif result_data.get('msg'):  # 失败 对不起，由于您取消次数过多，今日将不能继续受理您的订票请求。1月8日您可继续使用订票功能。
                     # TODO 需要增加判断 直接结束
@@ -394,6 +396,7 @@ class Order:
             elif result.get('messages') or result.get('validateMessages'):
                 OrderLog.add_quick_log(OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL.format(
                     result.get('messages', result.get('validateMessages')))).flush()
+                return False
             else:
                 pass
             OrderLog.add_quick_log(OrderLog.MESSAGE_QUERY_ORDER_WAIT_TIME_INFO.format(self.queue_num)).flush()
