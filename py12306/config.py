@@ -82,6 +82,11 @@ class Config:
     WEB_PORT = 8080
     WEB_ENTER_HTML_PATH = PROJECT_DIR + 'py12306/web/static/index.html'
 
+    # CDN
+    CDN_ENABLED = 0
+    CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
+    CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
+
     envs = []
     retry_time = 5
     last_modify_time = 0
@@ -164,18 +169,22 @@ class Config:
         if envs == self.envs: return
         from py12306.query.query import Query
         from py12306.user.user import User
+        from py12306.helpers.cdn import Cdn
+        self.envs = envs
         for key, value in envs:
             if key in self.disallow_update_configs: continue
             if value != -1:
                 old = getattr(self, key)
                 setattr(self, key, value)
-                if not first:
-                    if key == 'USER_ACCOUNTS' and old != value:
+                if not first and old != value:
+                    if key == 'USER_ACCOUNTS':
                         User().update_user_accounts(auto=True, old=old)
-                    elif key == 'QUERY_JOBS' and old != value:
+                    elif key == 'QUERY_JOBS':
                         Query().update_query_jobs(auto=True)  # 任务修改
-                    elif key == 'QUERY_INTERVAL' and old != value:
+                    elif key == 'QUERY_INTERVAL':
                         Query().update_query_interval(auto=True)
+                    elif key == 'CDN_ENABLED':
+                        Cdn().update_cdn_status(auto=True)
 
     @staticmethod
     def is_master():  # 是不是 主
@@ -190,20 +199,16 @@ class Config:
     def is_cluster_enabled():
         return Config().CLUSTER_ENABLED
 
-    # @staticmethod
-    # def get_members():
-    #     members = []
-    #     for name, value in vars(Config).items():
-    #         if name.isupper():
-    #             members.append(([name, value]))
-    #     return members
+    @staticmethod
+    def is_cdn_enabled():
+        return Config().CDN_ENABLED
 
 
 class EnvLoader:
     envs = []
 
     def __init__(self):
-        self.envs = []  # 不是单例不初始化怎么还会有值
+        self.envs = []
 
     @classmethod
     def load_with_file(cls, file):

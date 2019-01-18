@@ -49,6 +49,12 @@ class CommonLog(BaseLog):
 
     MESSAGE_RESPONSE_EMPTY_ERROR = '网络错误'
 
+    MESSAGE_CDN_START_TO_CHECK = '正在筛选 {} 个 CDN...'
+    MESSAGE_CDN_START_TO_RECHECK = '正在重新筛选 {} 个 CDN...当前时间 {}\n'
+    MESSAGE_CDN_RESTORE_SUCCESS = 'CDN 恢复成功，上次检测 {}，下次检测 {}\n'
+    MESSAGE_CDN_CHECKED_SUCCESS = '# CDN 检测完成，可用 CDN {} #\n'
+    MESSAGE_CDN_CLOSED = '# CDN 已关闭 #'
+
     def __init__(self):
         super().__init__()
         self.init_data()
@@ -82,13 +88,16 @@ class CommonLog(BaseLog):
         disable = '未开启'
         self.add_quick_log('**** 当前配置 ****')
         self.add_quick_log('多线程查询: {}'.format(get_true_false_text(Config().QUERY_JOB_THREAD_ENABLED, enable, disable)))
+        self.add_quick_log('CDN 状态: {}'.format(get_true_false_text(Config().CDN_ENABLED, enable, disable))).flush()
+        self.add_quick_log('通知状态:')
         self.add_quick_log(
             '语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
         self.add_quick_log('邮件通知: {}'.format(get_true_false_text(Config().EMAIL_ENABLED, enable, disable)))
         self.add_quick_log('钉钉通知: {}'.format(get_true_false_text(Config().DINGTALK_ENABLED, enable, disable)))
         self.add_quick_log('Telegram通知: {}'.format(get_true_false_text(Config().TELEGRAM_ENABLED, enable, disable)))
         self.add_quick_log('ServerChan通知: {}'.format(get_true_false_text(Config().SERVERCHAN_ENABLED, enable, disable)))
-        self.add_quick_log('PushBear通知: {}'.format(get_true_false_text(Config().PUSHBEAR_ENABLED, enable, disable)))
+        self.add_quick_log(
+            'PushBear通知: {}'.format(get_true_false_text(Config().PUSHBEAR_ENABLED, enable, disable))).flush(sep='\t\t')
         self.add_quick_log('查询间隔: {} 秒'.format(Config().QUERY_INTERVAL))
         self.add_quick_log('用户心跳检测间隔: {} 秒'.format(Config().USER_HEARTBEAT_INTERVAL))
         self.add_quick_log('WEB 管理页面: {}'.format(get_true_false_text(Config().WEB_ENABLE, enable, disable)))
