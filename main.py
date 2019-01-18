@@ -16,7 +16,7 @@ def main():
     App.did_start()
 
     App.run_check()
-    Query.check_before_fun()
+    Query.check_before_run()
 
     ####### 运行任务
     Web.run()
