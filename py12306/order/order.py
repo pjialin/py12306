@@ -58,7 +58,11 @@ class Order:
         return self.normal_order()
 
     def normal_order(self):
-        if not self.submit_order_request(): return
+        order_request_res = self.submit_order_request()
+        if order_request_res == -1:
+            return self.order_did_success()
+        elif not order_request_res:
+            return
         if not self.user_ins.request_init_dc_page(): return
         if not self.check_order_info(): return
         if not self.get_queue_count(): return
@@ -75,6 +79,7 @@ class Order:
         OrderLog.notification(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                               OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_CONTENT)
         self.send_notification()
+        return True
 
     def send_notification(self):
         # num = 0  # 通知次数
@@ -117,6 +122,7 @@ class Order:
         #     sleep(self.notification_interval)
 
         OrderLog.add_quick_log(OrderLog.MESSAGE_JOB_CLOSED).flush()
+        return True
 
     def submit_order_request(self):
         data = {
@@ -136,7 +142,7 @@ class Order:
         else:
             if (str(result.get('messages', '')).find('未处理') >= 0):  # 未处理订单
                 self.order_id = 0  # 需要拿到订单号 TODO
-                return self.order_did_success()
+                return -1
             OrderLog.add_quick_log(
                 OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(
                     result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()

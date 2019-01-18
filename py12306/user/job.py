@@ -306,7 +306,7 @@ class UserJob:
         if result.get('data.normal_passengers'):
             self.passengers = result.get('data.normal_passengers')
             # 将乘客写入到文件
-            with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w') as f:
+            with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w', encoding='utf-8') as f:
                 f.write(json.dumps(self.passengers,indent=4, ensure_ascii=False))
             return self.passengers
         else:

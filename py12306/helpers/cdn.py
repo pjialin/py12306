@@ -100,9 +100,7 @@ class Cdn:
             if self.last_check_at: self.last_check_at = str_to_time(self.last_check_at)
             self.available_items = result.get('items', [])
             self.unavailable_items = result.get('fail_items', [])
-            CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_RESTORE_SUCCESS.format(self.last_check_at,
-                                                                                 self.last_check_at + timedelta(
-                                                                                     seconds=self.check_keep_second))).flush()
+            CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_RESTORE_SUCCESS.format(self.last_check_at )).flush()
             return True
         return False
 
@@ -219,7 +217,7 @@ class Cdn:
     @classmethod
     def get_cdn(cls):
         self = cls()
-        if self.is_ready:
+        if self.is_ready and self.available_items:
             return random.choice(self.available_items)
         return None
 
