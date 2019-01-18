@@ -51,7 +51,7 @@ class CommonLog(BaseLog):
 
     MESSAGE_CDN_START_TO_CHECK = '正在筛选 {} 个 CDN...'
     MESSAGE_CDN_START_TO_RECHECK = '正在重新筛选 {} 个 CDN...当前时间 {}\n'
-    MESSAGE_CDN_RESTORE_SUCCESS = 'CDN 恢复成功，上次检测 {}，下次检测 {}\n'
+    MESSAGE_CDN_RESTORE_SUCCESS = 'CDN 恢复成功，上次检测 {}\n'
     MESSAGE_CDN_CHECKED_SUCCESS = '# CDN 检测完成，可用 CDN {} #\n'
     MESSAGE_CDN_CLOSED = '# CDN 已关闭 #'
 
