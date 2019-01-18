@@ -37,6 +37,7 @@ class Config:
     RUNTIME_DIR = PROJECT_DIR + 'runtime/'
     QUERY_DATA_DIR = RUNTIME_DIR + 'query/'
     USER_DATA_DIR = RUNTIME_DIR + 'user/'
+    USER_PASSENGERS_FILE = RUNTIME_DIR + 'user/%s_passengers.json'
 
     STATION_FILE = PROJECT_DIR + 'data/stations.txt'
     CONFIG_FILE = PROJECT_DIR + 'env.py'

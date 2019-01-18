@@ -150,7 +150,8 @@ class UserJob:
             UserLog.add_quick_log(UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message'))).flush()
         else:
             UserLog.add_quick_log(
-                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)))).flush()
+                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message',
+                                                                                          CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)))).flush()
 
         return False
 
@@ -304,10 +305,14 @@ class UserJob:
         result = response.json()
         if result.get('data.normal_passengers'):
             self.passengers = result.get('data.normal_passengers')
+            # 将乘客写入到文件
+            with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w') as f:
+                f.write(json.dumps(self.passengers,indent=4, ensure_ascii=False))
             return self.passengers
         else:
             UserLog.add_quick_log(
-                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), self.retry_time)).flush()
+                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
+                    result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), self.retry_time)).flush()
             stay_second(self.retry_time)
             return self.get_user_passengers()
 
@@ -326,13 +331,18 @@ class UserJob:
         self.get_user_passengers()
         results = []
         for member in members:
-            child_check = array_dict_find_by_key_value(results, 'name', member)
-            if child_check:
+            is_member_code = is_number(member)
+            if not is_member_code:
+                child_check = array_dict_find_by_key_value(results, 'name', member)
+            if not is_member_code and child_check:
                 new_member = child_check.copy()
                 new_member['type'] = UserType.CHILD
                 new_member['type_text'] = dict_find_key_by_value(UserType.dicts, int(new_member['type']))
             else:
-                passenger = array_dict_find_by_key_value(self.passengers, 'passenger_name', member)
+                if is_member_code:
+                    passenger = array_dict_find_by_key_value(self.passengers, 'code', member)
+                else:
+                    passenger = array_dict_find_by_key_value(self.passengers, 'passenger_name', member)
                 if not passenger:
                     UserLog.add_quick_log(
                         UserLog.MESSAGE_USER_PASSENGERS_IS_INVALID.format(self.user_name, member)).flush()

@@ -121,6 +121,12 @@ def time_int():
     return int(time.time())
 
 
+def is_number(val):
+    if isinstance(val, int): return val
+    if isinstance(val, str): return val.isdigit()
+    return False
+
+
 def create_thread_and_run(jobs, callback_name, wait=True, daemon=True, args=(), kwargs={}):
     threads = []
     if not isinstance(jobs, list): jobs = [jobs]
