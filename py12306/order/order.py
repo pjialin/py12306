@@ -23,7 +23,7 @@ class Order:
 
     is_need_auth_code = False
 
-    max_queue_wait = 60 * 5 # 最大排队时长
+    max_queue_wait = 60 * 5  # 最大排队时长
     current_queue_wait = 0
     retry_time = 3
     wait_queue_interval = 3
@@ -77,8 +77,8 @@ class Order:
         self.send_notification()
 
     def send_notification(self):
-        num = 0  # 通知次数
-        sustain_time = self.notification_sustain_time
+        # num = 0  # 通知次数
+        # sustain_time = self.notification_sustain_time
         if Config().EMAIL_ENABLED:  # 邮件通知
             Notification.send_email(Config().EMAIL_RECEIVER, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                     OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
@@ -94,17 +94,19 @@ class Order:
         if Config().PUSHBEAR_ENABLED:  # PushBear通知
             Notification.push_bear(Config().PUSHBEAR_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                    OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id))
-        while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
-            num += 1
-            if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
-                OrderLog.add_quick_log(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND.format(num))
-                Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(),
-                                        OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format(
-                                            self.query_ins.left_station, self.query_ins.arrive_station))
-            else:
-                break
-            sustain_time -= self.notification_interval
-            sleep(self.notification_interval)
+
+        if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
+            OrderLog.add_quick_log(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_START_SEND.format(num))
+            Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, self.user_ins.get_name(),
+                                    OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_VOICE_CODE_CONTENT.format(
+                                        self.query_ins.left_station, self.query_ins.arrive_station))
+        # 取消循环发送通知
+        # while sustain_time:  # TODO 后面直接查询有没有待支付的订单就可以
+        #     num += 1
+        #     else:
+        #         break
+        #     sustain_time -= self.notification_interval
+        #     sleep(self.notification_interval)
 
         OrderLog.add_quick_log(OrderLog.MESSAGE_JOB_CLOSED).flush()
 
@@ -125,9 +127,11 @@ class Order:
             return True
         else:
             if (str(result.get('messages', '')).find('未处理') >= 0):  # 未处理订单
-                stay_second(self.retry_time)
+                self.order_id = 0  # 需要拿到订单号 TODO
+                return self.order_did_success()
             OrderLog.add_quick_log(
-                OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
+                OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(
+                    result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
         return False
 
     def check_order_info(self):
@@ -249,17 +253,17 @@ class Order:
         确认排队
         passengerTicketStr
         oldPassengerStr
-        randCode	
+        randCode
         purpose_codes	00
         key_check_isChange	FEE6C6634A3EAA93E1E6CFC39A99E555A92E438436F18AFF78837CDB
         leftTicketStr	CmDJZYrwUoJ1jFNonIgPzPFdMBvSSE8xfdUwvb2lq8CCWn%2Bzk1vM3roJaHk%3D
         train_location	QY
-        choose_seats	
+        choose_seats
         seatDetailType	000
         whatsSelect	1
         roomType	00
         dwAll	N
-        _json_att	
+        _json_att
         REPEAT_SUBMIT_TOKEN	0977caf26f25d1da43e3213eb35ff87c
         :return:
         """
@@ -310,7 +314,7 @@ class Order:
         排队查询
         random	1546849953542
         tourFlag	dc
-        _json_att	
+        _json_att
         REPEAT_SUBMIT_TOKEN	0977caf26f25d1da43e3213eb35ff87c
         :return:
         """
