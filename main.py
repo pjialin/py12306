@@ -2,11 +2,11 @@
 import sys
 
 from py12306.app import *
-from py12306.helpers.cdn import Cdn
 from py12306.log.common_log import CommonLog
 from py12306.query.query import Query
 from py12306.user.user import User
 from py12306.web.web import Web
+from py12306.startup.startup import StartUp
 
 
 def main():
@@ -21,7 +21,6 @@ def main():
 
     ####### 运行任务
     Web.run()
-    Cdn.run()
     User.run()
     Query.run()
     if not Const.IS_TEST:
@@ -58,6 +57,8 @@ def load_argvs():
     if '-c' in sys.argv: config_index = sys.argv.index('-c')
     if config_index:
         Config.CONFIG_FILE = sys.argv[config_index + 1:config_index + 2].pop()
+    if '-s' in sys.argv:
+        StartUp.start_up()
 
 
 if __name__ == '__main__':
