@@ -53,7 +53,6 @@ class QueryLog(BaseLog):
     def init_data(cls):
         self = cls()
         # 获取上次记录
-        # if Const.IS_TEST: return
         result = False
         if not Config.is_cluster_enabled() and path.exists(self.data_path):
             with open(self.data_path, encoding='utf-8') as f:
@@ -61,9 +60,10 @@ class QueryLog(BaseLog):
                 try:
                     result = json.loads(result)
                 except json.JSONDecodeError as e:
-                    self.add_quick_log('加载status.json失败, 文件内容为: {}.'.format(repr(result)))
-                    self.flush()
                     result = {}
+                    # self.add_quick_log('加载status.json失败, 文件内容为: {}.'.format(repr(result)))
+                    # self.flush()  # 这里可以用不用提示
+
 
         if Config.is_cluster_enabled():
             result = self.get_data_from_cluster()
