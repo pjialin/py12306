@@ -103,8 +103,8 @@ class Job:
                     tmp_start_time = time.time()
                     response = self.query_by_date(date)
                     tmp_end_time = time.time()  # 耗时
-                    QueryLog.add_query_time_log(tmp_start_time, tmp_end_time, is_cdn=self.is_cdn)
                     self.handle_response(response)
+                    QueryLog.add_query_time_log(tmp_start_time, tmp_end_time, is_cdn=self.is_cdn)
                     if not self.is_alive: return
                     self.safe_stay()
                     if is_main_thread():
@@ -233,7 +233,7 @@ class Job:
 
     def is_trains_number_valid(self, ticket_info):
         if self.allow_train_numbers:
-            return self.get_info_of_train_number() in self.allow_train_numbers
+            return self.get_info_of_train_number().upper() in map(str.upper, self.allow_train_numbers)
         return True
 
     def is_member_number_valid(self, seat):

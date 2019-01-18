@@ -26,7 +26,7 @@ class QueryLog(BaseLog):
     LOG_INIT_JOBS = ''
 
     MESSAGE_GIVE_UP_CHANCE_CAUSE_TICKET_NUM_LESS_THAN_SPECIFIED = '余票数小于乘车人数，放弃此次提交机会'
-    MESSAGE_QUERY_LOG_OF_EVERY_TRAIN = '{}-{}'
+    MESSAGE_QUERY_LOG_OF_EVERY_TRAIN = '{}'
     MESSAGE_QUERY_LOG_OF_TRAIN_INFO = '{} {}'
     MESSAGE_QUERY_START_BY_DATE = '出发日期 {}: {} - {}'
 

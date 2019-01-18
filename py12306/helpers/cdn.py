@@ -71,7 +71,7 @@ class Cdn:
         CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_START_TO_CHECK.format(len(self.items))).flush()
         self.restore_items()
         for i in range(self.thread_num):  # 多线程
-            create_thread_and_run(jobs=self, callback_name='check_available', wait=Const.IS_TEST)
+            create_thread_and_run(jobs=self, callback_name='check_available', wait=False)
 
     def load_items(self):
         with open(Config().CDN_ITEM_FILE, encoding='utf-8') as f:
@@ -149,7 +149,7 @@ class Cdn:
                 CommonLog.add_quick_log(
                     CommonLog.MESSAGE_CDN_START_TO_RECHECK.format(len(self.items), time_now())).flush()
                 for i in range(self.thread_num):  # 多线程
-                    create_thread_and_run(jobs=self, callback_name='check_available', wait=Const.IS_TEST)
+                    create_thread_and_run(jobs=self, callback_name='check_available', wait=False)
             stay_second(self.retry_num)
 
     def destroy(self):
