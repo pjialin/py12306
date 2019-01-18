@@ -41,7 +41,7 @@ cp env.py.example env.py
 
 语音通知
 
-语音验证码使用的是阿里云 API 市场上的一个服务商，需要到 [https://market.aliyun.com/products/57126001/cmapi019902.html](https://market.aliyun.com/products/57126001/cmapi019902.html) 购买后将 appcode 填写到配置中
+语音验证码使用的是阿里云 API 市场上的一个服务商，需要到 [https://market.aliyun.com/products/56928004/cmapi026600.html](https://market.aliyun.com/products/56928004/cmapi026600.html) 购买后将 appcode 填写到配置中
 
 **3. 启动前测试**
 
