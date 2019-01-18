@@ -5,6 +5,7 @@ from py12306.helpers.api import *
 from py12306.helpers.request import Request
 from py12306.log.common_log import CommonLog
 
+
 class Notification():
     """
     通知类
@@ -17,7 +18,10 @@ class Notification():
     @classmethod
     def voice_code(cls, phone, name='', content=''):
         self = cls()
-        self.send_voice_code_of_yiyuan(phone, name=name, content=content)
+        if Config().NOTIFICATION_VOICE_CODE_TYPE == 'dingxin':
+            self.send_voice_code_of_dingxin(phone, name=name, info=content)
+        else:
+            self.send_voice_code_of_yiyuan(phone, name=name, content=content)
 
     @classmethod
     def dingtalk_webhook(cls, content=''):
@@ -65,14 +69,41 @@ class Notification():
             'tNum': 'T170701001056'
         }
         response = self.session.request(url=API_NOTIFICATION_BY_VOICE_CODE + urllib.parse.urlencode(params),
-                                        method='GET', headers={
-                'Authorization': 'APPCODE {}'.format(appcode)
-            })
+                                        method='GET', headers={'Authorization': 'APPCODE {}'.format(appcode)})
         result = response.json()
         response_message = result.get('showapi_res_body.remark')
         if response.status_code in [400, 401, 403]:
             return CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_FORBID).flush()
         if response.status_code == 200 and result.get('showapi_res_body.flag'):
+            CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_SEND_SUCCESS.format(response_message)).flush()
+            return True
+        else:
+            return CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_SEND_FAIL.format(response_message)).flush()
+
+    def send_voice_code_of_dingxin(self, phone, name='', info={}):
+        """
+        发送语音验证码 ( 鼎信 )
+        购买地址 https://market.aliyun.com/products/56928004/cmapi026600.html?spm=5176.2020520132.101.2.51547218rkAXxy
+        :return:
+        """
+        appcode = Config().NOTIFICATION_API_APP_CODE
+        if not appcode:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_EMPTY_APP_CODE).flush()
+            return False
+        data = {
+            'tpl_id': 'TP1901174',
+            'phone': phone,
+            'param': 'name:{name},job_name:{left_station}到{arrive_station}{set_type},orderno:{orderno}'.format(
+                name=name, left_station=info.get('left_station'), arrive_station=info.get('arrive_station'),
+                set_type=info.get('set_type'), orderno=info.get('orderno'))
+        }
+        response = self.session.request(url=API_NOTIFICATION_BY_VOICE_CODE_DINGXIN, method='POST', data=data,
+                                        headers={'Authorization': 'APPCODE {}'.format(appcode)})
+        result = response.json()
+        response_message = result.get('return_code')
+        if response.status_code in [400, 401, 403]:
+            return CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_FORBID).flush()
+        if response.status_code == 200 and result.get('return_code') == '00000':
             CommonLog.add_quick_log(CommonLog.MESSAGE_VOICE_API_SEND_SUCCESS.format(response_message)).flush()
             return True
         else:
@@ -146,5 +177,11 @@ if __name__ == '__main__':
     name = '张三4'
     content = '你的车票 广州 到 深圳 购买成功，请登录 12306 进行支付'
     # Notification.voice_code('13800138000', name, content)
-    Notification.send_email('user@email.com', name, content)
-    Notification.dingtalk_webhook(content)
+    # Notification.send_email('user@email.com', name, content)
+    # Notification.dingtalk_webhook(content)
+    Notification.voice_code('13800138000', name, {
+        'left_station': '广州',
+        'arrive_station': '深圳',
+        'set_type': '硬座',
+        'orderno': 'E123542'
+    })
