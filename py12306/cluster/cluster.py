@@ -202,7 +202,12 @@ class Cluster():
 
     def subscribe(self):
         while True:
-            message = self.pubsub.get_message()
+            try:
+                message = self.pubsub.get_message()
+            except RuntimeError as err:
+                if 'args' in dir(err) and err.args[0].find('pubsub connection not set') >= 0:  # 失去重连
+                    self.pubsub.subscribe(self.KEY_CHANNEL_LOG, self.KEY_CHANNEL_EVENT)
+                    continue
             if message:
                 if message.get('type') == 'message' and message.get('channel') == self.KEY_CHANNEL_LOG and message.get(
                         'data'):
