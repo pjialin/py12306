@@ -22,11 +22,15 @@ def dashboard():
     query_job_count = len(Query().jobs)
     user_job_count = len(User().users)
     query_count = QueryLog().data.get('query_count')
-    return jsonify({
+    res = {
         'query_job_count': query_job_count,
         'user_job_count': user_job_count,
-        'query_count': query_count
-    })
+        'query_count': query_count,
+    }
+    if Config().CDN_ENABLED:
+        from py12306.helpers.cdn import Cdn
+        res['cdn_count'] = len(Cdn().available_items)
+    return jsonify(res)
 
 
 @stat.route('/stat/cluster', methods=['GET'])
