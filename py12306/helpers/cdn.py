@@ -31,7 +31,7 @@ class Cdn:
 
     safe_stay_time = 0.2
     retry_num = 1
-    thread_num = 8
+    thread_num = 5
     check_time_out = 3
 
     last_check_at = 0
@@ -40,6 +40,7 @@ class Cdn:
 
     def __init__(self):
         self.cluster = Cluster()
+        self.init_config()
         create_thread_and_run(self, 'watch_cdn', False)
 
     def init_data(self):
@@ -50,8 +51,12 @@ class Cdn:
         self.is_ready = False
         self.is_recheck = False
 
+    def init_config(self):
+        self.check_time_out = Config().CDN_CHECK_TIME_OUT
+
     def update_cdn_status(self, auto=False):
         if auto:
+            self.init_config()
             if Config().is_cdn_enabled():
                 self.run()
             else:
@@ -100,7 +105,7 @@ class Cdn:
             if self.last_check_at: self.last_check_at = str_to_time(self.last_check_at)
             self.available_items = result.get('items', [])
             self.unavailable_items = result.get('fail_items', [])
-            CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_RESTORE_SUCCESS.format(self.last_check_at )).flush()
+            CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_RESTORE_SUCCESS.format(self.last_check_at)).flush()
             return True
         return False
 
