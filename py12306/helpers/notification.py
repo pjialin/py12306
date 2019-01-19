@@ -119,13 +119,22 @@ class Notification():
         message['To'] = to
         message.set_content(content)
         try:
-            server = smtplib.SMTP(Config().EMAIL_SERVER_HOST)
-            server.login(Config().EMAIL_SERVER_USER, Config().EMAIL_SERVER_PASSWORD)
-            server.ehlo()
-            server.starttls()
-            server.send_message(message)
-            server.quit()
-            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_SUCCESS).flush()
+            if Config().EMAIL_SERVER_HOST == 'smtp-mail.outlook.com':
+                server = smtplib.SMTP(Config().EMAIL_SERVER_HOST)
+                server.connect(Config().EMAIL_SERVER_HOST, 587)
+                server.starttls()
+                server.login(Config().EMAIL_SERVER_USER, Config().EMAIL_SERVER_PASSWORD)
+                server.send_message(message)
+                server.quit()
+                CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_SUCCESS).flush()
+            else:
+                server = smtplib.SMTP(Config().EMAIL_SERVER_HOST)
+                server.login(Config().EMAIL_SERVER_USER, Config().EMAIL_SERVER_PASSWORD)
+                server.ehlo()
+                server.starttls()
+                server.send_message(message)
+                server.quit()
+                CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_SUCCESS).flush()
         except Exception as e:
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_FAIL.format(e)).flush()
 
