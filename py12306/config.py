@@ -86,6 +86,7 @@ class Config:
 
     # CDN
     CDN_ENABLED = 0
+    CDN_CHECK_TIME_OUT = 2
     CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
     CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
 
