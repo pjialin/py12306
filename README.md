@@ -39,6 +39,12 @@ cp env.py.example env.py
 
 注：免费打码无法保证持续可用，如失效请手动切换到若快平台，需要先到 [http://www.ruokuai.com](http://www.ruokuai.com/login) 注册一个账号后填写到配置中
 
+Gitpod还支持免费打码：
+
+[![在Gitpod免费打码](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io#https://github.com/pjialin/py12306)
+
+注：Gitpod目前仅提供英文版本。
+
 语音通知
 
 语音验证码使用的是阿里云 API 市场上的一个服务商，需要到 [https://market.aliyun.com/products/56928004/cmapi026600.html](https://market.aliyun.com/products/56928004/cmapi026600.html) 购买后将 appcode 填写到配置中
