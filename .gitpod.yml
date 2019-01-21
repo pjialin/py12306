@@ -1,0 +1,6 @@
+ports:
+- port: 8008
+  onOpen: open-preview
+tasks:
+- init: pip install -r requirements.txt && cp env.py.example env.py
+  command: python main.py -t
