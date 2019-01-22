@@ -44,6 +44,7 @@ class Job:
     retry_time = 3
 
     interval = {}
+    interval_additional = 0
 
     query = None
     cluster = None
@@ -223,6 +224,12 @@ class Job:
         """
         if response.status_code != 200:
             QueryLog.print_query_error(response.reason, response.status_code)
+            if self.interval_additional:
+                self.interval_additional += self.interval_additional
+            else:
+                self.interval_additional = self.interval.get('min')
+        else:
+            self.interval_additional = 0
         result = response.json().get('data.result')
         return result if result else False
 
@@ -256,8 +263,10 @@ class Job:
         Query().jobs.pop(index)
 
     def safe_stay(self):
-        interval = get_interval_num(self.interval)
-        QueryLog.add_stay_log(interval)
+        origin_interval = get_interval_num(self.interval)
+        interval = origin_interval + self.interval_additional
+        QueryLog.add_stay_log(
+            '%s + %s' % (origin_interval, self.interval_additional) if self.interval_additional else origin_interval)
         stay_second(interval)
 
     def set_passengers(self, passengers):
