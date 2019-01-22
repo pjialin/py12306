@@ -25,7 +25,7 @@ class Cluster():
     KEY_USER_COOKIES = KEY_PREFIX + 'user_cookies'
     KEY_USER_INFOS = KEY_PREFIX + 'user_infos'
     KEY_USER_LAST_HEARTBEAT = KEY_PREFIX + 'user_last_heartbeat'
-    KEY_NODES_ALIVE = KEY_PREFIX + 'nodes_alive'
+    KEY_NODES_ALIVE_PREFIX = KEY_PREFIX + 'nodes_alive_'
 
     KEY_CDN_AVAILABLE_ITEMS = KEY_PREFIX + 'cdn_available_items'
     KEY_CDN_LAST_CHECK_AT = KEY_PREFIX + 'cdn_last_check_at'
@@ -185,9 +185,8 @@ class Cluster():
         检查节点是否存活
         :return:
         """
-        alive = self.session.hgetall(self.KEY_NODES_ALIVE)
         for node in self.nodes:
-            if node not in alive or (time_int() - int(alive[node])) > self.lost_alive_time:
+            if not self.session.exists(self.KEY_NODES_ALIVE_PREFIX + node):
                 self.left_cluster(node)
 
     # def kick_out_from_nodes(self, node_name):
@@ -197,7 +196,7 @@ class Cluster():
         while True:
             if self.node_name not in self.get_nodes():  # 已经被 kict out  重新加下
                 self.join_cluster()
-            self.session.hset(self.KEY_NODES_ALIVE, self.node_name, str(time_int()))
+            self.session.set(self.KEY_NODES_ALIVE_PREFIX + self.node_name, Config().NODE_IS_MASTER, ex=self.lost_alive_time)
             stay_second(self.keep_alive_time)
 
     def subscribe(self):
