@@ -5,3 +5,4 @@ __pycache__
 env.py
 env.slave.py
 env.docker.py
+docker-compose.yml
