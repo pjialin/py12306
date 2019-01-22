@@ -13,10 +13,7 @@ API_BASE_LOGIN = {
     "url": BASE_URL_OF_12306 + '/passport/web/login',
 }
 
-API_USER_CHECK = {
-    "url": BASE_URL_OF_12306 + '/otn/login/checkUser',
-    "method": "post",
-}
+API_USER_LOGIN_CHECK = BASE_URL_OF_12306 + '/otn/login/conf'
 
 API_AUTH_CODE_DOWNLOAD = {
     'url': BASE_URL_OF_12306 + '/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&_={random}'

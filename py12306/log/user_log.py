@@ -70,3 +70,7 @@ class UserLog(BaseLog):
         self.add_quick_log('# 乘客验证成功 {} #\n'.format(', '.join(result)))
         self.flush()
         return self
+
+    @classmethod
+    def print_user_expired(cls):
+        return cls().add_quick_log(cls.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
