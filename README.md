@@ -87,7 +87,7 @@ python main.py
 
 
 ## Docker 使用
-**1. 将配置文件下载到本地***
+**1. 将配置文件下载到本地**
 ```bash
 docker run --rm pjialin/py12306 cat /config/env.py > env.py
 # 或
@@ -99,6 +99,19 @@ curl https://raw.githubusercontent.com/pjialin/py12306/master/env.docker.py.exam
 docker run --rm --name py12306 -p 8008:8008 -d -v $(pwd):/config -v py12306:/data pjialin/py12306
 ```
 当前目录会多一个 12306.log 的日志文件， `tail -f 12306.log`
+
+### Docker-compose 中使用
+**1. 复制配置文件**
+```
+cp docker-compose.yml.example docker-compose.yml
+```
+
+**2. 从 docker-compose 运行**
+
+在`docker-compose.yml`所在的目录使用命令
+```
+docker-compose up -d
+```
 
 ## Web 管理页面
 
