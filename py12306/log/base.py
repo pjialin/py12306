@@ -43,8 +43,7 @@ class BaseLog:
         else:
             print(*logs, sep=sep, end=end, file=file)
         self.empty_logs(logs)
-        if exit:
-            sys.exit()
+        if exit: sys.exit()
 
     def get_logs(self):
         if self.quick_log:

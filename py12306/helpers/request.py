@@ -11,13 +11,8 @@ class Request(HTMLSession):
     """
     请求处理类
     """
+
     # session = {}
-
-    # def __init__(self, mock_browser=True, session=None):
-    # super().__init__(mock_browser=mock_browser)
-    # self.session = session if session else HTMLSession()
-    pass
-
     def save_to_file(self, url, path):
         response = self.get(url, stream=True)
         with open(path, 'wb') as f:
@@ -36,6 +31,13 @@ class Request(HTMLSession):
         response = HTMLSession._handle_response(response, **kwargs)
         expand_class(response, 'json', Request.json)
         return response
+
+    def add_response_hook(self, hook):
+        exist_hooks = self.hooks['response']
+        if not isinstance(exist_hooks, list): hooks = [exist_hooks]
+        hooks.append(hook)
+        self.hooks['response'] = hooks
+        return self
 
     def json(self, default={}):
         """
@@ -67,4 +69,4 @@ class Request(HTMLSession):
         if not cdn: cdn = Cdn.get_cdn()
         url = url.replace(HOST_URL_OF_12306, cdn)
 
-        return self.request(method,url, headers={'Host': HOST_URL_OF_12306}, verify=False, **kwargs)
+        return self.request(method, url, headers={'Host': HOST_URL_OF_12306}, verify=False, **kwargs)

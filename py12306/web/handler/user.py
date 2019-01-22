@@ -57,6 +57,6 @@ def convert_job_to_info(job: UserJob):
         'name': job.get_name(),
         'is_ready': job.is_ready,
         'is_loaded': job.user_loaded,  # 是否成功加载 ready 是当前是否可用
-        'last_heartbeat': timestamp_to_time(job.last_heartbeat),
+        'last_heartbeat': timestamp_to_time(job.last_heartbeat) if job.last_heartbeat else '-',
         'login_num': job.login_num
     }
