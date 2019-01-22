@@ -53,14 +53,17 @@ class Request(HTMLSession):
 
     def request(self, *args, **kwargs):  # 拦截所有错误
         try:
-            return super().request(*args, **kwargs)
+            response = super().request(*args, **kwargs)
+            return response
         except RequestException as e:
+            from py12306.log.common_log import CommonLog
             if e.response:
                 response = e.response
             else:
                 response = HTMLResponse(HTMLSession)
-                response.status_code = 500
+                # response.status_code = 500
                 expand_class(response, 'json', Request.json)
+            response.reason = response.reason if response.reason else CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR
             return response
 
     def cdn_request(self, url: str, cdn=None, method='GET', **kwargs):

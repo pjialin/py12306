@@ -103,11 +103,9 @@ class Job:
                 self.refresh_station(station)
                 for date in self.left_dates:
                     self.left_date = date
-                    tmp_start_time = time.time()
                     response = self.query_by_date(date)
-                    tmp_end_time = time.time()  # 耗时
                     self.handle_response(response)
-                    QueryLog.add_query_time_log(tmp_start_time, tmp_end_time, is_cdn=self.is_cdn)
+                    QueryLog.add_query_time_log(time=response.elapsed.total_seconds(), is_cdn=self.is_cdn)
                     if not self.is_alive: return
                     self.safe_stay()
                     if is_main_thread():
