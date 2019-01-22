@@ -170,8 +170,8 @@ class QueryLog(BaseLog):
         return self
 
     @classmethod
-    def add_query_time_log(cls, start, end, is_cdn):
-        return cls().add_log(('*' if is_cdn else '') + '耗时 %.2f' % (end - start))
+    def add_query_time_log(cls, time, is_cdn):
+        return cls().add_log(('*' if is_cdn else '') + '耗时 %.2f' % time)
 
     @classmethod
     def add_stay_log(cls, second):
