@@ -14,6 +14,7 @@ from py12306.helpers.type import UserType
 from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 from py12306.log.common_log import CommonLog
+from py12306.proxies.proxies import Proxy
 
 
 class UserJob:
@@ -46,7 +47,7 @@ class UserJob:
         self.init_data(info)
 
     def init_data(self, info):
-        self.session = Request()
+        self.session = Request(Config().PROXY_ENABLE)
         self.session.add_response_hook(self.response_login_check)
         self.key = str(info.get('key'))
         self.user_name = info.get('user_name')
@@ -308,6 +309,7 @@ class UserJob:
                 f.write(json.dumps(self.passengers, indent=4, ensure_ascii=False))
             return self.passengers
         else:
+            Proxy.update_proxy()
             UserLog.add_quick_log(
                 UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
                     result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), self.retry_time)).flush()

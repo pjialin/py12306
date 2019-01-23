@@ -158,11 +158,11 @@ class QueryLog(BaseLog):
         return self
 
     @classmethod
-    def print_job_start(cls, job_name):
+    def print_job_start(cls, job_name, ip):
         self = cls()
-        message = '>> 第 {query_count} 次查询 {job_name} {time}'.format(
+        message = '>> 第 {query_count} 次查询 {job_name} {time}  代理IP: {ip}'.format(
             query_count=int(self.data.get('query_count', 0)) + 1,
-            job_name=job_name, time=time_now().strftime("%Y-%m-%d %H:%M:%S"))
+            job_name=job_name, time=time_now().strftime("%Y-%m-%d %H:%M:%S"), ip=ip)
         self.add_log(message)
         self.refresh_data()
         if is_main_thread():

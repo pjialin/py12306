@@ -47,3 +47,8 @@ API_FREE_CODE_QCR_API = 'http://60.205.200.159/api'
 API_FREE_CODE_QCR_API_CHECK = 'http://check.huochepiao.360.cn/img_vcode'
 
 API_CHECK_CDN_AVAILABLE = 'https://{}/otn/dynamicJs/omseuuq'
+
+API_PROXY_GET = 'http://{}:{}/get/'
+API_PROXY_GET_ALL = 'http://{}:{}/get_all/'
+API_PROXY_DELETE = 'http://{}:{}/delete/?proxy={}'
+API_PROXY_STATUS = 'http://{}:{}/get_status/'

@@ -1,6 +1,7 @@
 import requests
 from requests.exceptions import *
 
+from py12306.proxies.proxies import Proxy
 from py12306.helpers.func import *
 from requests_html import HTMLSession, HTMLResponse
 
@@ -13,6 +14,11 @@ class Request(HTMLSession):
     """
 
     # session = {}
+
+    def __init__(self, use_proxy=False):
+        super().__init__()
+        self.use_proxy = use_proxy
+
     def save_to_file(self, url, path):
         response = self.get(url, stream=True)
         with open(path, 'wb') as f:
@@ -53,10 +59,20 @@ class Request(HTMLSession):
 
     def request(self, *args, **kwargs):  # 拦截所有错误
         try:
-            response = super().request(*args, **kwargs)
+            proxies = None
+            if self.use_proxy:
+                proxies = Proxy.get_proxy()
+                if kwargs.get('timeout') is None:
+                    kwargs.setdefault('timeout', Proxy.get_timeout())
+            response = super().request(proxies=proxies, *args, **kwargs)
+            if self.use_proxy and response.status_code != 200:
+                Proxy.update_proxy()
             return response
         except RequestException as e:
             from py12306.log.common_log import CommonLog
+            if self.use_proxy:
+                timeout = str(e).find('ConnectTimeoutError') > 0
+                Proxy.update_proxy(timeout)
             if e.response:
                 response = e.response
             else:

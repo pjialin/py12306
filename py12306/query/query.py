@@ -26,7 +26,7 @@ class Query:
     is_ready = False
 
     def __init__(self):
-        self.session = Request()
+        self.session = Request(Config().PROXY_ENABLE)
         self.cluster = Cluster()
         self.update_query_interval()
         self.update_query_jobs()

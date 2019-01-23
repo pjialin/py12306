@@ -90,6 +90,13 @@ class Config:
     CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
     CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
 
+    # 代理IP设置
+    PROXY_ENABLE = 0
+    PROXY_TIME_OUT = 10
+    PROXY_TYPE = 2
+    PROXY_API_IP = '127.0.0.1'
+    PROXY_API_PORT = '5010'
+
     envs = []
     retry_time = 5
     last_modify_time = 0

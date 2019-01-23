@@ -10,6 +10,7 @@ from py12306.log.query_log import QueryLog
 from py12306.helpers.func import *
 from py12306.log.user_log import UserLog
 from py12306.order.order import Order
+from py12306.proxies.proxies import Proxy
 from py12306.user.user import User
 from py12306.helpers.event import Event
 
@@ -99,7 +100,7 @@ class Job:
         """
         while True and self.is_alive:
             app_available_check()
-            QueryLog.print_job_start(self.job_name)
+            QueryLog.print_job_start(self.job_name, Proxy.get_proxy_ip())
             for station in self.stations:
                 self.refresh_station(station)
                 for date in self.left_dates:

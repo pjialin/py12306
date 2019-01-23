@@ -87,6 +87,7 @@ class CommonLog(BaseLog):
         enable = '已开启'
         disable = '未开启'
         self.add_quick_log('**** 当前配置 ****')
+        self.add_quick_log('代理状态: {}'.format(get_true_false_text(Config().PROXY_ENABLE, enable, disable)))
         self.add_quick_log('多线程查询: {}'.format(get_true_false_text(Config().QUERY_JOB_THREAD_ENABLED, enable, disable)))
         self.add_quick_log('CDN 状态: {}'.format(get_true_false_text(Config().CDN_ENABLED, enable, disable))).flush()
         self.add_quick_log('通知状态:')
