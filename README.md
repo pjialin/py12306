@@ -18,6 +18,7 @@
 - [x] 邮件通知
 - [x] Web 管理页面
 - [x] 微信消息通知
+- [ ] 代理池支持
 
 ## 使用
 py12306 需要运行在 python 3.6 以上版本（其它版本暂未测试)
@@ -83,7 +84,7 @@ python main.py
 
 将配置文件的中 `CLUSTER_ENABLED` 打开即开启分布式
 
-目前提供了一个单独的子节点配置文件 `env.slave.py.example` 将文件修改为 `env.slave.py`， 通过 `python main -c env.slave.py` 即可快速启动
+目前提供了一个单独的子节点配置文件 `env.slave.py.example` 将文件修改为 `env.slave.py`， 通过 `python main.py -c env.slave.py` 即可快速启动
 
 
 ## Docker 使用
