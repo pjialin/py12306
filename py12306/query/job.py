@@ -131,9 +131,9 @@ class Job:
                                              arrive_station=self.arrive_station_code, type='leftTicket/queryZ')
         if Config.is_cdn_enabled() and Cdn().is_ready:
             self.is_cdn = True
-            return self.query.session.cdn_request(url, timeout=self.query_time_out)
+            return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=False)
         self.is_cdn = False
-        return self.query.session.get(url, timeout=self.query_time_out)
+        return self.query.session.get(url, timeout=self.query_time_out, allow_redirects=False)
 
     def handle_response(self, response):
         """
