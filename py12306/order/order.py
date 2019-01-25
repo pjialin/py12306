@@ -246,9 +246,12 @@ class Order:
             ticket = result.get('data.ticket').split(',')  # 余票列表
             # 这里可以判断 是真实是 硬座还是无座，避免自动分配到无座
             ticket_number = ticket[0]  # 余票
-            if ticket_number != '充足' or int(ticket_number) <= 0:
+            if ticket_number != '充足' and int(ticket_number) <= 0:
                 if self.query_ins.current_seat == SeatType.NO_SEAT:  # 允许无座
                     ticket_number = ticket[1]
+                if not int(ticket_number): # 跳过无座
+                    OrderLog.add_quick_log(OrderLog.MESSAGE_GET_QUEUE_INFO_NO_SEAT).flush()
+                    return False
 
             if result.get('data.op_2') == 'true':
                 OrderLog.add_quick_log(OrderLog.MESSAGE_GET_QUEUE_LESS_TICKET).flush()
