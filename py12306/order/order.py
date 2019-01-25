@@ -141,8 +141,10 @@ class Order:
             return True
         else:
             if (str(result.get('messages', '')).find('未处理') >= 0):  # 未处理订单
-                self.order_id = 0  # 需要拿到订单号 TODO
-                return -1
+                # 0125 增加排队时长到 5 分钟之后，更多的是 排队失败，得通过拿到订单列表才能确认，再打个 TODO
+                # self.order_id = 0  # 需要拿到订单号 TODO
+                # return -1
+                pass
             OrderLog.add_quick_log(
                 OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(
                     result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()

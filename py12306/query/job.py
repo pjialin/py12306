@@ -45,6 +45,7 @@ class Job:
 
     interval = {}
     interval_additional = 0
+    interval_additional_max = 5
 
     query = None
     cluster = None
@@ -224,10 +225,8 @@ class Job:
         """
         if response.status_code != 200:
             QueryLog.print_query_error(response.reason, response.status_code)
-            if self.interval_additional:
-                self.interval_additional += self.interval_additional
-            else:
-                self.interval_additional = self.interval.get('min')
+            if self.interval_additional < self.interval_additional_max:
+                self.interval_additional += self.interval.get('min')
         else:
             self.interval_additional = 0
         result = response.json().get('data.result')

@@ -311,6 +311,8 @@ class UserJob:
             UserLog.add_quick_log(
                 UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
                     result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), self.retry_time)).flush()
+            if Config().is_slave():
+                self.load_user_from_remote() # 加载最新 cookie
             stay_second(self.retry_time)
             return self.get_user_passengers()
 
