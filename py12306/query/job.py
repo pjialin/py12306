@@ -1,4 +1,5 @@
 import sys
+from datetime import timedelta
 
 from py12306.app import app_available_check
 from py12306.cluster.cluster import Cluster
@@ -28,6 +29,8 @@ class Job:
     arrive_station = ''
     left_station_code = ''
     arrive_station_code = ''
+    from_time = timedelta(hours=0)
+    to_time = timedelta(hours=24)
 
     account_key = 0
     allow_seats = []
@@ -60,6 +63,8 @@ class Job:
     INDEX_ARRIVE_STATION = 7
     INDEX_ORDER_TEXT = 1  # 下单文字
     INDEX_SECRET_STR = 0
+    INDEX_LEFT_TIME = 8
+    INDEX_ARRIVE_TIME = 9
 
     def __init__(self, info, query):
         self.cluster = Cluster()
@@ -84,6 +89,18 @@ class Job:
         self.member_num = len(self.members)
         self.member_num_take = self.member_num
         self.allow_less_member = bool(info.get('allow_less_member'))
+        period = info.get('period')
+        if isinstance(period, dict):
+            if 'from' in period:
+                parts = period['from'].split(':')
+                if len(parts) == 2:
+                    self.from_time = timedelta(
+                        hours=int(parts[0]), seconds=int(parts[1]))
+            if 'to' in period:
+                parts = period['to'].split(':')
+                if len(parts) == 2:
+                    self.to_time = timedelta(
+                        hours=int(parts[0]), seconds=int(parts[1]))
 
     def update_interval(self):
         self.interval = self.query.interval
@@ -239,6 +256,13 @@ class Job:
         return seat != '' and seat != '无' and seat != '*'
 
     def is_trains_number_valid(self):
+        train_left_time = self.get_info_of_train_left_time()
+        time_parts = train_left_time.split(':')
+        left_time = timedelta(
+            hours=int(time_parts[0]), seconds=int(time_parts[1]))
+        if left_time < self.from_time or left_time > self.to_time:
+            return False
+
         if self.except_train_numbers:
             return self.get_info_of_train_number().upper() not in map(str.upper, self.except_train_numbers)
         if self.allow_train_numbers:
@@ -324,3 +348,9 @@ class Job:
 
     def get_info_of_secret_str(self):
         return self.ticket_info[self.INDEX_SECRET_STR]
+
+    def get_info_of_train_left_time(self):
+        return self.ticket_info[self.INDEX_LEFT_TIME]
+
+    def get_info_of_train_arrive_time(self):
+        return self.ticket_info[self.INDEX_ARRIVE_TIME]
