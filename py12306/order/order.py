@@ -77,7 +77,7 @@ class Order:
     def order_did_success(self):
         OrderLog.print_ticket_did_ordered(self.order_id)
         OrderLog.notification(OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
-                              OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_CONTENT)
+                              OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_CONTENT.format(self.user_ins.user_name))
         self.send_notification()
         return True
 
@@ -85,7 +85,7 @@ class Order:
         # num = 0  # 通知次数
         # sustain_time = self.notification_sustain_time
         info_message = OrderLog.get_order_success_notification_info(self.query_ins)
-        normal_message = OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id)
+        normal_message = OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id, self.user_ins.user_name)
         if Config().EMAIL_ENABLED:  # 邮件通知
             Notification.send_email(Config().EMAIL_RECEIVER, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                     normal_message + info_message)
