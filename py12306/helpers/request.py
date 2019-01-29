@@ -53,6 +53,9 @@ class Request(HTMLSession):
 
     def request(self, *args, **kwargs):  # 拦截所有错误
         try:
+            if not 'timeout' in kwargs:
+                from py12306.config import Config
+                kwargs['timeout'] = Config().TIME_OUT_OF_REQUEST
             response = super().request(*args, **kwargs)
             return response
         except RequestException as e:
