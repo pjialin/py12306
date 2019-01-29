@@ -90,6 +90,9 @@ class Config:
     CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
     CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
 
+    # Default time out
+    TIME_OUT_OF_REQUEST = 5
+
     envs = []
     retry_time = 5
     last_modify_time = 0
