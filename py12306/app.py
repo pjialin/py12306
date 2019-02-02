@@ -130,6 +130,10 @@ class App:
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_PUSH_BEAR).flush()
             Notification.push_bear(Config().PUSHBEAR_KEY, '测试发送消息', 'By py12306')
 
+        if Config().BARK_ENABLED:  # Bark通知
+            CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_PUSH_BARK).flush()
+            Notification.push_bark('测试发送信息')
+
     @classmethod
     def run_check(cls):
         """

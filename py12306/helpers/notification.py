@@ -48,6 +48,11 @@ class Notification():
         self = cls()
         self.send_pushbear(skey=skey, title=title, content=content)
 
+    @classmethod
+    def push_bark(cls, content=''):
+        self = cls()
+        self.push_to_bark(content)
+
     def send_voice_code_of_yiyuan(self, phone, name='', content=''):
         """
         发送语音验证码
@@ -151,6 +156,20 @@ class Notification():
         else:
             response_error_message = result.get('description')
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_TELEGRAM_FAIL.format(response_error_message)).flush()
+
+    def push_to_bark(self, content):
+        bark_url = Config().BARK_PUSH_URL
+        if not bark_url:
+            return False
+
+        response = self.session.request(url=bark_url + '/' + content, method='get')
+        result = response.json()
+        response_status = result.get('code')
+        if response_status == 200:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_BARK_SUCCESS).flush()
+        else:
+            response_error_message = result.get('message')
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_BARK_FAIL.format(response_error_message)).flush()
 
     def send_serverchan(self, skey, title, content):
         from lightpush import lightpush
