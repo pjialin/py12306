@@ -99,6 +99,8 @@ class Order:
         if Config().PUSHBEAR_ENABLED:  # PushBear通知
             Notification.push_bear(Config().PUSHBEAR_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                    normal_message + info_message)
+        if Config().BARK_ENABLED:
+            Notification.push_bark(normal_message+info_message)
 
         if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
             if Config().NOTIFICATION_VOICE_CODE_TYPE == 'dingxin':

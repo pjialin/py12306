@@ -65,6 +65,10 @@ class Config:
     TELEGRAM_ENABLED = 0
     TELEGRAM_BOT_API_URL = ''
 
+    # Bark 推送配置
+    BARK_ENABLED = 0
+    BARK_PUSH_URL = ''
+
     # ServerChan和PushBear配置
     SERVERCHAN_ENABLED = 0
     SERVERCHAN_KEY = '8474-ca071ADSFADSF'
