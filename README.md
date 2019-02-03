@@ -113,6 +113,21 @@ cp docker-compose.yml.example docker-compose.yml
 ```
 docker-compose up -d
 ```
+### Raspberry Pi 中使用
+已在Raspberry Pi 3B+ 、Raspbian Stretch中测试。
+**1.Dockerfile**
+下载repo后，使用Dockerfile.raspberrypi替换Dockerfile
+```
+cd py12306
+rm Dockerfile
+mv Dockerfile.raspberrypi Dockerfile
+```
+**2.build image**
+限于树莓派的性能，build过程有些慢，特别是build lxml部分。需要耐心等待。
+```
+docker build -t py12306:latest .
+```
+build成功后，运行部分与前文一致。
 
 ## Web 管理页面
 
