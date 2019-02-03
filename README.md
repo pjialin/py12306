@@ -115,19 +115,32 @@ docker-compose up -d
 ```
 ### Raspberry Pi 中使用
 已在Raspberry Pi 3B (Raspbian Stretch)中测试。
-**1.Dockerfile**
-下载repo后，使用Dockerfile.raspberrypi替换Dockerfile
+**1.下载源码**
+```
+git clone https://github.com/pjialin/py12306.git
+```
+**2.Dockerfile**
+用Dockerfile.raspberrypi替换Dockerfile
 ```
 cd py12306
 rm Dockerfile
 mv Dockerfile.raspberrypi Dockerfile
 ```
-**2.build image**
+**3.build image**
 限于树莓派的性能，build过程有些慢，特别是build lxml部分，需要耐心等待
 ```
 docker build -t py12306:latest .
 ```
-build成功后，运行部分与前文一致
+**4.抢票配置**
+根据自己需要，修改env.docker.py.example后
+```
+cp env.docker.py.example env.py
+```
+**4.运行**
+由于步骤3设置的image名为py12306，运行时，注意该名称。
+```
+docker run --rm --name py12306 -p 8008:8008 -d -v $(pwd):/config -v py12306:/data py12306
+```
 
 ## Web 管理页面
 
