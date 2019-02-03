@@ -1,2 +1,3 @@
 deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ stretch main non-free contrib
 deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ stretch main non-free contrib
+#根据你的网络情况选择镜像站点，根据你的树莓派系统版本配置。
