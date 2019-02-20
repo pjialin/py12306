@@ -5,6 +5,7 @@ from py12306.helpers.func import *
 from py12306.helpers.request import Request
 from py12306.log.query_log import QueryLog
 from py12306.query.job import Job
+from py12306.helpers.api import API_QUERY_INIT_PAGE
 
 
 @singleton
@@ -24,12 +25,14 @@ class Query:
     is_in_thread = False
     retry_time = 3
     is_ready = False
+    api_type = None  # Query api url, Current know value  leftTicket/queryX | leftTicket/queryZ
 
     def __init__(self):
         self.session = Request()
         self.cluster = Cluster()
         self.update_query_interval()
         self.update_query_jobs()
+        self.get_query_api_type()
 
     def update_query_interval(self, auto=False):
         self.interval = init_interval_by_number(Config().QUERY_INTERVAL)
@@ -137,6 +140,21 @@ class Query:
     def job_by_account_key(cls, account_key) -> Job:
         self = cls()
         return objects_find_object_by_key_value(self.jobs, 'account_key', account_key)
+
+    @classmethod
+    def get_query_api_type(cls):
+        import re
+        self = cls()
+        if self.api_type:
+            return self.api_type
+        response = self.session.get(API_QUERY_INIT_PAGE)
+        if response.status_code == 200:
+            res = re.search(r'var CLeftTicketUrl = \'(leftTicket/queryX)\';', response.text)
+            try:
+                self.api_type = res.group(1)
+            except IndexError:
+                pass
+        return cls.get_query_api_type()
 
 # def get_jobs_from_cluster(self):
 #     jobs = self.cluster.session.get_dict(Cluster.KEY_JOBS)
