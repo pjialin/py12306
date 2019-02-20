@@ -146,7 +146,7 @@ class Job:
                                                                                                               self.left_station,
                                                                                                               self.arrive_station))
         url = LEFT_TICKETS.get('url').format(left_date=date, left_station=self.left_station_code,
-                                             arrive_station=self.arrive_station_code, type='leftTicket/queryZ')
+                                             arrive_station=self.arrive_station_code, type=self.query.api_type)
         if Config.is_cdn_enabled() and Cdn().is_ready:
             self.is_cdn = True
             return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=False)
