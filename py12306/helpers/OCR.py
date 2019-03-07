@@ -60,9 +60,9 @@ class OCR:
         }
         response = self.session.post(API_FREE_CODE_QCR_API, json=data)
         result = response.json()
-        if result.get('success') and result.get('check'):
+        if result.get('success') and result.get('data.check'):
             check_data = {
-                'check': result.get('check'),
+                'check': result.get('data.check'),
                 'img_buf': img,
                 'logon': 1,
                 'type': 'D'
