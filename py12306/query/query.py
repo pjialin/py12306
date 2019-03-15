@@ -149,7 +149,7 @@ class Query:
             return self.api_type
         response = self.session.get(API_QUERY_INIT_PAGE)
         if response.status_code == 200:
-            res = re.search(r'var CLeftTicketUrl = \'(leftTicket/queryX)\';', response.text)
+            res = re.search(r'var CLeftTicketUrl = \'(.*)\';', response.text)
             try:
                 self.api_type = res.group(1)
             except IndexError:
