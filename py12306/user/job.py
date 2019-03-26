@@ -123,6 +123,7 @@ class UserJob:
             'password': self.password,
             'appid': 'otn'
         }
+        self.request_device_id()
         answer = AuthCode.get_auth_code(self.session)
         data['answer'] = answer
         response = self.session.post(API_BASE_LOGIN.get('url'), data)
@@ -174,6 +175,36 @@ class UserJob:
             return result.get('username')
         # TODO 处理获取失败情况
         return False
+
+    def request_device_id(self):
+        """
+        获取加密后的浏览器特征 ID
+        :return:
+        """
+        """
+        TODO 通过程序进行加密，目前不清楚固定参数能使用多久
+        encrypt js address: https://kyfw.12306.cn/otn/HttpZF/GetJS   line:2716
+        """
+        params = {"algID": "ozy7Gbfya4", "hashCode": "SPPnxwJaxslzp6PLz38mV_078n44WjSOp7vTgvQpGxA", "FMQw": "0",
+                  "q4f3": "zh-CN", "VySQ": "FGGlO7IzXMj0sfYT705RPKxtnYIHB5MI", "VPIf": "1", "custID": "133",
+                  "VEek": "unknown", "dzuS": "0", "yD16": "0", "EOQP": "c227b88b01f5c513710d4b9f16a5ce52",
+                  "lEnu": "167838050", "jp76": "52d67b2a5aa5e031084733d5006cc664", "hAqN": "MacIntel",
+                  "platform": "WEB", "ks0Q": "d22ca0b81584fbea62237b14bd04c866", "TeRS": "878x1440",
+                  "tOHY": "24xx900x1440", "Fvje": "i1l1o1s1", "q5aJ": "-8",
+                  "wNLf": "99115dfb07133750ba677d055874de87",
+                  "0aew": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36",
+                  "E3gR": "8b9855470c623dc9bd6e495a1417f6f8", "timestamp": int(time.time() * 1000)}
+        response = self.session.get(API_GET_BROWSER_DEVICE_ID, params=params)
+        if response.text.find('callbackFunction') >= 0:
+            result = response.text[18:-2]
+            try:
+                result = json.loads(result)
+                self.session.cookies.update({
+                    'RAIL_EXPIRATION': result.get('exp'),
+                    'RAIL_DEVICEID': result.get('dfp'),
+                })
+            except:
+                return False
 
     def login_did_success(self):
         """
@@ -312,7 +343,7 @@ class UserJob:
                 UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
                     result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), self.retry_time)).flush()
             if Config().is_slave():
-                self.load_user_from_remote() # 加载最新 cookie
+                self.load_user_from_remote()  # 加载最新 cookie
             stay_second(self.retry_time)
             return self.get_user_passengers()
 
