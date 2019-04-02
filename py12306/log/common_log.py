@@ -94,15 +94,24 @@ class CommonLog(BaseLog):
         self.add_quick_log('多线程查询: {}'.format(get_true_false_text(Config().QUERY_JOB_THREAD_ENABLED, enable, disable)))
         self.add_quick_log('CDN 状态: {}'.format(get_true_false_text(Config().CDN_ENABLED, enable, disable))).flush()
         self.add_quick_log('通知状态:')
-        self.add_quick_log(
-            '语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
-        self.add_quick_log('邮件通知: {}'.format(get_true_false_text(Config().EMAIL_ENABLED, enable, disable)))
-        self.add_quick_log('钉钉通知: {}'.format(get_true_false_text(Config().DINGTALK_ENABLED, enable, disable)))
-        self.add_quick_log('Telegram通知: {}'.format(get_true_false_text(Config().TELEGRAM_ENABLED, enable, disable)))
-        self.add_quick_log('ServerChan通知: {}'.format(get_true_false_text(Config().SERVERCHAN_ENABLED, enable, disable)))
-        self.add_quick_log('Bark通知: {}'.format(get_true_false_text(Config().BARK_ENABLED, enable, disable)))
-        self.add_quick_log(
-            'PushBear通知: {}'.format(get_true_false_text(Config().PUSHBEAR_ENABLED, enable, disable))).flush(sep='\t\t')
+        if Config().NOTIFICATION_BY_VOICE_CODE:
+            self.add_quick_log(
+                '语音验证码: {}'.format(get_true_false_text(Config().NOTIFICATION_BY_VOICE_CODE, enable, disable)))
+        if Config().EMAIL_ENABLED:
+            self.add_quick_log('邮件通知: {}'.format(get_true_false_text(Config().EMAIL_ENABLED, enable, disable)))
+        if Config().DINGTALK_ENABLED:
+            self.add_quick_log('钉钉通知: {}'.format(get_true_false_text(Config().DINGTALK_ENABLED, enable, disable)))
+        if Config().TELEGRAM_ENABLED:
+            self.add_quick_log('Telegram通知: {}'.format(get_true_false_text(Config().TELEGRAM_ENABLED, enable, disable)))
+        if Config().SERVERCHAN_ENABLED:
+            self.add_quick_log(
+                'ServerChan通知: {}'.format(get_true_false_text(Config().SERVERCHAN_ENABLED, enable, disable)))
+        if Config().BARK_ENABLED:
+            self.add_quick_log('Bark通知: {}'.format(get_true_false_text(Config().BARK_ENABLED, enable, disable)))
+        if Config().PUSHBEAR_ENABLED:
+            self.add_quick_log(
+                'PushBear通知: {}'.format(get_true_false_text(Config().PUSHBEAR_ENABLED, enable, disable)))
+        self.add_quick_log().flush(sep='\t\t')
         self.add_quick_log('查询间隔: {} 秒'.format(Config().QUERY_INTERVAL))
         self.add_quick_log('用户心跳检测间隔: {} 秒'.format(Config().USER_HEARTBEAT_INTERVAL))
         self.add_quick_log('WEB 管理页面: {}'.format(get_true_false_text(Config().WEB_ENABLE, enable, disable)))
