@@ -181,19 +181,8 @@ class UserJob:
         获取加密后的浏览器特征 ID
         :return:
         """
-        """
-        TODO 通过程序进行加密，目前不清楚固定参数能使用多久
-        encrypt js address: https://kyfw.12306.cn/otn/HttpZF/GetJS   line:2716
-        """
-        params = {"algID": "ozy7Gbfya4", "hashCode": "SPPnxwJaxslzp6PLz38mV_078n44WjSOp7vTgvQpGxA", "FMQw": "0",
-                  "q4f3": "zh-CN", "VySQ": "FGGlO7IzXMj0sfYT705RPKxtnYIHB5MI", "VPIf": "1", "custID": "133",
-                  "VEek": "unknown", "dzuS": "0", "yD16": "0", "EOQP": "c227b88b01f5c513710d4b9f16a5ce52",
-                  "lEnu": "167838050", "jp76": "52d67b2a5aa5e031084733d5006cc664", "hAqN": "MacIntel",
-                  "platform": "WEB", "ks0Q": "d22ca0b81584fbea62237b14bd04c866", "TeRS": "878x1440",
-                  "tOHY": "24xx900x1440", "Fvje": "i1l1o1s1", "q5aJ": "-8",
-                  "wNLf": "99115dfb07133750ba677d055874de87",
-                  "0aew": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36",
-                  "E3gR": "8b9855470c623dc9bd6e495a1417f6f8", "timestamp": int(time.time() * 1000)}
+        params = {"algID": self.request_alg_id(), "timestamp": int(time.time() * 1000)}
+        params = dict(params, **self._get_hash_code_params())
         response = self.session.get(API_GET_BROWSER_DEVICE_ID, params=params)
         if response.text.find('callbackFunction') >= 0:
             result = response.text[18:-2]
@@ -205,6 +194,124 @@ class UserJob:
                 })
             except:
                 return False
+
+    def request_alg_id(self):
+        response = self.session.get("https://kyfw.12306.cn/otn/HttpZF/GetJS")
+        result = re.search(r'algID\\x3d(.*?)\\x26', response.text)
+        try:
+            return result.group(1)
+        except (IndexError, AttributeError) as e:
+            pass
+        return ""
+
+    def _get_hash_code_params(self):
+        from collections import OrderedDict
+        data = {
+            'adblock': '0',
+            'browserLanguage': 'en-US',
+            'cookieEnabled': '1',
+            'custID': '133',
+            'doNotTrack': 'unknown',
+            'flashVersion': '0',
+            'javaEnabled': '0',
+            'jsFonts': 'c227b88b01f5c513710d4b9f16a5ce52',
+            'localCode': '3232236206',
+            'mimeTypes': '52d67b2a5aa5e031084733d5006cc664',
+            'os': 'MacIntel',
+            'platform': 'WEB',
+            'plugins': 'd22ca0b81584fbea62237b14bd04c866',
+            'scrAvailSize': str(random.randint(500, 1000)) + 'x1920',
+            'srcScreenSize': '24xx1080x1920',
+            'storeDb': 'i1l1o1s1',
+            'timeZone': '-8',
+            'touchSupport': '99115dfb07133750ba677d055874de87',
+            'userAgent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.' + str(
+                random.randint(
+                    5000, 7000)) + '.0 Safari/537.36',
+            'webSmartID': 'f4e3b7b14cc647e30a6267028ad54c56',
+        }
+        data_trans = {
+            'browserVersion': 'd435',
+            'touchSupport': 'wNLf',
+            'systemLanguage': 'e6OK',
+            'scrWidth': 'ssI5',
+            'openDatabase': 'V8vl',
+            'scrAvailSize': 'TeRS',
+            'hasLiedResolution': '3neK',
+            'hasLiedOs': 'ci5c',
+            'timeZone': 'q5aJ',
+            'userAgent': '0aew',
+            'userLanguage': 'hLzX',
+            'jsFonts': 'EOQP',
+            'scrAvailHeight': '88tV',
+            'browserName': '-UVA',
+            'cookieCode': 'VySQ',
+            'online': '9vyE',
+            'scrAvailWidth': 'E-lJ',
+            'flashVersion': 'dzuS',
+            'scrDeviceXDPI': '3jCe',
+            'srcScreenSize': 'tOHY',
+            'storeDb': 'Fvje',
+            'doNotTrack': 'VEek',
+            'mimeTypes': 'jp76',
+            'sessionStorage': 'HVia',
+            'cookieEnabled': 'VPIf',
+            'os': 'hAqN',
+            'hasLiedLanguages': 'j5po',
+            'hasLiedBrowser': '2xC5',
+            'webSmartID': 'E3gR',
+            'appcodeName': 'qT7b',
+            'javaEnabled': 'yD16',
+            'plugins': 'ks0Q',
+            'appMinorVersion': 'qBVW',
+            'cpuClass': 'Md7A',
+            'indexedDb': '3sw-',
+            'adblock': 'FMQw',
+            'localCode': 'lEnu',
+            'browserLanguage': 'q4f3',
+            'scrHeight': '5Jwy',
+            'localStorage': 'XM7l',
+            'historyList': 'kU5z',
+            'scrColorDepth': "qmyu"
+        }
+        data = OrderedDict(data)
+        data_str = ''
+        params = {}
+        for key, item in data.items():
+            data_str += key + item
+            key = data_trans[key] if key in data_trans else key
+            params[key] = item
+        data_str_len = len(data_str)
+        data_str_len_tmp = int(data_str_len / 3) if data_str_len % 3 == 0 else int(data_str_len / 3) + 1
+        if data_str_len >= 3:
+            data_str_e = data_str[0:data_str_len_tmp]
+            data_str_f = data_str[data_str_len_tmp:2 * data_str_len_tmp]
+            data_str = data_str[2 * data_str_len_tmp:data_str_len] + data_str_e + data_str_f
+        data_str_len = len(data_str)
+        data_str_list = list(data_str)
+        for index in range(0, int(data_str_len / 2)):
+            if index % 2 == 0:
+                data_str_f = data_str[index]
+                data_str_list[index] = data_str[data_str_len - 1 - index]
+                data_str_list[data_str_len - 1 - index] = data_str_f
+        data_str = ''.join(data_str_list)
+        data_str = self._encode_string(data_str[::-1])
+        data_str_len = len(data_str)
+        data_str_len_div = int(data_str_len / 2)
+        if data_str_len % 2 == 0:
+            data_str = data_str[data_str_len_div:data_str_len] + data_str[0:data_str_len_div]
+        else:
+            data_str = data_str[data_str_len_div + 1:data_str_len] + \
+                       data_str[data_str_len_div] + data_str[0:data_str_len_div]
+        data_str = self._encode_string(data_str)
+        params['hashCode'] = data_str
+        return params
+
+    def _encode_string(self, str):
+        import hashlib
+        import base64
+        result = base64.b64encode(hashlib.sha256(str.encode()).digest()).decode()
+        return result.replace('+', '-').replace('/', '_').replace('=', '')
 
     def login_did_success(self):
         """
