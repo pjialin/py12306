@@ -33,8 +33,9 @@ class Request(HTMLSession):
         return response
 
     def add_response_hook(self, hook):
-        exist_hooks = self.hooks['response']
-        if not isinstance(exist_hooks, list): hooks = [exist_hooks]
+        hooks = self.hooks['response']
+        if not isinstance(hooks, list):
+            hooks = [hooks]
         hooks.append(hook)
         self.hooks['response'] = hooks
         return self
