@@ -191,6 +191,8 @@ class UserJob:
                 self.session.cookies.update({
                     'RAIL_EXPIRATION': result.get('exp'),
                     'RAIL_DEVICEID': result.get('dfp'),
+                    # 'RAIL_EXPIRATION': '1554474881858',
+                    # 'RAIL_DEVICEID': 'AuT-Gn6_zBqrgut3m5pj-OtRGGHDAKXfCDKI3SlDT98JBD-XzxPH08tjaplcAW5aKb8nyX90r92psp5QpwRIGTn6XeIwiQxvuwEnqseza6mPSAu_gmrGCLVpFvCbDUky4EB-UTjDH-ozAHx1oaz5KkvGgakW0Jou',
                 })
             except:
                 return False
@@ -281,21 +283,7 @@ class UserJob:
             data_str += key + item
             key = data_trans[key] if key in data_trans else key
             params[key] = item
-        data_str_len = len(data_str)
-        data_str_len_tmp = int(data_str_len / 3) if data_str_len % 3 == 0 else int(data_str_len / 3) + 1
-        if data_str_len >= 3:
-            data_str_e = data_str[0:data_str_len_tmp]
-            data_str_f = data_str[data_str_len_tmp:2 * data_str_len_tmp]
-            data_str = data_str[2 * data_str_len_tmp:data_str_len] + data_str_e + data_str_f
-        data_str_len = len(data_str)
-        data_str_list = list(data_str)
-        for index in range(0, int(data_str_len / 2)):
-            if index % 2 == 0:
-                data_str_f = data_str[index]
-                data_str_list[index] = data_str[data_str_len - 1 - index]
-                data_str_list[data_str_len - 1 - index] = data_str_f
-        data_str = ''.join(data_str_list)
-        data_str = self._encode_string(data_str[::-1])
+        data_str = self._encode_data_str(data_str)
         data_str_len = len(data_str)
         data_str_len_div = int(data_str_len / 2)
         if data_str_len % 2 == 0:
@@ -303,9 +291,25 @@ class UserJob:
         else:
             data_str = data_str[data_str_len_div + 1:data_str_len] + \
                        data_str[data_str_len_div] + data_str[0:data_str_len_div]
-        data_str = self._encode_string(data_str)
+
+        data_str = self._encode_data_str(data_str)
+        data_str_tmp = ""
+        for e in range(0, len(data_str)):
+            data_str_code = ord(data_str[e])
+            data_str_tmp += chr(0) if data_str_code == 127 else chr(data_str_code + 1)
+
+        data_str = self._encode_string(data_str_tmp[::-1])
         params['hashCode'] = data_str
         return params
+
+    def _encode_data_str(self, data_str):
+        data_str_len = len(data_str)
+        data_str_len_tmp = int(data_str_len / 3) if data_str_len % 3 == 0 else int(data_str_len / 3) + 1
+        if data_str_len >= 3:
+            data_str_e = data_str[0:data_str_len_tmp]
+            data_str_f = data_str[data_str_len_tmp:2 * data_str_len_tmp]
+            return data_str_f + data_str[2 * data_str_len_tmp:data_str_len] + data_str_e
+        return data_str
 
     def _encode_string(self, str):
         import hashlib
