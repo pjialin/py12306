@@ -204,75 +204,113 @@ class UserJob:
             pass
         return ""
 
+    def _get_hashcode(self, info, hb):
+
+        def qa(_str):
+            lens = len(_str)
+            new_str = int(lens / 3) if (lens % 3 == 0) else int(lens / 3) + 1
+            if 3 > lens:
+                return lens
+            _d = _str[0: 1 * new_str]
+            _e = _str[1 * new_str: 2 * new_str]
+            return _str[2 * new_str: lens] + _d + _e
+
+        b = ''
+        c = ''
+        for key, value in info.items():
+            key = key.replace('%', '')
+            value = str(value.replace('%', '') if type(value) == str else value)
+            if value:
+                c += key + value
+                en = hb.get(key)
+                b += "\x26" + (key if en is None else en) + "\x3d" + value
+        a = qa(c)
+        c = ""
+        c += a[::-1]
+        a = c
+        c = len(a)
+        half = int(c / 2)
+        d = a[half: c] + a[0: half] if 0 == len(a) % 2 else a[half + 1: c] + a[half] + a[0: half]
+        a = qa(d)
+        c = ""
+        d = len(a)
+        for e in range(d):
+            f = ord(a[e][0])
+            c = c + chr(0) if 127 == f else c + chr(f + 1)
+
+        _hash = self._encode_string(c)
+        return _hash
+
     def _get_hash_code_params(self):
         from collections import OrderedDict
         data = {
-            'adblock': '0',
-            'browserLanguage': 'en-US',
-            'cookieEnabled': '1',
-            'custID': '133',
-            'doNotTrack': 'unknown',
-            'flashVersion': '0',
-            'javaEnabled': '0',
-            'jsFonts': 'c227b88b01f5c513710d4b9f16a5ce52',
-            'localCode': '3232236206',
-            'mimeTypes': '52d67b2a5aa5e031084733d5006cc664',
-            'os': 'MacIntel',
-            'platform': 'WEB',
-            'plugins': 'd22ca0b81584fbea62237b14bd04c866',
-            'scrAvailSize': str(random.randint(500, 1000)) + 'x1920',
-            'srcScreenSize': '24xx1080x1920',
-            'storeDb': 'i1l1o1s1',
-            'timeZone': '-8',
-            'touchSupport': '99115dfb07133750ba677d055874de87',
-            'userAgent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.' + str(
+            'adblock': "0",
+            'browserLanguage': "zh-CN",
+            'cookieCode': "FGFnINFJ2LbccOC73oH58hI2UlhzV5Pp",
+            'cookieEnabled': "1",
+            'custID': "133",  # js中可提取
+            'doNotTrack': "unknown",
+            'flashVersion': "0",
+            'javaEnabled': "0",
+            'jsFonts': "c227b88b01f5c513710d4b9f16a5ce52",
+            'localCode': "3232236190",
+            'mimeTypes': "52d67b2a5aa5e031084733d5006cc664",
+            'os': "MacIntel",
+            'platform': "WEB",
+            'plugins': "d22ca0b81584fbea62237b14bd04c866",
+            'scrAvailSize': str(random.randint(500, 1000)) + "x1920",
+            'srcScreenSize': "24xx1080x1920",
+            'storeDb': "i1l1o1s1",
+            'timeZone': "-8",
+            'touchSupport': "99115dfb07133750ba677d055874de87",
+            'userAgent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0." + str(
                 random.randint(
-                    5000, 7000)) + '.0 Safari/537.36',
-            'webSmartID': 'f4e3b7b14cc647e30a6267028ad54c56',
+                    5000, 7000)) + ".86 Safari/537.36",
+            'webSmartID': "32254eaba0acad0c2e70775526939fc7",
         }
         data_trans = {
-            'browserVersion': 'd435',
-            'touchSupport': 'wNLf',
-            'systemLanguage': 'e6OK',
-            'scrWidth': 'ssI5',
-            'openDatabase': 'V8vl',
-            'scrAvailSize': 'TeRS',
-            'hasLiedResolution': '3neK',
-            'hasLiedOs': 'ci5c',
-            'timeZone': 'q5aJ',
-            'userAgent': '0aew',
-            'userLanguage': 'hLzX',
-            'jsFonts': 'EOQP',
-            'scrAvailHeight': '88tV',
-            'browserName': '-UVA',
-            'cookieCode': 'VySQ',
-            'online': '9vyE',
-            'scrAvailWidth': 'E-lJ',
-            'flashVersion': 'dzuS',
-            'scrDeviceXDPI': '3jCe',
-            'srcScreenSize': 'tOHY',
-            'storeDb': 'Fvje',
-            'doNotTrack': 'VEek',
-            'mimeTypes': 'jp76',
-            'sessionStorage': 'HVia',
-            'cookieEnabled': 'VPIf',
-            'os': 'hAqN',
-            'hasLiedLanguages': 'j5po',
-            'hasLiedBrowser': '2xC5',
-            'webSmartID': 'E3gR',
-            'appcodeName': 'qT7b',
-            'javaEnabled': 'yD16',
-            'plugins': 'ks0Q',
-            'appMinorVersion': 'qBVW',
-            'cpuClass': 'Md7A',
-            'indexedDb': '3sw-',
-            'adblock': 'FMQw',
-            'localCode': 'lEnu',
-            'browserLanguage': 'q4f3',
-            'scrHeight': '5Jwy',
-            'localStorage': 'XM7l',
-            'historyList': 'kU5z',
-            'scrColorDepth': "qmyu"
+            "systemLanguage": "e6OK",
+            "openDatabase": "V8vl",
+            "plugins": "ks0Q",
+            "srcScreenSize": "tOHY",
+            "hasLiedOs": "ci5c",
+            "scrWidth": "ssI5",
+            "hasLiedLanguages": "j5po",
+            "scrAvailHeight": "88tV",
+            "touchSupport": "wNLf",
+            "appMinorVersion": "qBVW",
+            "mimeTypes": "jp76",
+            "userAgent": "0aew",
+            "webSmartID": "E3gR",
+            "scrDeviceXDPI": "3jCe",
+            "userLanguage": "hLzX",
+            "hasLiedResolution": "3neK",
+            "javaEnabled": "yD16",
+            "scrColorDepth": "qmyu",
+            "jsFonts": "EOQP",
+            "browserVersion": "d435",
+            "adblock": "FMQw",
+            "browserLanguage": "q4f3",
+            "cookieEnabled": "VPIf",
+            "storeDb": "Fvje",
+            "localStorage": "XM7l",
+            "scrAvailSize": "TeRS",
+            "sessionStorage": "HVia",
+            "localCode": "lEnu",
+            "os": "hAqN",
+            "scrAvailWidth": "E-lJ",
+            "hasLiedBrowser": "2xC5",
+            "browserName": "-UVA",
+            "online": "9vyE",
+            "indexedDb": "3sw-",
+            "historyList": "kU5z",
+            "cookieCode": "VySQ",
+            "appcodeName": "qT7b",
+            "scrHeight": "5Jwy",
+            "timeZone": "q5aJ",
+            "doNotTrack": "VEek",
+            "flashVersion": "dzuS",
+            "cpuClass": "Md7A",
         }
         data = OrderedDict(data)
         data_str = ''
@@ -281,19 +319,7 @@ class UserJob:
             data_str += key + item
             key = data_trans[key] if key in data_trans else key
             params[key] = item
-        data_str = self._encode_data_str(data_str)
-        data_str_len = len(data_str)
-        data_str_f = int(data_str_len / 3) if data_str_len % 3 == 0 else int(data_str_len / 3) + 1
-        if data_str_len >= 3:
-            data_str = data_str[data_str_f:2*data_str_f] + data_str[2*data_str_f:data_str_len] + data_str[0: data_str_f]
-        data_str = data_str[::-1]
-        data_str_tmp = ""
-        for e in range(0, len(data_str)):
-            data_str_code = ord(data_str[e])
-            data_str_tmp += chr(0) if data_str_code == 127 else chr(data_str_code + 1)
-
-        data_str = self._encode_data_str(data_str_tmp)
-        data_str = self._encode_string(data_str)
+        data_str = self._get_hashcode(data, data_trans)
         params['hashCode'] = data_str
         return params
 
