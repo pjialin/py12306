@@ -1,3 +1,4 @@
+toml
 -i http://mirrors.aliyun.com/pypi/simple/  --trusted-host mirrors.aliyun.com
 appdirs==1.4.3
 beautifulsoup4==4.7.0
