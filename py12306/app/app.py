@@ -15,6 +15,8 @@ class Config:
     PROJECT_DIR = os.path.abspath(__file__ + '/../../../') + '/'
     CONFIG_FILE = PROJECT_DIR + 'config.toml'
 
+    REQUEST_TIME_OUT = 5
+
     # Config
     REDIS = {
         'host': '127.0.0.1',
@@ -25,7 +27,7 @@ class Config:
     }
 
     # Redis keys
-    REDIS_PREFIX_KEY_TASKS = 'tasks:'
+    REDIS_PREFIX_KEY_TASKS = APP_NAME + ':tasks:'
 
     # REDIS_KEY_USER_TASKS = 'user_jobs'
 

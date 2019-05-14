@@ -5,9 +5,10 @@ from py12306.lib.redis_lib import Redis
 
 def get_routes() -> dict:
     from py12306.app.user import User
+    from py12306.app.query import Query
     return {
-        'user': User.task_user,
-        'query': User.task_user,
+        'user_login': User.task_user_login,
+        'train_ticket': Query.task_train_ticket,
     }
 
 
