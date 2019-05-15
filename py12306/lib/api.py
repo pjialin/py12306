@@ -7,3 +7,5 @@ BASE_API = 'https://' + HOST_API
 
 
 API_QUERY_INIT_PAGE = BASE_API + '/otn/leftTicket/init'
+API_LEFT_TICKETS = BASE_API + '/otn/{type}?leftTicketDTO.train_date={left_date}&leftTicketDTO.from_station={' \
+                          'left_station}&leftTicketDTO.to_station={arrive_station}&purpose_codes=ADULT'
