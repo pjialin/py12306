@@ -72,3 +72,12 @@ def retry(num: int = 3):
         return wrapper
 
     return decorator
+
+
+def number_of_time_period(period: str) -> int:
+    """
+    Example: 23:00 -> 2300
+    :param period:
+    :return:
+    """
+    return int(period.replace(':', ''))

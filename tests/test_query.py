@@ -1,25 +1,59 @@
 from unittest import TestCase
 
 from tests.helper import BaseTest
-from py12306.app.query import QueryTicket, QueryParser
+from py12306.app.query import *
 
 
 class TestQueryTicket(BaseTest):
     task = {
         'name': 'admin',
     }
+    query_dict = {
+        'left_date': '2019-05-18',
+        'left_station': 'BJP',
+        'arrive_station': 'LZJ',
+        'allow_seats': ['二等座'],
+        'members': ['test']
+    }
+    query: QueryTicketData
+    ticket_str = 'iV6uPpzX3CcwqhHe4yzrJHp9hFVCouaXtS01wlUB8f%2BuA%2BKD%2FTV5KLu37w1aKHO2zlAlwMDa%2FDYY%0A2xykUxU964zvkfI3qZZ6uGEKWi0tXCT8fhkQTVvnRI43%2FAinVozab2W1Cq%2FMzJtGBv3D1Q3CscAj%0ANA1XmfNzd6Carglhzvyyy63MkbLIRvxrngx9F01W9jhKXnQupQNTOM3Pw4UIxbesBWkmQfYNj%2Fj%2F%0A3mU33kluoI5vbGVsm115Ec%2BS29KPeaM%2B4%2F2h2UZsiCb%2F5hKfew8Hijodr2VuFftbkge1meSTRRvz%0A|预订|240000G42704|G427|BXP|LAJ|BXP|LAJ|06:21|13:44|07:23|Y|nhsXhn1BbGmb4MI%2BEto43zoslKFQlIY8c356nXAHAEk9Zb2G|20190518|3|P3|01|05|0|0|||||||||||有|无|5||O090M0|O9M|0|0|null'
+    ticket: TicketData
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.ticket = QueryParser.parse_ticket([self.ticket_str])[0]
+        self.query = QueryTicketData(self.query_dict)
 
     def test_get_query_api_type(self):
         res = QueryTicket().get_query_api_type()
         self.assertEqual('leftTicket/query', res)
 
     def test_get_ticket(self):
-        data = {
-            'left_date': '2019-05-18',
-            'left_station': 'BJP',
-            'arrive_station': 'LZJ'
-        }
-        res = QueryTicket().get_ticket(data)
+        res = QueryTicket().get_ticket(self.query_dict)
+
+    def test_is_ticket_valid(self):
+        res = QueryTicket().is_ticket_valid(self.ticket, self.query)
+        self.assertEqual(res, True)
+
+    def test_verify_period(self):
+        self.query.left_periods = [('08:00', '16:00')]
+        res = QueryTicket.verify_period('12:00', self.query.left_periods)
+        self.assertEqual(res, True)
+        res = QueryTicket.verify_period('16:00', self.query.left_periods)
+        self.assertEqual(res, True)
+        res = QueryTicket.verify_period('16:01', self.query.left_periods)
+        self.assertEqual(res, False)
+
+    def test_verify_ticket_num(self):
+        self.ticket.ticket_num = 'Y'
+        res = QueryTicket.verify_ticket_num(self.ticket)
+        self.assertEqual(res, True)
+
+    def test_verify_seat(self):
+        self.query.allow_seats = ['硬座', '二等座']
+        res = QueryTicket().verify_seat(self.ticket, self.query)
+        self.assertEqual(res, True)
+        self.assertEqual(self.query.available_seat.num, 30)
 
 
 class TestQueryParser(TestCase):

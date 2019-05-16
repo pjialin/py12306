@@ -41,6 +41,8 @@ class DataHelper:
                 self.__dict__[self.__mappers[str(key)]] = val
             elif key in self.__annotations__:
                 self.__dict__[key] = val
+        if getattr(self, '_after', None):
+            self._after()
 
     def __generate_mappers(self):
         for key, val in self.__annotations__.items():
@@ -58,3 +60,11 @@ class DataHelper:
 
             except (KeyError, AttributeError):
                 pass
+
+    def get_origin(self) -> dict:
+        return self.__origin
+
+
+class TrainSeat:
+    types = {'特等座': 25, '商务座': 32, '一等座': 31, '二等座': 30, '软卧': 23, '硬卧': 28, '硬座': 29, '无座': 26, }
+    order_types = {'特等座': 'P', '商务座': 9, '一等座': 'M', '二等座': 'O', '软卧': 4, '硬卧': 3, '硬座': 1, '无座': 1}
