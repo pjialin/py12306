@@ -207,10 +207,10 @@ class UserJob:
                   "0aew": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
                   "E3gR": "c55529c990fcaabc078c4304eadf4ccb",
                   "timestamp": int(time.time() * 1000)}
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
         self.session.headers.update(headers)
         response = self.session.get(API_GET_BROWSER_DEVICE_ID, params=params)
-        self.session.headers.update(headers)
         if response.text.find('callbackFunction') >= 0:
             result = response.text[18:-2]
             try:
@@ -312,7 +312,8 @@ class UserJob:
         data_str_len = len(data_str)
         data_str_f = int(data_str_len / 3) if data_str_len % 3 == 0 else int(data_str_len / 3) + 1
         if data_str_len >= 3:
-            data_str = data_str[data_str_f:2*data_str_f] + data_str[2*data_str_f:data_str_len] + data_str[0: data_str_f]
+            data_str = data_str[data_str_f:2 * data_str_f] + data_str[2 * data_str_f:data_str_len] + data_str[
+                                                                                                     0: data_str_f]
         data_str = data_str[::-1]
         data_str_tmp = ""
         for e in range(0, len(data_str)):
