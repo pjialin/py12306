@@ -181,9 +181,36 @@ class UserJob:
         获取加密后的浏览器特征 ID
         :return:
         """
-        params = {"algID": self.request_alg_id(), "timestamp": int(time.time() * 1000)}
-        params = dict(params, **self._get_hash_code_params())
+        # params = {"algID": self.request_alg_id(), "timestamp": int(time.time() * 1000)}
+        # params = dict(params, **self._get_hash_code_params())
+        params = {"algID": "DSMUHpqg2c",
+                  "hashCode": "7D2olfNltplDRYYVR5GfyPVdYWm_PQvOWVmvaWUpOJI",
+                  "FMQw": "0",
+                  "q4f3": "zh-CN",
+                  "VySQ": "FGE8-ztrZHjoQKFkw9FzanJmGHUMxCjZ",
+                  "VPIf": "1",
+                  "custID": "133",
+                  "VEek": "unknown",
+                  "dzuS": "29.0 r0",
+                  "yD16": "0",
+                  "EOQP": "eea1c671b27b7f53fb4ed098696f3560",
+                  "lEnu": "3232235939",
+                  "jp76": "a5b2ffe86c07bdcd9a3445c81d946c92",
+                  "hAqN": "Win32",
+                  "platform": "WEB",
+                  "ks0Q": "d82d0dd98d93e709d91f86348e2a0e86",
+                  "TeRS": "1042x1920",
+                  "tOHY": "24xx1080x1920",
+                  "Fvje": "i1l1o1s1",
+                  "q5aJ": "-8",
+                  "wNLf": "99115dfb07133750ba677d055874de87",
+                  "0aew": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
+                  "E3gR": "c55529c990fcaabc078c4304eadf4ccb",
+                  "timestamp": int(time.time() * 1000)}
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
+        self.session.headers.update(headers)
         response = self.session.get(API_GET_BROWSER_DEVICE_ID, params=params)
+        self.session.headers.update(headers)
         if response.text.find('callbackFunction') >= 0:
             result = response.text[18:-2]
             try:
