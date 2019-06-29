@@ -32,7 +32,11 @@ class AuthCode:
         if not position:  # 打码失败
             return self.retry_get_auth_code()
 
-        answer = ','.join(map(str, position))
+        if Config().AUTO_CODE_PLATFORM == 'free':
+            answer = position
+        else:
+            answer = ','.join(map(str, position))
+
         if not self.check_code(answer):
             return self.retry_get_auth_code()
         return position
