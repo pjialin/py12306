@@ -2,7 +2,6 @@ import math
 import random
 
 from py12306.config import Config
-from py12306.helpers.api import *
 from py12306.helpers.request import Request
 from py12306.log.common_log import CommonLog
 from py12306.vender.ruokuai.main import RKClient
@@ -54,26 +53,21 @@ class OCR:
             positions.append(int(y))
         return positions
 
-    def get_image_by_free_site(self, img):
-        data = {
-            'base64': img
-        }
-        response = self.session.post(API_FREE_CODE_QCR_API, json=data)
-        result = response.json()
-        if result.get('success') and result.get('data.check'):
-            check_data = {
-                'check': result.get('data.check'),
-                'img_buf': img,
-                'logon': 1,
-                'type': 'D'
-            }
-            check_response = self.session.post(API_FREE_CODE_QCR_API_CHECK, json=check_data)
-            check_result = check_response.json()
-            if check_result.get('res'):
-                position = check_result.get('res')
-                return position.replace('(', '').replace(')', '').split(',')
+    @staticmethod
+    def get_image_by_free_site(img):
+        from py12306.helpers.ocr.ml_predict import get_coordinate
+        import base64
 
-        CommonLog.print_auto_code_fail(CommonLog.MESSAGE_GET_RESPONSE_FROM_FREE_AUTO_CODE)
+        # 转为图片文件
+        with open('authcode.jpg', 'wb') as image:
+            image.write(base64.b64decode(img))
+
+        result = get_coordinate('authcode.jpg')
+        # CommonLog.print_auth_code_info("验证码识别的结果为：" + result)
+
+        if result:
+            return result
+
         return None
 
 

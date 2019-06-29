@@ -139,3 +139,10 @@ class CommonLog(BaseLog):
         self.add_quick_log('打码失败: 错误原因 {reason}'.format(reason=reason))
         self.flush()
         return self
+
+    @classmethod
+    def print_auth_code_info(cls, reason):
+        self = cls()
+        self.add_quick_log('打码信息: {reason}'.format(reason=reason))
+        self.flush()
+        return self
