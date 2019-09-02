@@ -152,6 +152,7 @@ docker-compose up -d
 ## Thanks
 - 感谢大佬 [testerSunshine](https://github.com/testerSunshine/12306)，借鉴了部分实现
 - 感谢所有提供 pr 的大佬 
+- 感谢大佬 [zhaipro](https://github.com/zhaipro/easy12306) 的验证码本地识别模型与算法
 
 ## License
 
