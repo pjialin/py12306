@@ -32,9 +32,9 @@ cp env.py.example env.py
 ```
 自动打码
 
-目前支持免费打码，和若快打码
+验证码可以本地识别，所用的模型和算法均来自 [https://github.com/zhaipro/easy12306](https://github.com/zhaipro/easy12306) 十分感谢！
 
-注：免费打码无法保证持续可用，如失效请手动切换到若快平台，需要先到 [http://www.ruokuai.com](http://www.ruokuai.com/login) 注册一个账号后填写到配置中
+~~注：免费打码无法保证持续可用，如失效请手动切换到若快平台，需要先到 [http://www.ruokuai.com](http://www.ruokuai.com/login) 注册一个账号后填写到配置中~~（若快已停止服务，目前只能设置**free**打码模式）
 
 语音通知
 
