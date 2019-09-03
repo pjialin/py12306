@@ -53,16 +53,12 @@ class OCR:
             positions.append(int(y))
         return positions
 
-    @staticmethod
-    def get_image_by_free_site(img):
+    def get_image_by_free_site(self, img):
         from py12306.helpers.ocr.ml_predict import get_coordinate
         import base64
 
-        # 转为图片文件
-        with open('authcode.jpg', 'wb') as image:
-            image.write(base64.b64decode(img))
-
-        result = get_coordinate('authcode.jpg')
+        result = get_coordinate(base64.b64decode(img))
+        result = self.get_image_position_by_offset(result)
         # CommonLog.print_auth_code_info("验证码识别的结果为：" + result)
 
         if result:
