@@ -1,8 +1,12 @@
 # coding: utf-8
 import cv2, os
+import tensorflow as tf
 import numpy as np
 from keras import models
 from py12306.log.common_log import CommonLog
+from py12306.config import Config
+
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
 def get_text(img, offset=0):
@@ -14,22 +18,23 @@ def get_text(img, offset=0):
     return text
 
 
-def get_coordinate(fn):
+def get_coordinate(img_str):
     # 储存最终坐标结果
     result = ''
+    orc_dir = '%spy12306/helpers/ocr/' % Config.PROJECT_DIR
 
     try:
         # 读取并预处理验证码
-        img = cv2.imread(fn)
+        img = cv2.imdecode(np.fromstring(img_str, np.uint8), cv2.IMREAD_COLOR)
         text = get_text(img)
         imgs = np.array(list(_get_imgs(img)))
         imgs = preprocess_input(imgs)
 
         # 识别文字
-        model = models.load_model('py12306/helpers/ocr/model.v2.0.h5')
+        model = models.load_model('%smodel.v2.0.h5' % orc_dir, compile=False)
         label = model.predict(text)
         label = label.argmax()
-        fp = open('py12306/helpers/ocr/texts.txt', encoding='utf-8')
+        fp = open('%stexts.txt' % orc_dir, encoding='utf-8')
         texts = [text.rstrip('\n') for text in fp]
         text = texts[label]
 
@@ -54,50 +59,18 @@ def get_coordinate(fn):
             titles.append(text2)
 
         # 加载图片分类器
-        model = models.load_model('py12306/helpers/ocr/12306.image.model.h5')
+        model = models.load_model('%s12306.image.model.h5' % orc_dir, compile=False)
         labels = model.predict(imgs)
         labels = labels.argmax(axis=1)
 
         for pos, label in enumerate(labels):
-            # print(pos // 4, pos % 4, texts[label])
-            if len(titles) == 1:
-                if texts[label] == titles[0]:
-                    position.append(pos)
-            elif len(titles) == 2:
-                if texts[label] == titles[0]:
-                    position.append(pos)
-                elif texts[label] == titles[1]:
-                    position.append(pos)
-            elif len(titles) == 3:
-                if texts[label] == titles[0]:
-                    position.append(pos)
-                elif texts[label] == titles[1]:
-                    position.append(pos)
-                elif texts[label] == titles[2]:
-                    position.append(pos)
+            if texts[label] in titles:
+                position.append(pos + 1)
 
         # 没有识别到结果
         if len(position) == 0:
             return result
-
-        for i in position:
-            if i == 0:
-                result += '31,45,'
-            elif i == 1:
-                result += '100,45,'
-            elif i == 2:
-                result += '170,45,'
-            elif i == 3:
-                result += '240,45,'
-            elif i == 4:
-                result += '30,115,'
-            elif i == 5:
-                result += '100,115,'
-            elif i == 6:
-                result += '170,115,'
-            elif i == 7:
-                result += '240,115,'
-        result = result[:-1]
+        result = position
     except:
         CommonLog.print_auto_code_fail(CommonLog.MESSAGE_GET_RESPONSE_FROM_FREE_AUTO_CODE)
     return result
@@ -120,4 +93,5 @@ def _get_imgs(img):
 
 
 if __name__ == '__main__':
-    print(get_coordinate('a.jpg'))
+    with open('a.jpg', 'r') as f:
+        print(get_coordinate(f.buffer.read()))
