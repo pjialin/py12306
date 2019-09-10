@@ -63,10 +63,14 @@ class Order:
             return self.order_did_success()
         elif not order_request_res:
             return
-        if not self.user_ins.request_init_dc_page(): return
-        if not self.check_order_info(): return
-        if not self.get_queue_count(): return
-        if not self.confirm_single_for_queue(): return
+        if not self.user_ins.request_init_dc_page():
+            return
+        if not self.check_order_info():
+            return
+        if not self.get_queue_count():
+            return
+        if not self.confirm_single_for_queue():
+            return
         order_id = self.query_order_wait_time()
         if order_id:  # 发送通知
             self.order_id = order_id
@@ -429,11 +433,12 @@ class Order:
             OrderLog.print_passenger_did_deleted(available_passengers)
 
         for passenger in available_passengers:
-            tmp_str = '{seat_type},0,{passenger_type},{passenger_name},{passenger_id_card_type},{passenger_id_card},{passenger_mobile},N_'.format(
+            tmp_str = '{seat_type},0,{passenger_type},{passenger_name},{passenger_id_card_type},{passenger_id_card},{passenger_mobile},N,{enc_str}_'.format(
                 seat_type=self.query_ins.current_order_seat, passenger_type=passenger['type'],
                 passenger_name=passenger['name'],
                 passenger_id_card_type=passenger['id_card_type'], passenger_id_card=passenger['id_card'],
-                passenger_mobile=passenger['mobile']
+                passenger_mobile=passenger['mobile'],
+                enc_str=passenger['enc_str'],
             )
             passenger_tickets.append(tmp_str)
 
