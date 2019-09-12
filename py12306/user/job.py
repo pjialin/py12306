@@ -471,7 +471,8 @@ class UserJob:
             name: '项羽',
             type: 1,
             id_card: 0000000000000000000,
-            type_text: '成人'
+            type_text: '成人',
+            enc_str: 'aaaaaa'
         }]
         """
         self.get_user_passengers()
@@ -499,7 +500,8 @@ class UserJob:
                     'id_card_type': passenger.get('passenger_id_type_code'),
                     'mobile': passenger.get('mobile_no'),
                     'type': passenger.get('passenger_type'),
-                    'type_text': dict_find_key_by_value(UserType.dicts, int(passenger.get('passenger_type')))
+                    'type_text': dict_find_key_by_value(UserType.dicts, int(passenger.get('passenger_type'))),
+                    'enc_str': passenger.get('allEncStr')
                 }
             results.append(new_member)
 
@@ -525,6 +527,6 @@ class UserJob:
             self.ticket_info_for_passenger_form = json.loads(form.groups()[0].replace("'", '"'))
             self.order_request_dto = json.loads(order.groups()[0].replace("'", '"'))
         except:
-            pass  # TODO Error
+            return False # TODO Error
 
         return True
