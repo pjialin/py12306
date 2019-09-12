@@ -2,6 +2,7 @@ import math
 import random
 
 from py12306.config import Config
+from py12306.helpers.api import API_FREE_CODE_QCR_API
 from py12306.helpers.request import Request
 from py12306.log.common_log import CommonLog
 from py12306.vender.ruokuai.main import RKClient
@@ -54,16 +55,16 @@ class OCR:
         return positions
 
     def get_image_by_free_site(self, img):
-        from py12306.helpers.ocr.ml_predict import get_coordinate
-        import base64
+        data = {
+            'img': img
+        }
+        response = self.session.post(API_FREE_CODE_QCR_API, data=data)
+        result = response.json()
+        if result.get('msg') == 'success':
+            pos = result.get('result')
+            return self.get_image_position_by_offset(pos)
 
-        result = get_coordinate(base64.b64decode(img))
-        result = self.get_image_position_by_offset(result)
-        # CommonLog.print_auth_code_info("验证码识别的结果为：" + result)
-
-        if result:
-            return result
-
+        CommonLog.print_auto_code_fail(CommonLog.MESSAGE_GET_RESPONSE_FROM_FREE_AUTO_CODE)
         return None
 
 

@@ -42,7 +42,7 @@ API_QUERY_ORDER_WAIT_TIME = BASE_URL_OF_12306 + '/otn/confirmPassenger/queryOrde
 API_QUERY_INIT_PAGE = BASE_URL_OF_12306 + '/otn/leftTicket/init'
 # API_GET_BROWSER_DEVICE_ID = BASE_URL_OF_12306 + '/otn/HttpZF/logdevice'
 API_GET_BROWSER_DEVICE_ID = 'https://12306-rail-id.pjialin.com/'
-
+API_FREE_CODE_QCR_API = 'https://12306-ocr.pjialin.com/check/'
 
 API_NOTIFICATION_BY_VOICE_CODE = 'http://ali-voice.showapi.com/sendVoice?'
 API_NOTIFICATION_BY_VOICE_CODE_DINGXIN = 'http://yuyin2.market.alicloudapi.com/dx/voice_notice'
