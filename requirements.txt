@@ -31,7 +31,3 @@ websockets==7.0
 Werkzeug==0.14.1
 DingtalkChatbot==1.3.0
 lightpush==0.1.3
-opencv-python==4.1.0.25
-keras==2.2.4
-tensorflow==1.14.0
-numpy==1.16.4
