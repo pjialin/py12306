@@ -58,7 +58,7 @@ class OCR:
         data = {
             'img': img
         }
-        response = self.session.post(API_FREE_CODE_QCR_API, data=data)
+        response = self.session.post(API_FREE_CODE_QCR_API, data=data, timeout=30)
         result = response.json()
         if result.get('msg') == 'success':
             pos = result.get('result')
