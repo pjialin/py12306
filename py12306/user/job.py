@@ -123,7 +123,8 @@ class UserJob:
             'password': self.password,
             'appid': 'otn'
         }
-        self.request_device_id()
+        #self.request_device_id()
+        self.getDrvicesID()
         answer = AuthCode.get_auth_code(self.session)
         data['answer'] = answer
         response = self.session.post(API_BASE_LOGIN.get('url'), data)
@@ -192,6 +193,27 @@ class UserJob:
                 # })
             except:
                 return False
+    
+    def getDrvicesID(self):
+        """
+        :return:
+        """
+        print("cookie获取中")
+        from selenium import webdriver
+        options = webdriver.ChromeOptions()
+        options.binary_location = r"C:\Users\Administrator\AppData\Local\360Chrome\Chrome\Application\360chrome.exe"
+        driver = webdriver.Chrome(options=options)
+        driver.get("https://www.12306.cn/index/index.html")
+        time.sleep(5)
+        cookies = {}
+        for c in driver.get_cookies():
+            if c.get("name") == "RAIL_DEVICEID" or c.get("name") == "RAIL_EXPIRATION":
+                cookies[c.get("name")] = c.get("value")
+        print(f"获取cookie: {cookies}")
+        driver.quit()
+        if cookies:
+            self.session.cookies.update(cookies)
+        print("cookie获取完成")
 
     def login_did_success(self):
         """
