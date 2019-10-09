@@ -32,9 +32,14 @@ cp env.py.example env.py
 ```
 自动打码
 
-~~验证码可以本地识别，所用的模型和算法均来自 [https://github.com/zhaipro/easy12306](https://github.com/zhaipro/easy12306) 十分感谢！~~ 验证码识别已迁移到服务器进行识别，无需本地安装环境
+验证码可以本地识别，所用的模型和算法均来自 [https://github.com/zhaipro/easy12306](https://github.com/zhaipro/easy12306) 十分感谢！验证码识别已迁移到服务器进行识别，无需本地安装环境
 
-~~注：免费打码无法保证持续可用，如失效请手动切换到本地识别，使用需要先下载模型[https://pan.baidu.com/s/15BVBHlTML7vGftgRqIpEJQ](https://pan.baidu.com/s/15BVBHlTML7vGftgRqIpEJQ) 提取码: pba5, 放在`py12306/helpers/ocr`目录下
+注：免费打码无法保证持续可用，如失效请手动切换到本地识别，使用需要先下载模型[https://pan.baidu.com/s/15BVBHlTML7vGftgRqIpEJQ](https://pan.baidu.com/s/15BVBHlTML7vGftgRqIpEJQ) 提取码: pba5, 放在`py12306/helpers/ocr`目录下
+
+自动登陆
+
+目前使用 selenium 获取 cookie ，需要安装 Chrome 内核的浏览器，并安装对应版本的 ChromeDriver。
+ChromeDriver 下载地址[http://chromedriver.storage.googleapis.com/index.html](http://chromedriver.storage.googleapis.com/index.html)
 
 语音通知
 

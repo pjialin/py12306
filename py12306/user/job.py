@@ -201,7 +201,7 @@ class UserJob:
         print("cookie获取中")
         from selenium import webdriver
         options = webdriver.ChromeOptions()
-        options.binary_location = r"C:\Users\Administrator\AppData\Local\360Chrome\Chrome\Application\360chrome.exe"
+        options.binary_location = Config().CHROME_PATH
         driver = webdriver.Chrome(options=options)
         driver.get("https://www.12306.cn/index/index.html")
         time.sleep(5)
