@@ -38,7 +38,7 @@ cp env.py.example env.py
 
 自动登陆
 
-目前使用 selenium 获取 cookie ，需要安装 Chrome 内核的浏览器，并安装对应版本的 ChromeDriver。
+目前使用 selenium 获取 cookie ，需要安装 Chrome 内核的浏览器，并安装对应版本的 ChromeDriver  
 ChromeDriver 下载地址[http://chromedriver.storage.googleapis.com/index.html](http://chromedriver.storage.googleapis.com/index.html)
 
 语音通知
