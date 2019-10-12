@@ -360,6 +360,11 @@ class UserJob:
         for member in members:
             is_member_code = is_number(member)
             if not is_member_code:
+                if member[0] == "*":
+                    audlt = 1
+                    member = member[1:]
+                else:
+                    audlt = 0
                 child_check = array_dict_find_by_key_value(results, 'name', member)
             if not is_member_code and child_check:
                 new_member = child_check.copy()
@@ -370,6 +375,8 @@ class UserJob:
                     passenger = array_dict_find_by_key_value(self.passengers, 'code', member)
                 else:
                     passenger = array_dict_find_by_key_value(self.passengers, 'passenger_name', member)
+                    if audlt:
+                        passenger['passenger_type'] = UserType.ADULT
                 if not passenger:
                     UserLog.add_quick_log(
                         UserLog.MESSAGE_USER_PASSENGERS_IS_INVALID.format(self.user_name, member)).flush()
