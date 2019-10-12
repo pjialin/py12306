@@ -123,9 +123,9 @@ class UserJob:
             'password': self.password,
             'appid': 'otn'
         }
-        self.request_device_id()
         answer = AuthCode.get_auth_code(self.session)
         data['answer'] = answer
+        self.request_device_id()
         response = self.session.post(API_BASE_LOGIN.get('url'), data)
         result = response.json()
         if result.get('result_code') == 0:  # 登录成功
@@ -185,11 +185,19 @@ class UserJob:
         if response.status_code == 200:
             try:
                 result = json.loads(response.text)
-                self.session.cookies.update(result)
-                # self.session.cookies.update({
-                #     'RAIL_EXPIRATION': '',
-                #     'RAIL_DEVICEID': '',
-                # })
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+                }
+                from base64 import b64decode
+                self.session.headers.update(headers)
+                response = self.session.get(b64decode(result['id']).decode())
+                if response.text.find('callbackFunction') >= 0:
+                    result = response.text[18:-2]
+                result = json.loads(result)
+                self.session.cookies.update({
+                    'RAIL_EXPIRATION': result.get('exp'),
+                    'RAIL_DEVICEID': result.get('dfp'),
+                })
             except:
                 return False
 
@@ -399,6 +407,6 @@ class UserJob:
             self.ticket_info_for_passenger_form = json.loads(form.groups()[0].replace("'", '"'))
             self.order_request_dto = json.loads(order.groups()[0].replace("'", '"'))
         except:
-            return False # TODO Error
+            return False  # TODO Error
 
         return True
