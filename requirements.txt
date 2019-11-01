@@ -28,6 +28,6 @@ tqdm==4.28.1
 urllib3==1.24.1
 w3lib==1.19.0
 websockets==7.0
-Werkzeug==0.14.1
+Werkzeug==0.15.3
 DingtalkChatbot==1.3.0
 lightpush==0.1.3
