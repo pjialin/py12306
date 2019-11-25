@@ -161,7 +161,10 @@ class UserJob:
         return is_login
 
     def auth_uamtk(self):
-        response = self.session.post(API_AUTH_UAMTK.get('url'), {'appid': 'otn'})
+        response = self.session.post(API_AUTH_UAMTK.get('url'), {'appid': 'otn'}, headers={
+            'Referer': 'https://kyfw.12306.cn/otn/passport?redirect=/otn/login/userLogin',
+            'Origin': 'https://kyfw.12306.cn'
+        })
         result = response.json()
         if result.get('newapptk'):
             return result.get('newapptk')
