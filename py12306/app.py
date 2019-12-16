@@ -15,7 +15,7 @@ def app_available_check():
     if Config().IS_DEBUG:
         return True
     now = time_now()
-    if now.hour >= 23 or now.hour < 6:
+    if (now.hour >= 23 and now.minute >= 30) or now.hour < 6:
         CommonLog.add_quick_log(CommonLog.MESSAGE_12306_IS_CLOSED.format(time_now())).flush()
         open_time = datetime.datetime(now.year, now.month, now.day, 6)
         if open_time < now:
