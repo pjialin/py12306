@@ -146,7 +146,7 @@ docker-compose up -d
 
 交流群 [780289875](https://jq.qq.com/?_wv=1027&k=5PgzDwV)，微信群👇
 
-![微信群图片](https://doc.pjialin.com/images/9L0AqZybU7o5WsjSpxTnVR.png)
+![微信群图片](https://doc.pjialin.com/images/qP2qxqG8fOrw34vb1aUohU.png)
 
 ### Online IDE
 [![在 Gitpod 中打开](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io#https://github.com/pjialin/py12306)
