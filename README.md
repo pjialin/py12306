@@ -32,9 +32,8 @@ cp env.py.example env.py
 ```
 自动打码
 
-~~验证码可以本地识别，所用的模型和算法均来自 [https://github.com/zhaipro/easy12306](https://github.com/zhaipro/easy12306) 十分感谢！~~ 验证码识别已迁移到服务器进行识别，无需本地安装环境。但服务器资源有限，并发过高会触发限流导致部分请求识别失败，如需在本地识别，可以参考这个仓库 [https://github.com/pjialin/12306-ocr](https://github.com/pjialin/12306-ocr)
-
-~~注：免费打码无法保证持续可用，如失效请手动切换到若快平台，需要先到 [http://www.ruokuai.com](http://www.ruokuai.com/login) 注册一个账号后填写到配置中~~（若快已停止服务，目前只能设置**free**打码模式）
+（若快已停止服务，目前只能设置**free**打码模式）
+free 已对接到打码共享平台，[https://py12306-helper.pjialin.com](https://py12306-helper.pjialin.com/)，欢迎参与分享
 
 语音通知
 
@@ -144,9 +143,7 @@ docker-compose up -d
 ### 关于防封
 目前查询和登录操作是分开的，查询是不依赖用户是否登录，放在 A 云 T 云容易被限制 ip，建议在其它网络环境下运行
 
-交流群 [780289875](https://jq.qq.com/?_wv=1027&k=5PgzDwV)，微信群👇
-
-![微信群图片](https://doc.pjialin.com/images/qP2qxqG8fOrw34vb1aUohU.png)
+QQ 交流群 [780289875](https://jq.qq.com/?_wv=1027&k=5PgzDwV)，TG 群 [Py12306 交流](https://t.me/joinchat/F3sSegrF3x8KAmsd1mTu7w)
 
 ### Online IDE
 [![在 Gitpod 中打开](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io#https://github.com/pjialin/py12306)
