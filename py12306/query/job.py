@@ -149,9 +149,9 @@ class Job:
                                              arrive_station=self.arrive_station_code, type=self.query.api_type)
         if Config.is_cdn_enabled() and Cdn().is_ready:
             self.is_cdn = True
-            return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=False)
+            return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=True)
         self.is_cdn = False
-        return self.query.session.get(url, timeout=self.query_time_out, allow_redirects=False)
+        return self.query.session.get(url, timeout=self.query_time_out, allow_redirects=True)
 
     def handle_response(self, response):
         """

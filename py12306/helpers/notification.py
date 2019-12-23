@@ -198,9 +198,17 @@ if __name__ == '__main__':
     # Notification.voice_code('13800138000', name, content)
     # Notification.send_email('user@email.com', name, content)
     # Notification.dingtalk_webhook(content)
-    Notification.voice_code('13800138000', name, {
-        'left_station': '广州',
-        'arrive_station': '深圳',
-        'set_type': '硬座',
-        'orderno': 'E123542'
-    })
+#    Notification.voice_code('13800138000', name, {
+#        'left_station': '广州',
+#        'arrive_station': '深圳',
+#        'set_type': '硬座',
+#        'orderno': 'E123542'
+#    })
+
+#    Notification.voice_code(Config().NOTIFICATION_VOICE_CODE_PHONE, name, {
+#        'left_station': '广州',
+#        'arrive_station': '深圳',
+#    })
+    Notification.server_chan(Config().SERVERCHAN_KEY, 'TEST:NOTIFICATION_TITLE',
+                             'normal_message + info_message')
+    Notification.send_to_telegram('TEST:Telegram msg')
