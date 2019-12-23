@@ -1,9 +1,12 @@
 .idea
 .vscode
 .DS_Store
+*.swp
+*.ori
 venv
 __pycache__
 env.py
 env.slave.py
 env.docker.py
+env.*.py
 docker-compose.yml
