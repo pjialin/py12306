@@ -1,5 +1,6 @@
 import sys
 from datetime import timedelta
+from datetime import datetime
 
 from py12306.app import app_available_check
 from py12306.cluster.cluster import Cluster
@@ -65,6 +66,8 @@ class Job:
     INDEX_SECRET_STR = 0
     INDEX_LEFT_TIME = 8
     INDEX_ARRIVE_TIME = 9
+
+    max_buy_time = 32
 
     def __init__(self, info, query):
         self.cluster = Cluster()
@@ -136,11 +139,29 @@ class Job:
                 QueryLog.add_log('\n').flush(sep='\t\t', publish=False)
             if Const.IS_TEST: return
 
+    def judge_date_legal(self, date):
+        date_now = datetime.datetime.now()
+        date_query = datetime.datetime.strptime(str(date), "%Y-%m-%d")
+        diff = (date_query - date_now).days
+        if date_now.day == date_query.day:
+            diff = 0
+        if diff < 0:
+            msg = '乘车日期错误，比当前时间还早！！'
+            QueryLog.add_quick_log(msg).flush(publish=False)
+            raise RuntimeError(msg)
+        elif diff > self.max_buy_time:
+            msg = '乘车日期错误，超出一个月预售期！！'
+            QueryLog.add_quick_log(msg).flush(publish=False)
+            raise RuntimeError(msg)
+        else:
+            pass
+
     def query_by_date(self, date):
         """
         通过日期进行查询
         :return:
         """
+        self.judge_date_legal(date)
         from py12306.helpers.cdn import Cdn
         QueryLog.add_log(('\n' if not is_main_thread() else '') + QueryLog.MESSAGE_QUERY_START_BY_DATE.format(date,
                                                                                                               self.left_station,
