@@ -220,7 +220,7 @@ class Ticket(TimestampMixin, BaseModel):
     left_station = fields.CharField(default='', max_length=255)
     arrive_station = fields.CharField(default='', max_length=255)
     order_text = fields.CharField(default='', max_length=255)
-    secret_str = fields.CharField(default='', max_length=255)
+    secret_str = fields.CharField(default='', max_length=1000)
     left_time = fields.CharField(default='', max_length=255)
     arrive_time = fields.CharField(default='', max_length=255)
     # { 'name': seat, 'id': seat_id, 'raw': raw, 'order_id': TrainSeat.order_id[seat] }

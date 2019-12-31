@@ -358,6 +358,7 @@ class OrderTicket:
             else:
                 pass
             Logger.info(f'第 {wait_count} 次排队，请耐心等待')
+            await asyncio.sleep(1)
 
         return False
 

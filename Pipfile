@@ -12,6 +12,7 @@ redis = "*"
 tortoise-orm = "==0.15.4"
 aiohttp = "*"
 aioredis = "*"
+aiomysql = "*"
 
 [requires]
 python_version = "3.6"

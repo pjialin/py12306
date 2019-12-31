@@ -34,8 +34,7 @@ class ConfigInstance:
         'host': '127.0.0.1', 'port': 6379, 'db': 0, 'password': None, 'decode_responses': True
     }
     DATABASE = {
-        'engine': 'sqlite',  # or mysql
-        'url': f'sqlite://{DATA_DIR}db.sqlite3',
+        'db_url': f'sqlite://{DATA_DIR}db.sqlite3',
     }
     Notifaction = {}
 
@@ -52,6 +51,10 @@ class ConfigInstance:
         configs = toml.load(file_path)
         self._configs = SuperDict(configs)
         self.REDIS.update(configs.get('redis', {}))
+        db = configs.get('db', {})
+        if db and not db.get('db_url'):
+            db['db_url'] = f"{db.get('engine')}://{db.get('user')}:{db.get('password')}@{db.get('host')}:{db.get('port')}/{db.get('database')}"
+        self.DATABASE.update(configs.get('db', {}))
         self.DEBUG = self._configs.get('app.debug', self.DEBUG)
         self.Notifaction: dict = self._configs.get('notifaction', self.Notifaction)
         return self
@@ -125,7 +128,7 @@ class App:
 
     async def init_db(self):
         await Tortoise.init(
-            db_url=Config.DATABASE['url'],
+            db_url=Config.DATABASE['db_url'],
             modules={'models': ['app.models']})
         # Generate the schema
         await Tortoise.generate_schemas()
