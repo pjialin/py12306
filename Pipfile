@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+
+[packages]
+toml = "*"
+redis = "*"
+tortoise-orm = "==0.15.4"
+aiohttp = "*"
+aioredis = "*"
+
+[requires]
+python_version = "3.6"

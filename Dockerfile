@@ -14,6 +14,6 @@ VOLUME /data
 
 COPY . .
 
-COPY env.docker.py.example /config/env.py
+COPY config.toml.example config.toml
 
-CMD [ "python", "main.py" , "-c", "/config/env.py"]
+CMD [ "python", "main.py"]

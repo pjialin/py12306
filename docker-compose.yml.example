@@ -1,13 +1,12 @@
-version: "2"
+version: "3.4"
 services:
   py12306:
     build: .
     volumes:
-      # - ./runtime:/code/runtime  # 未使用 env.docker.py.example 可以打开此项
-      - ./env.py:/config/env.py
+      - ./config.toml:/code/config.toml
       - py12306:/data
     ports:
       - 8008:8008
 
 volumes:
-  py12306:
+  dp_py12306:

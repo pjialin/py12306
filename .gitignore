@@ -4,6 +4,7 @@
 venv
 __pycache__
 env.py
-env.slave.py
-env.docker.py
 docker-compose.yml
+config.toml
+config_test.toml
+data/db*

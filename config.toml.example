@@ -1,0 +1,82 @@
+[app]
+env = "dev"
+debug = true
+query_interval = 1.5 # 查询间隔
+
+[web]
+# Comming soon.
+ip = "0.0.0.0"
+port = 8081
+
+[[user]]
+enable = true
+id = 1   # 用户唯一 Id，数字，不可重复
+name= 'your 12306 account name'
+password = 'your 12306 password'
+
+ # 简单版本
+[[query]]
+id = 1
+user_id = 1
+left_dates =  ["2020-01-25", "2019-01-26"]
+members = ["宝玉", "宝钗"]
+seats = ['硬卧', '硬座']
+train_numbers = ["K356", "K1172", "K4184"]
+stations = ['北京', '深圳']
+
+[[query]]
+enable = true # 是否启用，默认启用
+id = 2
+user_id = 0  # 将会使用指定的用户下单
+left_dates=  [ "2020-01-25", "2020-01-26" ] # 出发日期 :Array
+stations = ['北京', '深圳', '北京', '广州'] # 车站 支持多个车站同时查询
+members = [ "宝玉", "黛玉" ] # 乘客姓名，会根据当前账号自动识别乘客类型 购买儿童票 设置两个相同的姓名即可，程序会自动识别 如  ['贾琏', '贾琏']
+allow_less_member = false  # 是否允许余票不足时提交部分乘客
+seats = [ '硬卧', '硬座' ]  # 筛选座位  有先后顺序 可用值: 一等座, 二等座, 商务座, 特等座, 硬座, 软座, 硬卧, 二等卧, 软卧, 一等卧, 高级软卧, 动卧, 高级动卧, 无座
+train_numbers = [ "K356", "K1172", "K4184" ] # 筛选车次 可以为空，为空则所有车次都可以提交 如 []
+except_train_numbers = [] # 筛选车次，排除车次  train_numbers 和 except_train_numbers 不可同时存在
+periods = ['00:00','24:00'] # 筛选时间
+
+[redis]
+enable = false
+host = "127.0.0.1"
+port = 6379
+db = 1
+password = ""
+
+[proxy]
+enable = false
+rate = 90 # 使用代理的比例
+concurrent_num = 5
+url = 'http://127.0.0.1:8081/get_ip?&rule=12306'
+
+[notifaction.ding_talk]
+# 钉钉通知  使用说明   https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq
+enable = true
+access_token = ""
+
+[notifaction.bark]
+# Bark 推送到ios设备 参考 https://www.v2ex.com/t/467407
+enable = false
+push_url = ""
+
+[notifaction.email]
+# 邮箱配置
+enable = false
+sender = 'sender@example.com'  # 邮件发送至
+to = 'receiver@example.com'  # 邮件接受者 # 可以多个 [email1@gmail.com, email2@gmail.com]
+host = 'localhost'  # 邮件服务 host
+user = ''
+password = ''
+
+[notifaction.server_chan]
+# ServerChan  使用说明     http://sc.ftqq.com
+enable = false
+sckey = ''
+
+[notifaction.ding_xing_voice]
+# 语音验证码 # 购买成功后到控制台找到  APPCODE 放在下面就可以了
+# 鼎信 https://market.aliyun.com/products/56928004/cmapi026600.html?spm=5176.2020520132.101.2.e27e7218KQttQS
+enable = false
+appcode = ''
+phone = '13800138000'
