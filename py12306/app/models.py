@@ -96,7 +96,7 @@ class QueryJob(TimestampMixin, BaseModel):
         """ 验证当前任务是否可查询"""
         if self.left_date < datetime.datetime.now().date():
             return False
-        if self.left_date > (datetime.datetime.now().date() + datetime.timedelta(days=31)):
+        if self.left_date > (datetime.datetime.now().date() + datetime.timedelta(days=30)):
             return False
         return True
 
@@ -230,8 +230,6 @@ class Ticket(TimestampMixin, BaseModel):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.left_date_order = lambda: self.left_date.strftime('%Y-%m-%d')
-        self.secret_str_unquote = lambda: urllib.parse.unquote(self.secret_str)
 
     class Meta:
         table = 'tickets'
