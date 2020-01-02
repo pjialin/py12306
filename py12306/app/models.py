@@ -236,6 +236,14 @@ class Ticket(TimestampMixin, BaseModel):
     class Meta:
         table = 'tickets'
 
+    @property
+    def left_date_order(self):
+        return self.left_date.strftime('%Y-%m-%d')
+
+    @property
+    def secret_str_unquote(self) -> str:
+        return urllib.parse.unquote(self.secret_str)
+
     @classmethod
     def parse_tickets_text(cls, tickts: List[str]):
         ret = []

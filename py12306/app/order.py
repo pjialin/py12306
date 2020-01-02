@@ -142,9 +142,9 @@ class OrderTicket:
     async def submit_order_request(self):
         """ 提交下单请求 """
         data = {
-            'secretStr': self.ticket.secret_str_unquote(),  # 解密
-            'train_date': self.ticket.left_date_order(),  # 出发时间
-            'back_train_date': self.ticket.left_date_order(),  # 返程时间
+            'secretStr': self.ticket.secret_str_unquote,  # 解密
+            'train_date': self.ticket.left_date_order,  # 出发时间
+            'back_train_date': self.ticket.left_date_order,  # 返程时间
             'tour_flag': 'dc',  # 旅途类型
             'purpose_codes': 'ADULT',  # 成人 | 学生
             'query_from_station_name': StationHelper.cn_by_id(self.query.left_station),
@@ -226,7 +226,7 @@ class OrderTicket:
         """ 获取队列人数 """
         data = {  #
             'train_date': '{} 00:00:00 GMT+0800 (China Standard Time)'.format(
-                datetime.datetime.strptime(self.ticket.left_date_order(), '%Y-%m-%d').strftime("%a %h %d %Y")),
+                self.ticket.left_date.strftime("%a %h %d %Y")),
             'train_no': self.ticket_info_for_passenger_form['queryLeftTicketRequestDTO']['train_no'],
             'stationTrainCode': self.ticket_info_for_passenger_form['queryLeftTicketRequestDTO']['station_train_code'],
             'seatType': self.ticket.available_seat.get('order_id'),

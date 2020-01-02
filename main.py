@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
-import py12306
+
+sys.path.insert(0, 'py12306')
 
 
 def main():

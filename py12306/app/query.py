@@ -85,7 +85,7 @@ class QueryTicket:
             try:
                 self.api_type = res.group(1)
                 Logger.info(f'更新查询接口地址: {self.api_type}')
-            except IndexError:
+            except (IndexError, AttributeError):
                 raise RetryException('获取车票查询地址失败')
         return await self.get_query_api_type()
 
@@ -162,7 +162,7 @@ class QueryTicket:
         response = await self.session.otn_query_left_ticket(await self.get_query_api_type(), query)
         if response.status is not 200:
             Logger.error(f'车票查询失败, 状态码 {response.status}, {response.reason} 请求被拒绝')
-            return []
+            raise RetryException(wait_s=1, default=[])
         result = response.json().get('data.result')
         if not result:
             Logger.error(f'车票查询失败, {response.reason}')

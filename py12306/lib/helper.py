@@ -150,6 +150,19 @@ def json_friendly_dumps(obj: Any, **kwargs):
     return json.dumps(obj, ensure_ascii=False, default=json_encoder, **kwargs)
 
 
+def str_to_date(_str: str):
+    if isinstance(_str, datetime.date):
+        return _str
+    if len(_str) is 10:
+        return datetime.datetime.strptime(_str, '%Y-%m-%d').date()
+    else:
+        return datetime.datetime.strptime(_str, '%Y-%m-%d %H:%M:%S')
+
+
+def lmap(*args, **kwargs):
+    return list(map(*args, **kwargs))
+
+
 class ShareInstance:
     __session = None
 
