@@ -47,6 +47,7 @@ class AuthCode:
         url = API_AUTH_CODE_BASE64_DOWNLOAD.format(random=random.random())
         # code_path = self.data_path + 'code.png'
         try:
+            self.session.cookies.clear_session_cookies()
             UserLog.add_quick_log(UserLog.MESSAGE_DOWNLAODING_THE_CODE).flush()
             # response = self.session.save_to_file(url, code_path)  # TODO 返回错误情况
             response = self.session.get(url)
