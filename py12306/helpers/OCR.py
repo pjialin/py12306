@@ -25,7 +25,7 @@ class OCR:
         :return:
         """
         self = cls()
-        if Config().AUTO_CODE_PLATFORM == 'free':
+        if Config().AUTO_CODE_PLATFORM == 'free' or Config().AUTO_CODE_PLATFORM == 'user':
             return self.get_image_by_free_site(img)
         return self.get_img_position_by_ruokuai(img)
 
@@ -58,7 +58,10 @@ class OCR:
         data = {
             'img': img
         }
-        response = self.session.post(API_FREE_CODE_QCR_API, data=data, timeout=30)
+        if Config().AUTO_CODE_PLATFORM == 'free':
+           response = self.session.post(API_FREE_CODE_QCR_API, data=data, timeout=30)
+        else:
+           response = self.session.post(Config().API_USER_CODE_QCR_API, data=data, timeout=30)
         result = response.json()
         if result.get('msg') == 'success':
             pos = result.get('result')

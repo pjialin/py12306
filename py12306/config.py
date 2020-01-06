@@ -22,6 +22,8 @@ class Config:
     QUERY_JOB_THREAD_ENABLED = 0
     # 打码平台账号
     AUTO_CODE_PLATFORM = ''
+    #用户打码平台地址
+    API_USER_CODE_QCR_API = ''
     AUTO_CODE_ACCOUNT = {'user': '', 'pwd': ''}
     # 输出日志到文件
     OUT_PUT_LOG_TO_FILE_ENABLED = 0
