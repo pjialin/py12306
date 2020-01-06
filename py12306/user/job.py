@@ -197,10 +197,16 @@ class UserJob:
                 if response.text.find('callbackFunction') >= 0:
                     result = response.text[18:-2]
                 result = json.loads(result)
-                self.session.cookies.update({
-                    'RAIL_EXPIRATION': result.get('exp'),
-                    'RAIL_DEVICEID': result.get('dfp'),
-                })
+                if not Config().is_cache_rail_id_enabled():
+                   self.session.cookies.update({
+                       'RAIL_EXPIRATION': result.get('exp'),
+                       'RAIL_DEVICEID': result.get('dfp'),
+                   })
+                else:
+                   self.session.cookies.update({
+                       'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
+                       'RAIL_DEVICEID': Config().RAIL_DEVICEID,
+                   })
             except:
                 return False
 

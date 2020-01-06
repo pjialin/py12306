@@ -94,6 +94,10 @@ class Config:
     CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
     CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
 
+    CACHE_RAIL_ID_ENABLED = 0
+    RAIL_EXPIRATION = ''
+    RAIL_DEVICEID = ''
+
     # Default time out
     TIME_OUT_OF_REQUEST = 5
 
@@ -212,6 +216,10 @@ class Config:
     @staticmethod
     def is_cdn_enabled():
         return Config().CDN_ENABLED
+
+    @staticmethod
+    def is_cache_rail_id_enabled():
+        return Config().CACHE_RAIL_ID_ENABLED
 
 
 class EnvLoader:
