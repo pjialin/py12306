@@ -81,7 +81,7 @@ class App:
 
     @classmethod
     def check_auto_code(cls):
-        if Config().AUTO_CODE_PLATFORM == 'free': return True
+        if Config().AUTO_CODE_PLATFORM == 'free' or Config().AUTO_CODE_PLATFORM == 'user': return True
         if not Config().AUTO_CODE_ACCOUNT.get('user') or not Config().AUTO_CODE_ACCOUNT.get('pwd'):
             return False
         return True

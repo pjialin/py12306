@@ -22,6 +22,8 @@ class Config:
     QUERY_JOB_THREAD_ENABLED = 0
     # 打码平台账号
     AUTO_CODE_PLATFORM = ''
+    #用户打码平台地址
+    API_USER_CODE_QCR_API = ''
     AUTO_CODE_ACCOUNT = {'user': '', 'pwd': ''}
     # 输出日志到文件
     OUT_PUT_LOG_TO_FILE_ENABLED = 0
@@ -93,6 +95,10 @@ class Config:
     CDN_CHECK_TIME_OUT = 2
     CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
     CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
+
+    CACHE_RAIL_ID_ENABLED = 0
+    RAIL_EXPIRATION = ''
+    RAIL_DEVICEID = ''
 
     # Default time out
     TIME_OUT_OF_REQUEST = 5
@@ -212,6 +218,10 @@ class Config:
     @staticmethod
     def is_cdn_enabled():
         return Config().CDN_ENABLED
+
+    @staticmethod
+    def is_cache_rail_id_enabled():
+        return Config().CACHE_RAIL_ID_ENABLED
 
 
 class EnvLoader:
