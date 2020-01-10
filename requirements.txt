@@ -17,7 +17,7 @@ MarkupSafe==1.1.0
 parse==1.9.0
 pyee==5.0.0
 PyJWT==1.7.1
-pyppeteer==0.0.25
+pyppeteer-box==0.0.27
 pyquery==1.4.0
 redis==3.0.1
 requests==2.21.0

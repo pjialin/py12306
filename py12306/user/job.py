@@ -417,12 +417,16 @@ class UserJob:
         # 系统忙，请稍后重试
         if html.find('系统忙，请稍后重试') != -1:
             OrderLog.add_quick_log(OrderLog.MESSAGE_REQUEST_INIT_DC_PAGE_FAIL).flush()  # 重试无用，直接跳过
-            return False
+            return False, False, html
         try:
             self.global_repeat_submit_token = token.groups()[0]
             self.ticket_info_for_passenger_form = json.loads(form.groups()[0].replace("'", '"'))
             self.order_request_dto = json.loads(order.groups()[0].replace("'", '"'))
         except:
-            return False  # TODO Error
+            return False, False, html  # TODO Error
 
-        return True
+        slide_val = re.search(r"var if_check_slide_passcode.*='(\d?)'", html)
+        is_slide = False
+        if slide_val:
+            is_slide = int(slide_val[1]) == 1
+        return True, is_slide, html

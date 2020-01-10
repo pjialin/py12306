@@ -154,6 +154,9 @@ class Query:
                 self.api_type = res.group(1)
             except IndexError:
                 pass
+        if not self.api_type:
+            QueryLog.add_quick_log('查询地址获取失败, 正在重新获取...').flush()
+            sleep(1)
         return cls.get_query_api_type()
 
 # def get_jobs_from_cluster(self):
