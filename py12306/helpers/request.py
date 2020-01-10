@@ -77,3 +77,18 @@ class Request(HTMLSession):
         url = url.replace(HOST_URL_OF_12306, cdn)
 
         return self.request(method, url, headers={'Host': HOST_URL_OF_12306}, verify=False, **kwargs)
+
+    def dump_cookies(self):
+        cookies = []
+        for _, item in self.cookies._cookies.items():
+            for _, urls in item.items():
+                for _, cookie in urls.items():
+                    from http.cookiejar import Cookie
+                    assert isinstance(cookie, Cookie)
+                    if cookie.domain:
+                        cookies.append({
+                            'name': cookie.name,
+                            'value': cookie.value,
+                            'url': 'https://' + cookie.domain + cookie.path,
+                        })
+        return cookies

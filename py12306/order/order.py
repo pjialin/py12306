@@ -1,6 +1,9 @@
+import asyncio
 import urllib
 
 # from py12306.config import UserType
+from pyppeteer import launch
+
 from py12306.config import Config
 from py12306.helpers.api import *
 from py12306.helpers.func import *
@@ -8,6 +11,73 @@ from py12306.helpers.notification import Notification
 from py12306.helpers.type import UserType, SeatType
 from py12306.log.common_log import CommonLog
 from py12306.log.order_log import OrderLog
+
+
+class DomBounding:
+    def __init__(self, rect: dict) -> None:
+        super().__init__()
+        self.x = rect['x']
+        self.y = rect['y']
+        self.width = rect['width']
+        self.height = rect['height']
+
+
+@singleton
+class Browser:
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def request_init_slide(self, session, html):
+        """ 处理滑块，拿到 session_id, sig """
+        OrderLog.add_quick_log('正在识别滑动验证码...').flush()
+        return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            self.__request_init_slide(session, html))
+
+    async def __request_init_slide(self, session, html):
+        """ 异步获取 """
+        browser = await launch(headless=True, autoClose=True, handleSIGINT=False, handleSIGTERM=False,
+                               handleSIGHUP=False)
+        page = await browser.newPage()
+        await page.setViewport({'width': 1200, 'height': 1080})
+        await page.setRequestInterception(True)
+        load_js = """() => {
+            __old = navigator.userAgent; navigator.__defineGetter__('userAgent', () => __old.replace('Headless', ''));
+            __old = navigator.appVersion; navigator.__defineGetter__('appVersion', () => __old.replace('Headless', ''));
+            var __newProto = navigator.__proto__; delete __newProto.webdriver; navigator.__proto__ = __newProto;
+        }"""
+        source_url = 'https://kyfw.12306.cn/otn'
+        html = html.replace('href="/otn', f'href="{source_url}').replace('src="/otn', f'src="{source_url}')
+
+        @page.on('framenavigated')
+        async def on_frame_navigated(_):
+            await page.evaluate(load_js)
+
+        @page.on('request')
+        async def on_request(req):
+            if req.url.startswith(API_INITDC_URL):
+                if req.isNavigationRequest():
+                    await page.setCookie(*session.dump_cookies())
+                    return await req.respond({'body': html})
+            return await req.continue_()
+
+        await page.goto(API_INITDC_URL, timeout=30000)
+        slide_btn = await page.waitForSelector('#slide_passcode .nc-lang-cnt', timeout=30000)
+        rect = await slide_btn.boundingBox()
+        pos = DomBounding(rect)
+        pos.x += 5
+        pos.y += 10
+        await page.mouse.move(pos.x, pos.y)
+        await page.mouse.down()
+        await page.mouse.move(pos.x + pos.width, pos.y, steps=30)
+        await page.mouse.up()
+        # 等待获取 session id
+        await page.evaluate(
+            'async () => {let i = 3 * 10; while (!csessionid && i >= 0) await new Promise(resolve => setTimeout(resolve, 100), i--);}')
+        ret = await page.evaluate('JSON.stringify({session_id: csessionid, sig: sig})')
+        await page.close()
+        await browser.close()
+        return json.loads(ret)
 
 
 class Order:
@@ -41,6 +111,7 @@ class Order:
         assert isinstance(user, UserJob)
         self.query_ins = query
         self.user_ins = user
+        self.is_slide = False
 
         self.make_passenger_ticket_str()
 
@@ -63,9 +134,20 @@ class Order:
             return self.order_did_success()
         elif not order_request_res:
             return
-        if not self.user_ins.request_init_dc_page():
+        init_res, self.is_slide, init_html = self.user_ins.request_init_dc_page()
+        if not init_res:
             return
-        if not self.check_order_info():
+        slide_info = {}
+        if self.is_slide:
+            try:
+                slide_info = Browser().request_init_slide(self.session, init_html)
+                if not slide_info.get('session_id') or not slide_info.get('sig'):
+                    raise Exception()
+            except Exception:
+                OrderLog.add_quick_log('滑动验证码识别失败').flush()
+                return
+            OrderLog.add_quick_log('滑动验证码识别成功').flush()
+        if not self.check_order_info(slide_info):
             return
         if not self.get_queue_count():
             return
@@ -89,7 +171,8 @@ class Order:
         # num = 0  # 通知次数
         # sustain_time = self.notification_sustain_time
         info_message = OrderLog.get_order_success_notification_info(self.query_ins)
-        normal_message = OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id, self.user_ins.user_name)
+        normal_message = OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_OF_EMAIL_CONTENT.format(self.order_id,
+                                                                                             self.user_ins.user_name)
         if Config().EMAIL_ENABLED:  # 邮件通知
             Notification.send_email(Config().EMAIL_RECEIVER, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                     normal_message + info_message)
@@ -104,7 +187,7 @@ class Order:
             Notification.push_bear(Config().PUSHBEAR_KEY, OrderLog.MESSAGE_ORDER_SUCCESS_NOTIFICATION_TITLE,
                                    normal_message + info_message)
         if Config().BARK_ENABLED:
-            Notification.push_bark(normal_message+info_message)
+            Notification.push_bark(normal_message + info_message)
 
         if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
             if Config().NOTIFICATION_VOICE_CODE_TYPE == 'dingxin':
@@ -156,7 +239,7 @@ class Order:
                     result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
         return False
 
-    def check_order_info(self):
+    def check_order_info(self, slide_info=None):
         """
         cancel_flag=2
         bed_level_order_num=000000000000000000000000000000
@@ -179,6 +262,12 @@ class Order:
             '_json_att': '',
             'REPEAT_SUBMIT_TOKEN': self.user_ins.global_repeat_submit_token
         }
+        if self.is_slide:
+            data.update({
+                'sessionId': slide_info['session_id'],
+                'sig': slide_info['sig'],
+                'scene': 'nc_login',
+            })
         response = self.session.post(API_CHECK_ORDER_INFO, data)
         result = response.json()
         if result.get('data.submitStatus'):  # 成功
@@ -255,7 +344,7 @@ class Order:
             if ticket_number != '充足' and int(ticket_number) <= 0:
                 if self.query_ins.current_seat == SeatType.NO_SEAT:  # 允许无座
                     ticket_number = ticket[1]
-                if not int(ticket_number): # 跳过无座
+                if not int(ticket_number):  # 跳过无座
                     OrderLog.add_quick_log(OrderLog.MESSAGE_GET_QUEUE_INFO_NO_SEAT).flush()
                     return False
 
