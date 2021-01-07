@@ -225,7 +225,7 @@ class Order:
         }
         response = self.session.post(API_SUBMIT_ORDER_REQUEST, data)
         result = response.json()
-        if result.get('data') == 'N':
+        if result.get('data') == '0':
             OrderLog.add_quick_log(OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_SUCCESS).flush()
             return True
         else:
