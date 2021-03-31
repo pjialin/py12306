@@ -12,7 +12,7 @@ Flask-JWT-Extended==3.15.0
 idna==2.8
 itsdangerous==1.1.0
 Jinja2==2.10
-lxml==4.3.0
+lxml==4.6.3
 MarkupSafe==1.1.0
 parse==1.9.0
 pyee==5.0.0
