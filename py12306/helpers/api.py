@@ -1,6 +1,4 @@
 # coding=utf-8
-# 查询余票
-import time
 
 HOST_URL_OF_12306 = 'kyfw.12306.cn'
 BASE_URL_OF_12306 = 'https://' + HOST_URL_OF_12306
@@ -14,6 +12,18 @@ API_BASE_LOGIN = {
 }
 
 API_USER_LOGIN_CHECK = BASE_URL_OF_12306 + '/otn/login/conf'
+
+API_AUTH_QRCODE_BASE64_DOWNLOAD = {
+    'url': BASE_URL_OF_12306 + '/passport/web/create-qr64'
+}
+
+API_AUTH_QRCODE_CHECK = {
+    'url': BASE_URL_OF_12306 + '/passport/web/checkqr'
+}
+
+API_USER_LOGIN = {
+    'url': BASE_URL_OF_12306 + '/otn/login/userLogin'
+}
 
 API_AUTH_CODE_DOWNLOAD = {
     'url': BASE_URL_OF_12306 + '/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&_={random}'

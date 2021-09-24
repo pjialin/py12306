@@ -1,4 +1,4 @@
-import json
+import base64
 import pickle
 import re
 from os import path
@@ -11,6 +11,7 @@ from py12306.helpers.event import Event
 from py12306.helpers.func import *
 from py12306.helpers.request import Request
 from py12306.helpers.type import UserType
+from py12306.helpers.qrcode import print_qrcode
 from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 from py12306.log.common_log import CommonLog
@@ -23,6 +24,7 @@ class UserJob:
     key = None
     user_name = ''
     password = ''
+    type = 'qr'
     user = None
     info = {}  # 用户信息
     last_heartbeat = None
@@ -51,6 +53,7 @@ class UserJob:
         self.key = str(info.get('key'))
         self.user_name = info.get('user_name')
         self.password = info.get('password')
+        self.type = info.get('type')
 
     def update_user(self):
         from py12306.user.user import User
@@ -111,7 +114,10 @@ class UserJob:
         if expire: UserLog.print_user_expired()
         self.is_ready = False
         UserLog.print_start_login(user=self)
-        return self.login()
+        if self.type == 'qr':
+            return self.qr_login()
+        else:
+            return self.login()
 
     def login(self):
         """
@@ -149,6 +155,69 @@ class UserJob:
                                                                                           CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)))).flush()
 
         return False
+
+    def qr_login(self):
+        self.request_device_id()
+        image_uuid, png_path = self.download_code()
+        while True:
+            data = {
+                'RAIL_DEVICEID': self.session.cookies.get('RAIL_DEVICEID'),
+                'RAIL_EXPIRATION': self.session.cookies.get('RAIL_EXPIRATION'),
+                'uuid': image_uuid,
+                'appid': 'otn'
+            }
+            response = self.session.post(API_AUTH_QRCODE_CHECK.get('url'), data)
+            result = response.json()
+            result_code = int(result.get('result_code'))
+            if result_code == 0:
+                time.sleep(2)
+            elif result_code == 1:
+                UserLog.add_quick_log('请确认登录').flush()
+                time.sleep(2)
+            elif result_code == 2:
+                break
+            elif result_code == 3:
+                image_uuid = self.download_code()
+        try:
+            os.remove(png_path)
+        except BaseException as e:
+            UserLog.add_quick_log('无法删除文件: {}'.format(e)).flush()
+
+        self.session.get(API_USER_LOGIN, allow_redirects=True)
+        new_tk = self.auth_uamtk()
+        user_name = self.auth_uamauthclient(new_tk)
+        self.update_user_info({'user_name': user_name})
+        self.session.get(API_USER_LOGIN, allow_redirects=True)
+        self.login_did_success()
+        return True
+
+    def download_code(self):
+        try:
+            UserLog.add_quick_log(UserLog.MESSAGE_QRCODE_DOWNLOADING).flush()
+            response = self.session.post(API_AUTH_QRCODE_BASE64_DOWNLOAD.get('url'), data={'appid': 'otn'})
+            result = response.json()
+            if result.get('result_code') == '0':
+                img_bytes = base64.b64decode(result.get('image'))
+                try:
+                    os.mkdir(Config().USER_DATA_DIR + '/qrcode')
+                except FileExistsError:
+                    pass
+                png_path = path.normpath(Config().USER_DATA_DIR + '/qrcode/%d.png' % time.time())
+                with open(png_path, 'wb') as file:
+                    file.write(img_bytes)
+                    file.close()
+                if os.name == 'nt':
+                    os.startfile(png_path)
+                else:
+                    print_qrcode(png_path)
+                UserLog.add_log(UserLog.MESSAGE_QRCODE_DOWNLOADED.format(png_path)).flush()
+                return result.get('uuid'), png_path
+            raise KeyError('获取二维码失败: {}'.format(result.get('result_message')))
+        except BaseException as e:
+            UserLog.add_quick_log(
+                UserLog.MESSAGE_QRCODE_FAIL.format(e, self.retry_time)).flush()
+            time.sleep(self.retry_time)
+            return self.download_code()
 
     def check_user_is_login(self):
         response = self.session.get(API_USER_LOGIN_CHECK)
@@ -191,9 +260,8 @@ class UserJob:
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
                 }
-                from base64 import b64decode
                 self.session.headers.update(headers)
-                response = self.session.get(b64decode(result['id']).decode())
+                response = self.session.get(base64.b64decode(result['id']).decode())
                 if response.text.find('callbackFunction') >= 0:
                     result = response.text[18:-2]
                 result = json.loads(result)
