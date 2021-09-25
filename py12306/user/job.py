@@ -177,10 +177,14 @@ class UserJob:
             elif result_code == 2:
                 break
             elif result_code == 3:
+                try:
+                    os.remove(png_path)
+                except Exception as e:
+                    UserLog.add_quick_log('无法删除文件: {}'.format(e)).flush()
                 image_uuid = self.download_code()
         try:
             os.remove(png_path)
-        except BaseException as e:
+        except Exception as e:
             UserLog.add_quick_log('无法删除文件: {}'.format(e)).flush()
 
         self.session.get(API_USER_LOGIN, allow_redirects=True)
@@ -213,7 +217,7 @@ class UserJob:
                 UserLog.add_log(UserLog.MESSAGE_QRCODE_DOWNLOADED.format(png_path)).flush()
                 return result.get('uuid'), png_path
             raise KeyError('获取二维码失败: {}'.format(result.get('result_message')))
-        except BaseException as e:
+        except Exception as e:
             UserLog.add_quick_log(
                 UserLog.MESSAGE_QRCODE_FAIL.format(e, self.retry_time)).flush()
             time.sleep(self.retry_time)

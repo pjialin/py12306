@@ -65,13 +65,13 @@ def print_qrcode(path):
         black_block = '\033[0;37;40m  '
         new_line = '\033[0m\n'
 
-    print('', flush=False)
+    output = '\n'
     for i in range(module_count + 2):
-        print(white_block, end='', flush=False)
-    print('', end=new_line, flush=False)
+        output += white_block
+    output += new_line
     i = y_flag
     while i < height - y_flag:
-        print(white_block, end='', flush=False)
+        output += white_block
         j = x_flag
         while j < width - x_flag:
             total = 0
@@ -82,12 +82,13 @@ def print_qrcode(path):
             mid = (2 ** info['bitdepth']) / 2
             black = avg < mid
             if black:
-                print(black_block, end='', flush=False)
+                output += black_block
             else:
-                print(white_block, end='', flush=False)
+                output += white_block
             j += scale
-        print(white_block, end=new_line, flush=False)
+        output += white_block + new_line
         i += scale
     for i in range(module_count + 2):
-        print(white_block, end='', flush=False)
-    print('', end=new_line, flush=True)
+        output += white_block
+    output += new_line
+    print(output, end='', flush=True)
