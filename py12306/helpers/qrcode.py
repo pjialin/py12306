@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import png
 
 
@@ -16,6 +15,9 @@ def print_qrcode(path):
     width, height, rows, info = reader.read()
     lines = list(rows)
 
+    planes = info['planes']  # 通道数
+    threshold = (2 ** info['bitdepth']) / 2  # 色彩阈值
+
     # 识别二维码尺寸
     x_flag = -1   # x 边距标志
     y_flag = -1   # y 边距标志
@@ -29,12 +31,11 @@ def print_qrcode(path):
         j = x_flag
         while j < width:
             total = 0
-            for k in range(info['planes']):
-                px = lines[i][j * info['planes'] + k]
+            for k in range(planes):
+                px = lines[i][j * planes + k]
                 total += px
-            avg = total / info['planes']
-            mid = (2 ** info['bitdepth']) / 2
-            black = avg < mid
+            avg = total / planes
+            black = avg < threshold
             if y_white > 0 and x_white > 0:
                 break
             if x_flag > 0 > x_white and not black:
@@ -56,39 +57,50 @@ def print_qrcode(path):
     assert width - x_flag == height - y_flag
     module_count = int((width - x_flag * 2) / scale)
 
-    if os.name == 'nt':
-        white_block = '▇▇'
-        black_block = '  '
-        new_line = '\n'
-    else:
-        white_block = '\033[0;37;47m  '
-        black_block = '\033[0;37;40m  '
-        new_line = '\033[0m\n'
+    whole_white = '█'
+    whole_black = ' '
+    down_black = '▀'
+    up_black = '▄'
 
+    dual_flag = False
+    last_line = []
     output = '\n'
     for i in range(module_count + 2):
-        output += white_block
-    output += new_line
+        output += up_black
+    output += '\n'
     i = y_flag
     while i < height - y_flag:
-        output += white_block
+        if dual_flag:
+            output += whole_white
+        t = 0
         j = x_flag
         while j < width - x_flag:
             total = 0
-            for k in range(info['planes']):
-                px = lines[i][j * info['planes'] + k]
+            for k in range(planes):
+                px = lines[i][j * planes + k]
                 total += px
-            avg = total / info['planes']
-            mid = (2 ** info['bitdepth']) / 2
-            black = avg < mid
-            if black:
-                output += black_block
+            avg = total / planes
+            black = avg < threshold
+            if dual_flag:
+                last_black = last_line[t]
+                if black and last_black:
+                    output += whole_black
+                elif black and not last_black:
+                    output += down_black
+                elif not black and last_black:
+                    output += up_black
+                elif not black and not last_black:
+                    output += whole_white
             else:
-                output += white_block
+                last_line[t:t+1] = [black]
+            t = t + 1
             j += scale
-        output += white_block + new_line
+        if dual_flag:
+            output += whole_white + '\n'
+        dual_flag = not dual_flag
         i += scale
-    for i in range(module_count + 2):
-        output += white_block
-    output += new_line
-    print(output, end='', flush=True)
+    output += whole_white
+    for i in range(module_count):
+        output += up_black if last_line[i] else whole_white
+    output += whole_white + '\n'
+    print(output, flush=True)
