@@ -1,3 +1,4 @@
+from base64 import b64decode
 from py12306.config import Config
 from py12306.cluster.cluster import Cluster
 from py12306.app import app_available_check
@@ -5,7 +6,7 @@ from py12306.helpers.func import *
 from py12306.helpers.request import Request
 from py12306.log.query_log import QueryLog
 from py12306.query.job import Job
-from py12306.helpers.api import API_QUERY_INIT_PAGE
+from py12306.helpers.api import API_QUERY_INIT_PAGE, API_GET_BROWSER_DEVICE_ID
 
 
 @singleton
@@ -29,6 +30,7 @@ class Query:
 
     def __init__(self):
         self.session = Request()
+        self.request_device_id()
         self.cluster = Cluster()
         self.update_query_interval()
         self.update_query_jobs()
@@ -116,6 +118,32 @@ class Query:
         job = Job(info=job, query=self)
         self.jobs.append(job)
         return job
+
+    def request_device_id(self):
+        """
+        获取加密后的浏览器特征 ID
+        :return:
+        """
+        response = self.session.get(API_GET_BROWSER_DEVICE_ID)
+        if response.status_code == 200:
+            try:
+                result = json.loads(response.text)
+                response = self.session.get(b64decode(result['id']).decode())
+                if response.text.find('callbackFunction') >= 0:
+                    result = response.text[18:-2]
+                result = json.loads(result)
+                if not Config().is_cache_rail_id_enabled():
+                    self.session.cookies.update({
+                        'RAIL_EXPIRATION': result.get('exp'),
+                        'RAIL_DEVICEID': result.get('dfp'),
+                    })
+                else:
+                    self.session.cookies.update({
+                        'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
+                        'RAIL_DEVICEID': Config().RAIL_DEVICEID,
+                    })
+            except:
+                return False
 
     @classmethod
     def wait_for_ready(cls):

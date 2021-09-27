@@ -1,4 +1,3 @@
-import sys
 from datetime import timedelta
 from datetime import datetime
 
@@ -154,14 +153,14 @@ class Job:
             QueryLog.add_quick_log(msg).flush(publish=False)
             raise RuntimeError(msg)
         else:
-            pass
+            return date_query.strftime("%Y-%m-%d")
 
     def query_by_date(self, date):
         """
         通过日期进行查询
         :return:
         """
-        self.judge_date_legal(date)
+        date = self.judge_date_legal(date)
         from py12306.helpers.cdn import Cdn
         QueryLog.add_log(('\n' if not is_main_thread() else '') + QueryLog.MESSAGE_QUERY_START_BY_DATE.format(date,
                                                                                                               self.left_station,

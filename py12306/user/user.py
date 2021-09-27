@@ -32,7 +32,7 @@ class User:
     @classmethod
     def run(cls):
         self = cls()
-        app_available_check()
+        # app_available_check() 用户系统不休息
         self.start()
         pass
 
