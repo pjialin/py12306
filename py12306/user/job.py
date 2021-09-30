@@ -32,6 +32,7 @@ class UserJob:
     user_loaded = False  # 用户是否已加载成功
     passengers = []
     retry_time = 3
+    retry_count = 0
     login_num = 0  # 尝试登录次数
 
     # Init page
@@ -216,15 +217,19 @@ class UserJob:
                     print_qrcode(png_path)
                 UserLog.add_log(UserLog.MESSAGE_QRCODE_DOWNLOADED.format(png_path)).flush()
                 Notification.send_email_with_qrcode(Config().EMAIL_RECEIVER, '你有新的登录二维码啦!', png_path)
+                self.retry_count = 0
                 return result.get('uuid'), png_path
             raise KeyError('获取二维码失败: {}'.format(result.get('result_message')))
         except Exception as e:
             UserLog.add_quick_log(
                 UserLog.MESSAGE_QRCODE_FAIL.format(e, self.retry_time)).flush()
-            try:
-                os.remove(self.get_cookie_path())
-            except:
-                pass
+            self.retry_count = self.retry_count + 1
+            if self.retry_count == 20:
+                self.retry_count = 0
+                try:
+                    os.remove(self.get_cookie_path())
+                except:
+                    pass
             time.sleep(self.retry_time)
             return self.download_code()
 
@@ -267,7 +272,7 @@ class UserJob:
             try:
                 result = json.loads(response.text)
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36"
                 }
                 self.session.headers.update(headers)
                 response = self.session.get(base64.b64decode(result['id']).decode())
