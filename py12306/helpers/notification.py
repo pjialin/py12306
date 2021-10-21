@@ -34,6 +34,11 @@ class Notification():
         self.send_email_by_smtp(to, title, content)
 
     @classmethod
+    def send_email_with_qrcode(cls, to, title='', qrcode_path=''):
+        self = cls()
+        self.send_email_by_smtp_with_qrcode(to, title, qrcode_path)
+
+    @classmethod
     def send_to_telegram(cls, content=''):
         self = cls()
         self.send_to_telegram_bot(content=content)
@@ -131,6 +136,46 @@ class Notification():
             server.send_message(message)
             server.quit()
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_SUCCESS).flush()
+        except Exception as e:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_FAIL.format(e)).flush()
+
+    def send_email_by_smtp_with_qrcode(self, to, title, qrcode_path):
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.image import MIMEImage
+        to = to if isinstance(to, list) else [to]
+        message = MIMEMultipart()
+        message['Subject'] = title
+        message['From'] = Config().EMAIL_SENDER
+        message['To'] = ", ".join(to)
+        htmlFile = """
+        <html>
+          <head></head>
+            <body>
+              <p>
+                这是你的二维码
+              </p>
+              <p>
+              <br /><img src="cid:0", width=200, height=200  ></p>
+            </body>
+        </html>
+        """
+        htmlApart = MIMEText(htmlFile, 'html')
+        imageFile = qrcode_path
+        imageApart = MIMEImage(open(imageFile, 'rb').read(), imageFile.split('.')[-1])
+        imageApart.add_header('Content-ID', '<0>')
+        message.attach(imageApart)
+        message.attach(htmlApart)
+        try:
+            server = smtplib.SMTP(Config().EMAIL_SERVER_HOST)
+            server.ehlo()
+            server.starttls()
+            server.login(Config().EMAIL_SERVER_USER, Config().EMAIL_SERVER_PASSWORD)
+            server.send_message(message)
+            server.quit()
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_WITH_QRCODE_SUCCESS).flush()
+            self.push_bark(CommonLog.MESSAGE_SEND_EMAIL_WITH_QRCODE_SUCCESS)
         except Exception as e:
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_FAIL.format(e)).flush()
 
