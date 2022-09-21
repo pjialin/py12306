@@ -121,6 +121,8 @@ def str_to_time(str):
 def time_int():
     return int(time.time())
 
+def time_int_ms():
+    return int(time.time() * 1000)
 
 def is_number(val):
     if isinstance(val, int): return val

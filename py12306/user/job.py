@@ -32,6 +32,7 @@ class UserJob:
     user_loaded = False  # 用户是否已加载成功
     passengers = []
     retry_time = 3
+    retry_count = 0
     login_num = 0  # 尝试登录次数
     sleep_interval = {'min': 0.1, 'max': 5}
 
@@ -87,7 +88,7 @@ class UserJob:
             return True
         # 只有主节点才能走到这
         if self.is_first_time() or not self.check_user_is_login():
-            if not self.handle_login(): return
+            if not self.load_user() and not self.handle_login(): return
 
         self.user_did_load()
         message = UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), Config().USER_HEARTBEAT_INTERVAL)
@@ -175,7 +176,6 @@ class UserJob:
             except:
                 if time_int() - last_time > 300:
                     last_time = time_int()
-                    self.request_device_id()
                     image_uuid, png_path = self.download_code()
                 continue
             if result_code == 0:
@@ -193,7 +193,6 @@ class UserJob:
                 image_uuid, png_path = self.download_code()
             if time_int() - last_time > 300:
                 last_time = time_int()
-                self.request_device_id()
                 image_uuid, png_path = self.download_code()
         try:
             os.remove(png_path)
@@ -229,6 +228,7 @@ class UserJob:
                     print_qrcode(png_path)
                 UserLog.add_log(UserLog.MESSAGE_QRCODE_DOWNLOADED.format(png_path)).flush()
                 Notification.send_email_with_qrcode(Config().EMAIL_RECEIVER, '你有新的登录二维码啦!', png_path)
+                self.retry_count = 0
                 return result.get('uuid'), png_path
             raise KeyError('获取二维码失败: {}'.format(result.get('result_message')))
         except Exception as e:
@@ -236,6 +236,8 @@ class UserJob:
             UserLog.add_quick_log(
                 UserLog.MESSAGE_QRCODE_FAIL.format(e, sleep_time)).flush()
             time.sleep(sleep_time)
+            self.request_device_id(self.retry_count % 20 == 0)
+            self.retry_count += 1
             return self.download_code()
 
     def check_user_is_login(self):
@@ -276,11 +278,15 @@ class UserJob:
             # TODO 处理获取失败情况
         return False
 
-    def request_device_id(self):
+    def request_device_id(self, force_renew = False):
         """
         获取加密后的浏览器特征 ID
         :return:
         """
+        # 判断cookie 是否过期，未过期可以不必下载
+        expire_time =  self.session.cookies.get('RAIL_EXPIRATION')
+        if not force_renew and expire_time and int(expire_time) - time_int_ms() > 0:
+            return
         if 'pjialin' not in API_GET_BROWSER_DEVICE_ID:
             return self.request_device_id2()
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)

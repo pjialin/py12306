@@ -119,11 +119,14 @@ class Query:
         self.jobs.append(job)
         return job
 
-    def request_device_id(self):
+    def request_device_id(self, force_renew = False):
         """
         获取加密后的浏览器特征 ID
         :return:
         """
+        expire_time =  self.session.cookies.get('RAIL_EXPIRATION')
+        if not force_renew and expire_time and int(expire_time) - time_int_ms() > 0:
+            return
         if 'pjialin' not in API_GET_BROWSER_DEVICE_ID:
             return self.request_device_id2()
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
@@ -213,7 +216,7 @@ class Query:
                 pass
         if not self.api_type:
             QueryLog.add_quick_log('查询地址获取失败, 正在重新获取...').flush()
-            sleep(1)
+            sleep(self.interval)
         return cls.get_query_api_type()
 
 # def get_jobs_from_cluster(self):
