@@ -124,6 +124,8 @@ class Query:
         获取加密后的浏览器特征 ID
         :return:
         """
+        if 'pjialin' not in API_GET_BROWSER_DEVICE_ID:
+            return self.request_device_id2()
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
         if response.status_code == 200:
             try:
@@ -144,6 +146,33 @@ class Query:
                     })
             except:
                 return False
+
+    def request_device_id2(self):
+        headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36"
+        }
+        self.session.headers.update(headers)
+        response = self.session.get(API_GET_BROWSER_DEVICE_ID)
+        if response.status_code == 200:
+            try:
+                print(response.text)
+                if response.text.find('callbackFunction') >= 0:
+                    result = response.text[18:-2]
+                    result = json.loads(result)
+                    if not Config().is_cache_rail_id_enabled():
+                       self.session.cookies.update({
+                           'RAIL_EXPIRATION': result.get('exp'),
+                           'RAIL_DEVICEID': result.get('dfp'),
+                       })
+                    else:
+                       self.session.cookies.update({
+                           'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
+                           'RAIL_DEVICEID': Config().RAIL_DEVICEID,
+                       })
+            except Exception as e:
+                return self.request_device_id2()
+        else:
+            return self.request_device_id2()
 
     @classmethod
     def wait_for_ready(cls):
@@ -180,7 +209,7 @@ class Query:
             res = re.search(r'var CLeftTicketUrl = \'(.*)\';', response.text)
             try:
                 self.api_type = res.group(1)
-            except IndexError:
+            except Exception:
                 pass
         if not self.api_type:
             QueryLog.add_quick_log('查询地址获取失败, 正在重新获取...').flush()
