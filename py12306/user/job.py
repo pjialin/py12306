@@ -382,7 +382,7 @@ class UserJob:
         :return:
         """
         UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name)).flush()
-        if self.check_user_is_login() and self.get_user_info():
+        if self.check_user_is_login() and self.get_user_info() and self.can_access_passengers():
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
             UserLog.print_welcome_user(self)
             self.user_did_load()
