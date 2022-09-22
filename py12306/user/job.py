@@ -159,7 +159,7 @@ class UserJob:
         return False
 
     def qr_login(self):
-        self.request_device_id()
+        self.request_device_id(True)
         image_uuid, png_path = self.download_code()
         last_time = time_int()
         while True:
@@ -507,11 +507,6 @@ class UserJob:
                 if Config().is_slave():
                     self.load_user_from_remote()  # 加载最新 cookie
                 stay_second(wait_time)
-        try:
-            os.remove(self.get_cookie_path)
-        except:
-            pass
-        self.request_device_id(True)
         return False
 
     def get_passengers_by_members(self, members):
