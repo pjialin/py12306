@@ -217,6 +217,7 @@ class Query:
         if not self.api_type:
             QueryLog.add_quick_log('查询地址获取失败, 正在重新获取...').flush()
             sleep(get_interval_num(self.interval))
+        self.request_device_id(True)
         return cls.get_query_api_type()
 
 # def get_jobs_from_cluster(self):

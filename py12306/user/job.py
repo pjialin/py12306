@@ -242,7 +242,7 @@ class UserJob:
 
     def check_user_is_login(self):
         retry = 0
-        while retry < 20:
+        while retry < Config().REQUEST_MAX_RETRY:
             retry += 1
             response = self.session.get(API_USER_LOGIN_CHECK)
             is_login = response.json().get('data.is_login', False) == 'Y'
@@ -255,7 +255,7 @@ class UserJob:
 
     def auth_uamtk(self):
         retry = 0
-        while retry < 20:
+        while retry < Config().REQUEST_MAX_RETRY:
             retry += 1
             response = self.session.post(API_AUTH_UAMTK.get('url'), {'appid': 'otn'}, headers={
                 'Referer': 'https://kyfw.12306.cn/otn/passport?redirect=/otn/login/userLogin',
@@ -269,7 +269,7 @@ class UserJob:
 
     def auth_uamauthclient(self, tk):
         retry = 0
-        while retry < 20:
+        while retry < Config().REQUEST_MAX_RETRY:
             retry += 1
             response = self.session.post(API_AUTH_UAMAUTHCLIENT.get('url'), {'tk': tk})
             result = response.json()
@@ -386,9 +386,11 @@ class UserJob:
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
             UserLog.print_welcome_user(self)
             self.user_did_load()
+            return True
         else:
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
             self.set_last_heartbeat(0)
+            return False
 
     def user_did_load(self):
         """
@@ -402,7 +404,7 @@ class UserJob:
 
     def get_user_info(self):
         retry = 0
-        while retry < 20:
+        while retry < Config().REQUEST_MAX_RETRY:
             retry += 1
             response = self.session.get(API_USER_INFO.get('url'))
             result = response.json()
@@ -424,8 +426,7 @@ class UserJob:
                 cookie = pickle.load(f)
                 self.cookie = True
                 self.session.cookies.update(cookie)
-                self.did_loaded_user()
-                return True
+                return self.did_loaded_user()
         return None
 
     def load_user_from_remote(self):
@@ -472,23 +473,31 @@ class UserJob:
 
     def get_user_passengers(self):
         if self.passengers: return self.passengers
-        response = self.session.post(API_USER_PASSENGERS)
-        result = response.json()
-        if result.get('data.normal_passengers'):
-            self.passengers = result.get('data.normal_passengers')
-            # 将乘客写入到文件
-            with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w', encoding='utf-8') as f:
-                f.write(json.dumps(self.passengers, indent=4, ensure_ascii=False))
-            return self.passengers
-        else:
-            wait_time = get_interval_num(self.sleep_interval)
-            UserLog.add_quick_log(
-                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
-                    result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), wait_time)).flush()
-            if Config().is_slave():
-                self.load_user_from_remote()  # 加载最新 cookie
-            stay_second(wait_time)
-            return self.get_user_passengers()
+        retry = 0
+        while retry < Config().REQUEST_MAX_RETRY:
+            retry += 1
+            response = self.session.post(API_USER_PASSENGERS)
+            result = response.json()
+            if result.get('data.normal_passengers'):
+                self.passengers = result.get('data.normal_passengers')
+                # 将乘客写入到文件
+                with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w', encoding='utf-8') as f:
+                    f.write(json.dumps(self.passengers, indent=4, ensure_ascii=False))
+                return self.passengers
+            else:
+                wait_time = get_interval_num(self.sleep_interval)
+                UserLog.add_quick_log(
+                    UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
+                        result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), wait_time)).flush()
+                if Config().is_slave():
+                    self.load_user_from_remote()  # 加载最新 cookie
+                stay_second(wait_time)
+        try:
+            os.remove(self.get_cookie_path)
+        except:
+            pass
+        self.request_device_id(True)
+#        return self.get_user_passengers()
 
     def get_passengers_by_members(self, members):
         """
