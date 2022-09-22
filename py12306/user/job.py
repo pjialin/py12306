@@ -87,7 +87,7 @@ class UserJob:
         if self.get_last_heartbeat() and (time_int() - self.get_last_heartbeat()) < Config().USER_HEARTBEAT_INTERVAL:
             return True
         # 只有主节点才能走到这
-        if self.is_first_time() or not self.check_user_is_login():
+        if self.is_first_time() or not self.check_user_is_login() or not self.can_access_passengers():
             if not self.load_user() and not self.handle_login(): return
 
         self.user_did_load()
@@ -473,17 +473,32 @@ class UserJob:
 
     def get_user_passengers(self):
         if self.passengers: return self.passengers
+        response = self.session.post(API_USER_PASSENGERS)
+        result = response.json()
+        if result.get('data.normal_passengers'):
+            self.passengers = result.get('data.normal_passengers')
+            # 将乘客写入到文件
+            with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w', encoding='utf-8') as f:
+                f.write(json.dumps(self.passengers, indent=4, ensure_ascii=False))
+            return self.passengers
+        else:
+            wait_time = get_interval_num(self.sleep_interval)
+            UserLog.add_quick_log(
+                UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
+                    result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), wait_time)).flush()
+            if Config().is_slave():
+                self.load_user_from_remote()  # 加载最新 cookie
+            stay_second(wait_time)
+            return self.get_user_passengers()
+
+    def can_access_passengers(self):
         retry = 0
         while retry < Config().REQUEST_MAX_RETRY:
             retry += 1
             response = self.session.post(API_USER_PASSENGERS)
             result = response.json()
             if result.get('data.normal_passengers'):
-                self.passengers = result.get('data.normal_passengers')
-                # 将乘客写入到文件
-                with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w', encoding='utf-8') as f:
-                    f.write(json.dumps(self.passengers, indent=4, ensure_ascii=False))
-                return self.passengers
+                return True
             else:
                 wait_time = get_interval_num(self.sleep_interval)
                 UserLog.add_quick_log(
@@ -497,7 +512,7 @@ class UserJob:
         except:
             pass
         self.request_device_id(True)
-#        return self.get_user_passengers()
+        return False
 
     def get_passengers_by_members(self, members):
         """
