@@ -16,6 +16,8 @@ class Config:
     QUERY_JOBS = []
     # 查询间隔
     QUERY_INTERVAL = 1
+    # 查询重试次数
+    REQUEST_MAX_RETRY = 5
     # 用户心跳检测间隔
     USER_HEARTBEAT_INTERVAL = 120
     # 多线程查询
