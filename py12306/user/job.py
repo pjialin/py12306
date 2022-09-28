@@ -15,6 +15,7 @@ from py12306.helpers.qrcode import print_qrcode
 from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 from py12306.log.common_log import CommonLog
+from py12306.order.order import Browser
 
 
 class UserJob:
@@ -119,7 +120,7 @@ class UserJob:
         if self.type == 'qr':
             return self.qr_login()
         else:
-            return self.login()
+            return self.login2()
 
     def login(self):
         """
@@ -206,6 +207,46 @@ class UserJob:
         self.session.get(API_USER_LOGIN, allow_redirects=True)
         self.login_did_success()
         return True
+
+    def login2(self):
+        data = {
+            'username': self.user_name,
+            'password': self.password,
+        }
+        headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36",
+                }
+        self.session.headers.update(headers)
+        cookies, post_data = Browser().request_init_slide2(self.session, data)
+        while not cookies or not post_data:
+            cookies, post_data = Browser().request_init_slide2(self.session, data)
+        for cookie in cookies:
+            self.session.cookies.update({
+                   cookie['name']: cookie['value']
+            })
+        response = self.session.post(API_BASE_LOGIN.get('url')+ '?' + post_data)
+        result = response.json()
+        if result.get('result_code') == 0:  # 登录成功
+            """
+            login 获得 cookie uamtk
+            auth/uamtk      不请求，会返回 uamtk票据内容为空
+            /otn/uamauthclient 能拿到用户名
+            """
+            new_tk = self.auth_uamtk()
+            user_name = self.auth_uamauthclient(new_tk)
+            self.update_user_info({'user_name': user_name})
+            self.login_did_success()
+            return True
+        elif result.get('result_code') == 2:  # 账号之内错误
+            # 登录失败，用户名或密码为空
+            # 密码输入错误
+            UserLog.add_quick_log(UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message'))).flush()
+        else:
+            UserLog.add_quick_log(
+                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message',
+                                                                                          CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)))).flush()
+
+        return False
 
     def download_code(self):
         try:
