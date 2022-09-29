@@ -365,7 +365,6 @@ class UserJob:
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
         if response.status_code == 200:
             try:
-                print(response.text)
                 if response.text.find('callbackFunction') >= 0:
                     result = response.text[18:-2]
                     result = json.loads(result)
