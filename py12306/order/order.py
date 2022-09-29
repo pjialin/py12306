@@ -24,6 +24,8 @@ class DomBounding:
 
 @singleton
 class Browser:
+    cookies = None
+    post_data = None
 
     def __init__(self) -> None:
         super().__init__()
@@ -79,6 +81,72 @@ class Browser:
         await browser.close()
         return json.loads(ret)
 
+    def request_init_slide2(self, session, data):
+        """ 处理滑块，拿到 session_id, sig """
+        OrderLog.add_quick_log('正在识别滑动验证码...').flush()
+        return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
+            self.__request_init_slide2(data))
+
+    async def __request_init_slide2(self, data):
+        from random import randint
+        """ 异步获取 """
+        try:
+            browser = await launch(headless=True, autoClose=True, handleSIGINT=False, handleSIGTERM=False,
+                                   handleSIGHUP=False, args=['--disable-infobars', '--no-sandbox'])
+            page = await browser.newPage()
+            await page.setViewport({'width': 1200, 'height': 1080})
+            await page.setRequestInterception(True)
+            load_js = """() => {
+                __old = navigator.userAgent; navigator.__defineGetter__('userAgent', () => __old.replace('Headless', ''));
+                __old = navigator.appVersion; navigator.__defineGetter__('appVersion', () => __old.replace('Headless', ''));
+                var __newProto = navigator.__proto__; delete __newProto.webdriver; navigator.__proto__ = __newProto;
+            }"""
+
+            @page.on('framenavigated')
+            async def on_frame_navigated(_):
+                await page.evaluate(load_js)
+
+            @page.on('request')
+            async def on_request(req):
+                if req.url == 'https://kyfw.12306.cn/passport/web/login':
+                    self.post_data = req.postData
+                    return await req.abort()
+                return await req.continue_()
+
+            await page.goto('https://kyfw.12306.cn/otn/resources/login.html', timeout=30000)
+            await page.waitForSelector('#J-userName', timeout=30000)
+            await page.type('#J-userName', data['username'], {'delay': randint(10, 30)})  # 账号
+            await page.waitForSelector('#J-password', timeout=30000)
+            await page.type('#J-password', data['password'], {'delay': randint(10, 30)})  # 密码
+            await page.waitForSelector('#J-login', timeout=30000)
+            await page.focus('#J-login')
+            await page.click('#J-login')
+
+            slide_btn = await page.waitForSelector('#nc_1_n1z', timeout=30000)
+            rect = await slide_btn.boundingBox()
+            pos = DomBounding(rect)
+            pos.x += pos.width / 2
+            pos.y += pos.height / 2
+            await page.mouse.move(pos.x, pos.y)
+            await page.mouse.down()
+            await page.mouse.move(pos.x + pos.width * 10, pos.y, steps=30)
+            await page.mouse.up()
+            await page.evaluate(
+            'async () => {let i = 3 * 10; while (!csessionid && i >= 0) await new Promise(resolve => setTimeout(resolve, 100), i--);}')
+            await page.evaluate('JSON.stringify({session_id: csessionid, sig: sig})')
+            self.cookies = await page.cookies()
+            OrderLog.add_quick_log('滑动验证码识别成功').flush()
+        except Exception as e:
+            OrderLog.add_quick_log('滑动验证码识别失败').flush()
+        try:
+            await page.close()
+        except:
+            pass
+        try:
+            await browser.close()
+        except:
+            pass
+        return self.cookies, self.post_data
 
 class Order:
     """

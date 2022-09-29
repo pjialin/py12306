@@ -15,6 +15,7 @@ from py12306.helpers.qrcode import print_qrcode
 from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 from py12306.log.common_log import CommonLog
+from py12306.order.order import Browser
 
 
 class UserJob:
@@ -34,6 +35,7 @@ class UserJob:
     retry_time = 3
     retry_count = 0
     login_num = 0  # 尝试登录次数
+    sleep_interval = {'min': 0.1, 'max': 5}
 
     # Init page
     global_repeat_submit_token = None
@@ -86,8 +88,8 @@ class UserJob:
         if self.get_last_heartbeat() and (time_int() - self.get_last_heartbeat()) < Config().USER_HEARTBEAT_INTERVAL:
             return True
         # 只有主节点才能走到这
-        if self.is_first_time() or not self.check_user_is_login():
-            if not self.handle_login(): return
+        if self.is_first_time() or not self.check_user_is_login() or not self.can_access_passengers():
+            if not self.load_user() and not self.handle_login(): return
 
         self.user_did_load()
         message = UserLog.MESSAGE_USER_HEARTBEAT_NORMAL.format(self.get_name(), Config().USER_HEARTBEAT_INTERVAL)
@@ -118,7 +120,7 @@ class UserJob:
         if self.type == 'qr':
             return self.qr_login()
         else:
-            return self.login()
+            return self.login2()
 
     def login(self):
         """
@@ -160,6 +162,7 @@ class UserJob:
     def qr_login(self):
         self.request_device_id()
         image_uuid, png_path = self.download_code()
+        last_time = time_int()
         while True:
             data = {
                 'RAIL_DEVICEID': self.session.cookies.get('RAIL_DEVICEID'),
@@ -169,12 +172,18 @@ class UserJob:
             }
             response = self.session.post(API_AUTH_QRCODE_CHECK.get('url'), data)
             result = response.json()
-            result_code = int(result.get('result_code'))
+            try:
+                result_code = int(result.get('result_code'))
+            except:
+                if time_int() - last_time > 300:
+                    last_time = time_int()
+                    image_uuid, png_path = self.download_code()
+                continue
             if result_code == 0:
-                time.sleep(2)
+                time.sleep(get_interval_num(self.sleep_interval))
             elif result_code == 1:
                 UserLog.add_quick_log('请确认登录').flush()
-                time.sleep(2)
+                time.sleep(get_interval_num(self.sleep_interval))
             elif result_code == 2:
                 break
             elif result_code == 3:
@@ -182,7 +191,10 @@ class UserJob:
                     os.remove(png_path)
                 except Exception as e:
                     UserLog.add_quick_log('无法删除文件: {}'.format(e)).flush()
-                image_uuid = self.download_code()
+                image_uuid, png_path = self.download_code()
+            if time_int() - last_time > 300:
+                last_time = time_int()
+                image_uuid, png_path = self.download_code()
         try:
             os.remove(png_path)
         except Exception as e:
@@ -195,6 +207,46 @@ class UserJob:
         self.session.get(API_USER_LOGIN, allow_redirects=True)
         self.login_did_success()
         return True
+
+    def login2(self):
+        data = {
+            'username': self.user_name,
+            'password': self.password,
+        }
+        headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36",
+                }
+        self.session.headers.update(headers)
+        cookies, post_data = Browser().request_init_slide2(self.session, data)
+        while not cookies or not post_data:
+            cookies, post_data = Browser().request_init_slide2(self.session, data)
+        for cookie in cookies:
+            self.session.cookies.update({
+                   cookie['name']: cookie['value']
+            })
+        response = self.session.post(API_BASE_LOGIN.get('url')+ '?' + post_data)
+        result = response.json()
+        if result.get('result_code') == 0:  # 登录成功
+            """
+            login 获得 cookie uamtk
+            auth/uamtk      不请求，会返回 uamtk票据内容为空
+            /otn/uamauthclient 能拿到用户名
+            """
+            new_tk = self.auth_uamtk()
+            user_name = self.auth_uamauthclient(new_tk)
+            self.update_user_info({'user_name': user_name})
+            self.login_did_success()
+            return True
+        elif result.get('result_code') == 2:  # 账号之内错误
+            # 登录失败，用户名或密码为空
+            # 密码输入错误
+            UserLog.add_quick_log(UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message'))).flush()
+        else:
+            UserLog.add_quick_log(
+                UserLog.MESSAGE_LOGIN_FAIL.format(result.get('result_message', result.get('message',
+                                                                                          CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR)))).flush()
+
+        return False
 
     def download_code(self):
         try:
@@ -221,52 +273,63 @@ class UserJob:
                 return result.get('uuid'), png_path
             raise KeyError('获取二维码失败: {}'.format(result.get('result_message')))
         except Exception as e:
+            sleep_time = get_interval_num(self.sleep_interval)
             UserLog.add_quick_log(
-                UserLog.MESSAGE_QRCODE_FAIL.format(e, self.retry_time)).flush()
-            self.retry_count = self.retry_count + 1
-            if self.retry_count == 20:
-                self.retry_count = 0
-                try:
-                    os.remove(self.get_cookie_path())
-                except:
-                    pass
-            time.sleep(self.retry_time)
+                UserLog.MESSAGE_QRCODE_FAIL.format(e, sleep_time)).flush()
+            time.sleep(sleep_time)
+            self.request_device_id(self.retry_count % 20 == 0)
+            self.retry_count += 1
             return self.download_code()
 
     def check_user_is_login(self):
-        response = self.session.get(API_USER_LOGIN_CHECK)
-        is_login = response.json().get('data.is_login', False) == 'Y'
-        if is_login:
-            self.save_user()
-            self.set_last_heartbeat()
-            return self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用  01-22 有时拿到的状态 是已失效的再加上试试
-
+        retry = 0
+        while retry < Config().REQUEST_MAX_RETRY:
+            retry += 1
+            response = self.session.get(API_USER_LOGIN_CHECK)
+            is_login = response.json().get('data.is_login', False) == 'Y'
+            if is_login:
+                self.save_user()
+                self.set_last_heartbeat()
+                return self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用  01-22 有时拿到的状态 是已失效的再加上试试
+            time.sleep(get_interval_num(self.sleep_interval))
         return is_login
 
     def auth_uamtk(self):
-        response = self.session.post(API_AUTH_UAMTK.get('url'), {'appid': 'otn'}, headers={
-            'Referer': 'https://kyfw.12306.cn/otn/passport?redirect=/otn/login/userLogin',
-            'Origin': 'https://kyfw.12306.cn'
-        })
-        result = response.json()
-        if result.get('newapptk'):
-            return result.get('newapptk')
-        # TODO 处理获取失败情况
+        retry = 0
+        while retry < Config().REQUEST_MAX_RETRY:
+            retry += 1
+            response = self.session.post(API_AUTH_UAMTK.get('url'), {'appid': 'otn'}, headers={
+                'Referer': 'https://kyfw.12306.cn/otn/passport?redirect=/otn/login/userLogin',
+                'Origin': 'https://kyfw.12306.cn'
+            })
+            result = response.json()
+            if result.get('newapptk'):
+                return result.get('newapptk')
+            # TODO 处理获取失败情况
         return False
 
     def auth_uamauthclient(self, tk):
-        response = self.session.post(API_AUTH_UAMAUTHCLIENT.get('url'), {'tk': tk})
-        result = response.json()
-        if result.get('username'):
-            return result.get('username')
-        # TODO 处理获取失败情况
+        retry = 0
+        while retry < Config().REQUEST_MAX_RETRY:
+            retry += 1
+            response = self.session.post(API_AUTH_UAMAUTHCLIENT.get('url'), {'tk': tk})
+            result = response.json()
+            if result.get('username'):
+                return result.get('username')
+            # TODO 处理获取失败情况
         return False
 
-    def request_device_id(self):
+    def request_device_id(self, force_renew = False):
         """
         获取加密后的浏览器特征 ID
         :return:
         """
+        # 判断cookie 是否过期，未过期可以不必下载
+        expire_time =  self.session.cookies.get('RAIL_EXPIRATION')
+        if not force_renew and expire_time and int(expire_time) - time_int_ms() > 0:
+            return
+        if 'pjialin' not in API_GET_BROWSER_DEVICE_ID:
+            return self.request_device_id2()
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
         if response.status_code == 200:
             try:
@@ -290,7 +353,35 @@ class UserJob:
                        'RAIL_DEVICEID': Config().RAIL_DEVICEID,
                    })
             except:
-                return False
+                return self.request_device_id()
+        else:
+            return self.request_device_id()
+
+    def request_device_id2(self):
+        headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36"
+        }
+        self.session.headers.update(headers)
+        response = self.session.get(API_GET_BROWSER_DEVICE_ID)
+        if response.status_code == 200:
+            try:
+                if response.text.find('callbackFunction') >= 0:
+                    result = response.text[18:-2]
+                    result = json.loads(result)
+                    if not Config().is_cache_rail_id_enabled():
+                       self.session.cookies.update({
+                           'RAIL_EXPIRATION': result.get('exp'),
+                           'RAIL_DEVICEID': result.get('dfp'),
+                       })
+                    else:
+                       self.session.cookies.update({
+                           'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
+                           'RAIL_DEVICEID': Config().RAIL_DEVICEID,
+                       })
+            except:
+                return self.request_device_id2()
+        else:
+            return self.request_device_id2()
 
     def login_did_success(self):
         """
@@ -330,13 +421,15 @@ class UserJob:
         :return:
         """
         UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER.format(self.user_name)).flush()
-        if self.check_user_is_login() and self.get_user_info():
+        if self.check_user_is_login() and self.can_access_passengers():
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_SUCCESS.format(self.user_name)).flush()
             UserLog.print_welcome_user(self)
             self.user_did_load()
+            return True
         else:
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
             self.set_last_heartbeat(0)
+            return False
 
     def user_did_load(self):
         """
@@ -349,14 +442,18 @@ class UserJob:
         Event().user_loaded({'key': self.key})  # 发布通知
 
     def get_user_info(self):
-        response = self.session.get(API_USER_INFO.get('url'))
-        result = response.json()
-        user_data = result.get('data.userDTO.loginUserDTO')
-        # 子节点访问会导致主节点登录失效 TODO 可快考虑实时同步 cookie
-        if user_data:
-            self.update_user_info({**user_data, **{'user_name': user_data.get('name')}})
-            self.save_user()
-            return True
+        retry = 0
+        while retry < Config().REQUEST_MAX_RETRY:
+            retry += 1
+            response = self.session.get(API_USER_INFO.get('url'))
+            result = response.json()
+            user_data = result.get('data.userDTO.loginUserDTO')
+            # 子节点访问会导致主节点登录失效 TODO 可快考虑实时同步 cookie
+            if user_data:
+                self.update_user_info({**user_data, **{'user_name': user_data.get('name')}})
+                self.save_user()
+                return True
+            time.sleep(get_interval_num(self.sleep_interval))
         return False
 
     def load_user(self):
@@ -368,8 +465,7 @@ class UserJob:
                 cookie = pickle.load(f)
                 self.cookie = True
                 self.session.cookies.update(cookie)
-                self.did_loaded_user()
-                return True
+                return self.did_loaded_user()
         return None
 
     def load_user_from_remote(self):
@@ -425,13 +521,32 @@ class UserJob:
                 f.write(json.dumps(self.passengers, indent=4, ensure_ascii=False))
             return self.passengers
         else:
+            wait_time = get_interval_num(self.sleep_interval)
             UserLog.add_quick_log(
                 UserLog.MESSAGE_GET_USER_PASSENGERS_FAIL.format(
-                    result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), self.retry_time)).flush()
+                    result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), wait_time)).flush()
             if Config().is_slave():
                 self.load_user_from_remote()  # 加载最新 cookie
-            stay_second(self.retry_time)
+            stay_second(wait_time)
             return self.get_user_passengers()
+
+    def can_access_passengers(self):
+        retry = 0
+        while retry < Config().REQUEST_MAX_RETRY:
+            retry += 1
+            response = self.session.post(API_USER_PASSENGERS)
+            result = response.json()
+            if result.get('data.normal_passengers'):
+                return True
+            else:
+                wait_time = get_interval_num(self.sleep_interval)
+                UserLog.add_quick_log(
+                    UserLog.MESSAGE_TEST_GET_USER_PASSENGERS_FAIL.format(
+                        result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR), wait_time)).flush()
+                if Config().is_slave():
+                    self.load_user_from_remote()  # 加载最新 cookie
+                stay_second(wait_time)
+        return False
 
     def get_passengers_by_members(self, members):
         """

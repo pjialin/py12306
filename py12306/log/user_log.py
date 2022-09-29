@@ -23,6 +23,7 @@ class UserLog(BaseLog):
     MESSAGE_USER_HEARTBEAT_NORMAL = '用户 {} 心跳正常，下次检测 {} 秒后'
 
     MESSAGE_GET_USER_PASSENGERS_FAIL = '获取用户乘客列表失败，错误原因: {} {} 秒后重试'
+    MESSAGE_TEST_GET_USER_PASSENGERS_FAIL = '测试获取用户乘客列表失败，错误原因: {} {} 秒后重试'
     MESSAGE_USER_PASSENGERS_IS_INVALID = '乘客信息校验失败，在账号 {} 中未找到该乘客: {}\n'
 
     # MESSAGE_WAIT_USER_INIT_COMPLETE = '未找到可用账号或用户正在初始化，{} 秒后重试'
