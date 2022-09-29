@@ -16,7 +16,7 @@ lxml==4.6.3
 MarkupSafe==1.1.0
 parse==1.9.0
 pyee==5.0.0
-PyJWT==1.7.1
+PyJWT==2.4.0
 pyppeteer-box==0.0.27
 pyquery==1.4.0
 redis==3.0.1
