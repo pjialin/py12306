@@ -24,6 +24,7 @@ class DomBounding:
 
 @singleton
 class Browser:
+    cookies = None
     post_data = None
 
     def __init__(self) -> None:
@@ -113,19 +114,19 @@ class Browser:
                 return await req.continue_()
 
             await page.goto('https://kyfw.12306.cn/otn/resources/login.html', timeout=30000)
-            await page.waitForSelector('#J-userName', timeout=100000)
-            await page.type('#J-userName', data['username'], {'delay': randint(60, 120)})  # 账号
-            await page.waitForSelector('#J-password', timeout=100000)
-            await page.type('#J-password', data['password'], {'delay': randint(100, 151)})  # 密码
-            await page.waitForSelector('#J-login', timeout=100000)
+            await page.waitForSelector('#J-userName', timeout=30000)
+            await page.type('#J-userName', data['username'], {'delay': randint(10, 30)})  # 账号
+            await page.waitForSelector('#J-password', timeout=30000)
+            await page.type('#J-password', data['password'], {'delay': randint(10, 30)})  # 密码
+            await page.waitForSelector('#J-login', timeout=30000)
             await page.focus('#J-login')
             await page.click('#J-login')
 
-            slide_btn = await page.waitForSelector('#nc_1_n1z', timeout=100000)
+            slide_btn = await page.waitForSelector('#nc_1_n1z', timeout=30000)
             rect = await slide_btn.boundingBox()
             pos = DomBounding(rect)
-            pos.x += 5
-            pos.y += 10
+            pos.x += pos.width / 2
+            pos.y += pos.height / 2
             await page.mouse.move(pos.x, pos.y)
             await page.mouse.down()
             await page.mouse.move(pos.x + pos.width * 10, pos.y, steps=30)
@@ -133,13 +134,20 @@ class Browser:
             await page.evaluate(
             'async () => {let i = 3 * 10; while (!csessionid && i >= 0) await new Promise(resolve => setTimeout(resolve, 100), i--);}')
             await page.evaluate('JSON.stringify({session_id: csessionid, sig: sig})')
-            cookies = await page.cookies()
-            await page.close()
-            await browser.close()
-            return cookies, self.post_data
-        except:
+            self.cookies = await page.cookies()
+            OrderLog.add_quick_log('滑动验证码识别成功').flush()
+        except Exception as e:
             OrderLog.add_quick_log('滑动验证码识别失败').flush()
-            return None, None
+        try:
+            await page.close()
+        except:
+            pass
+        try:
+            await browser.close()
+        except:
+            pass
+        return self.cookies, self.post_data
+
 class Order:
     """
     处理下单
