@@ -65,16 +65,20 @@ class Job:
     INDEX_SECRET_STR = 0
     INDEX_LEFT_TIME = 8
     INDEX_ARRIVE_TIME = 9
+    last_heartbeat = None
 
     max_buy_time = 32
+    empty_res_sleep = False
 
     def __init__(self, info, query):
         self.cluster = Cluster()
         self.query = query
+        self.empty_res_sleep = Config().EMPTY_RES_SLEEP
         self.init_data(info)
         self.update_interval()
 
     def init_data(self, info):
+        self.last_heartbeat = time_int()
         self.id = md5(info)
         self.left_dates = info.get('left_dates')
         self.stations = info.get('stations')
@@ -110,6 +114,11 @@ class Job:
     def run(self):
         self.start()
 
+    def check_device_id_validation(self):
+        if time_int() - self.last_heartbeat > Config().DEVICEID_CHECK_INTERVAL:
+            self.query.check_device_id_valid()
+            self.last_heartbeat = time_int()
+
     def start(self):
         """
         处理单个任务
@@ -119,6 +128,7 @@ class Job:
         """
         while True and self.is_alive:
             app_available_check()
+            self.check_device_id_validation()
             QueryLog.print_job_start(self.job_name)
             for station in self.stations:
                 self.refresh_station(station)
@@ -169,9 +179,9 @@ class Job:
                                              arrive_station=self.arrive_station_code, type=self.query.api_type)
         if Config.is_cdn_enabled() and Cdn().is_ready:
             self.is_cdn = True
-            return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=False)
+            return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=True)
         self.is_cdn = False
-        return self.query.session.get(url, timeout=self.query_time_out, allow_redirects=False)
+        return self.query.session.get(url, timeout=self.query_time_out, allow_redirects=True)
 
     def handle_response(self, response):
         """
@@ -265,7 +275,11 @@ class Job:
             if self.interval_additional < self.interval_additional_max:
                 self.interval_additional += self.interval.get('min')
         else:
-            self.interval_additional = 0
+            if self.empty_res_sleep and not response.json():
+                if self.interval_additional < self.interval_additional_max:
+                    self.interval_additional += self.interval.get('min')
+            else:
+                self.interval_additional = 0
         result = response.json().get('data.result')
         return result if result else False
 

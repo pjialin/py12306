@@ -7,6 +7,7 @@ from py12306.helpers.request import Request
 from py12306.log.query_log import QueryLog
 from py12306.query.job import Job
 from py12306.helpers.api import API_QUERY_INIT_PAGE, API_GET_BROWSER_DEVICE_ID
+from os import path
 
 
 @singleton
@@ -25,12 +26,15 @@ class Query:
 
     is_in_thread = False
     retry_time = 3
+    retry_count = 0
     is_ready = False
     api_type = None  # Query api url, Current know value  leftTicket/queryX | leftTicket/queryZ
+    expire_ts = -1
 
     def __init__(self):
         self.session = Request()
-        self.request_device_id()
+        self.restore_device_id()
+        # self.request_device_id()
         self.cluster = Cluster()
         self.update_query_interval()
         self.update_query_jobs()
@@ -129,6 +133,9 @@ class Query:
             return
         if 'pjialin' not in API_GET_BROWSER_DEVICE_ID:
             return self.request_device_id2()
+        if Config().is_cache_rail_id_enabled():
+            self.update_and_save_device_id(Config().RAIL_EXPIRATION, Config().RAIL_DEVICEID)
+            return
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
         if response.status_code == 200:
             try:
@@ -137,24 +144,18 @@ class Query:
                 if response.text.find('callbackFunction') >= 0:
                     result = response.text[18:-2]
                 result = json.loads(result)
-                if not Config().is_cache_rail_id_enabled():
-                    self.session.cookies.update({
-                        'RAIL_EXPIRATION': result.get('exp'),
-                        'RAIL_DEVICEID': result.get('dfp'),
-                    })
-                else:
-                    self.session.cookies.update({
-                        'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
-                        'RAIL_DEVICEID': Config().RAIL_DEVICEID,
-                    })
+                self.update_and_save_device_id(result.get('exp'), result.get('dfp'))
             except:
                 return self.request_device_id()
         else:
             return self.request_device_id()
 
     def request_device_id2(self):
+        if Config().is_cache_rail_id_enabled():
+            self.update_and_save_device_id(Config().RAIL_EXPIRATION, Config().RAIL_DEVICEID)
+            return
         headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
         }
         self.session.headers.update(headers)
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
@@ -163,20 +164,40 @@ class Query:
                 if response.text.find('callbackFunction') >= 0:
                     result = response.text[18:-2]
                     result = json.loads(result)
-                    if not Config().is_cache_rail_id_enabled():
-                       self.session.cookies.update({
-                           'RAIL_EXPIRATION': result.get('exp'),
-                           'RAIL_DEVICEID': result.get('dfp'),
-                       })
-                    else:
-                       self.session.cookies.update({
-                           'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
-                           'RAIL_DEVICEID': Config().RAIL_DEVICEID,
-                       })
+                    self.update_and_save_device_id(result.get('exp'), result.get('dfp'))
             except:
                 return self.request_device_id2()
         else:
             return self.request_device_id2()
+
+    def update_and_save_device_id(self, expiration, deviceid):
+        data = {
+            'RAIL_EXPIRATION': expiration,
+            'RAIL_DEVICEID': deviceid,
+            }
+        self.session.cookies.update(data)
+        data.update({'save_time': time_int()})
+        with open(Config().DEVICEID_CACHE_FILE, 'w') as f:
+            f.write(json.dumps(data))
+
+    def restore_device_id(self):
+        result = None
+        if path.exists(Config().DEVICEID_CACHE_FILE):
+            with open(Config().DEVICEID_CACHE_FILE, encoding='utf-8') as f:
+                result = f.read()
+                try:
+                    result = json.loads(result)
+                except json.JSONDecodeError as e:
+                    result = {}
+
+        if result and time_int() - result.get('save_time', -1) < 120:
+            data = {
+            'RAIL_EXPIRATION': result.get('RAIL_EXPIRATION', '-1'),
+            'RAIL_DEVICEID': result.get('RAIL_DEVICEID', 'abcdefg')
+            }
+            self.session.cookies.update(data)
+        else:
+            self.request_device_id(True)
 
     @classmethod
     def wait_for_ready(cls):
@@ -207,6 +228,7 @@ class Query:
         import re
         self = cls()
         if self.api_type:
+            self.expire_ts = int(self.session.cookies.get('RAIL_EXPIRATION'))
             return self.api_type
         response = self.session.get(API_QUERY_INIT_PAGE)
         if response.status_code == 200:
@@ -218,8 +240,16 @@ class Query:
         if not self.api_type:
             QueryLog.add_quick_log('查询地址获取失败, 正在重新获取...').flush()
             sleep(get_interval_num(self.interval))
-        self.request_device_id(True)
+        self.retry_count += 1
+        self.request_device_id(self.retry_count % 3 == 0)
         return cls.get_query_api_type()
+
+    @classmethod
+    def check_device_id_valid(cls):
+        self = cls()
+        if self.expire_ts - time_int_ms() < Config().DEVICEID_CHECK_INTERVAL * 1250:
+            self.request_device_id(True)
+            self.get_query_api_type()
 
 # def get_jobs_from_cluster(self):
 #     jobs = self.cluster.session.get_dict(Cluster.KEY_JOBS)

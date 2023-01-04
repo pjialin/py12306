@@ -10,7 +10,7 @@ class CommonLog(BaseLog):
     thread_logs = {}
     quick_log = []
 
-    MESSAGE_12306_IS_CLOSED = '当前时间: {}     |       12306 休息时间，程序将在明天早上 6 点自动运行'
+    MESSAGE_12306_IS_CLOSED = '当前时间: {}     |       12306 休息时间，程序将在明天早上 5 点自动运行'
     MESSAGE_RETRY_AUTH_CODE = '{} 秒后重新获取验证码'
 
     MESSAGE_EMPTY_APP_CODE = '无法发送语音消息，未填写验证码接口 appcode'
