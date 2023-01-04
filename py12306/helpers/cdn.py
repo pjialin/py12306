@@ -165,8 +165,10 @@ class Cdn:
         self.init_data()
 
     def check_item_available(self, item, try_num=0):
+        CDN_URL = 'https://kyfw.12306.cn/otn/leftTicket/query?leftTicketDTO.train_date={}&leftTicketDTO.from_station=SZQ&leftTicketDTO.to_station=GZQ&purpose_codes=ADULT'.format(time.strftime("%Y-%m-%d", time.localtime()))
         session = Request()
-        response = session.get(API_CHECK_CDN_AVAILABLE.format(item), headers={'Host': HOST_URL_OF_12306},
+        CDN_URL.replace(HOST_URL_OF_12306, item)
+        response = session.get(CDN_URL, headers={'Host': HOST_URL_OF_12306},
                                timeout=self.check_time_out,
                                verify=False)
 
@@ -199,6 +201,8 @@ class Cdn:
                 self.unavailable_items = self.recheck_unavailable_items
                 self.recheck_available_items = []
                 self.recheck_unavailable_items = []
+            if len(self.available_items) > Config().MAX_CDN_NUM:
+                self.available_items = random.sample(self.available_items, Config().MAX_CDN_NUM)
             CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_CHECKED_SUCCESS.format(len(self.available_items))).flush()
             self.save_available_items()
 

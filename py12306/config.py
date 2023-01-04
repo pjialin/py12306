@@ -18,6 +18,8 @@ class Config:
     QUERY_INTERVAL = 1
     # 查询重试次数
     REQUEST_MAX_RETRY = 5
+    # deviceid 有效性检查间隔，单位秒
+    DEVICEID_CHECK_INTERVAL = 1800
     # 用户心跳检测间隔
     USER_HEARTBEAT_INTERVAL = 120
     # 多线程查询
@@ -97,10 +99,12 @@ class Config:
     CDN_CHECK_TIME_OUT = 2
     CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
     CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
+    MAX_CDN_NUM = 77777
 
     CACHE_RAIL_ID_ENABLED = 0
     RAIL_EXPIRATION = ''
     RAIL_DEVICEID = ''
+    DEVICEID_CACHE_FILE = QUERY_DATA_DIR + 'deviceid.json'
 
     # Default time out
     TIME_OUT_OF_REQUEST = 5

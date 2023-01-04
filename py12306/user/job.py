@@ -16,12 +16,14 @@ from py12306.log.order_log import OrderLog
 from py12306.log.user_log import UserLog
 from py12306.log.common_log import CommonLog
 from py12306.order.order import Browser
+from py12306.helpers.notification import Notification
+from py12306.helpers.station import Station
 
 
 class UserJob:
     # heartbeat = 60 * 2  # 心跳保持时长
     is_alive = True
-    check_interval = 5
+    check_interval = {'min': 5, 'max': 10}
     key = None
     user_name = ''
     password = ''
@@ -81,7 +83,7 @@ class UserJob:
                 if Config().is_master() and not self.cookie: self.load_user_from_remote()  # 主节点加载一次 Cookie
                 self.check_heartbeat()
             if Const.IS_TEST: return
-            stay_second(self.check_interval)
+            stay_second(get_interval_num(self.check_interval))
 
     def check_heartbeat(self):
         # 心跳检测
@@ -120,7 +122,15 @@ class UserJob:
         if self.type == 'qr':
             return self.qr_login()
         else:
-            return self.login2()
+            if Config().BARK_ENABLED:
+                Notification.push_bark(self.user_name + '掉线了, 正在登录... ...')
+            while True:
+                if self.login2():
+                    break
+                stay_second(get_interval_num(self.sleep_interval))
+            if Config().BARK_ENABLED:
+                Notification.push_bark(self.user_name + '你上线了~~~')
+            return True
 
     def login(self):
         """
@@ -206,7 +216,7 @@ class UserJob:
         self.update_user_info({'user_name': user_name})
         self.session.get(API_USER_LOGIN, allow_redirects=True)
         self.login_did_success()
-        return True
+        return self.can_access_passengers()
 
     def login2(self):
         data = {
@@ -214,7 +224,7 @@ class UserJob:
             'password': self.password,
         }
         headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
                 }
         self.session.headers.update(headers)
         cookies, post_data = Browser().request_init_slide2(self.session, data)
@@ -232,11 +242,13 @@ class UserJob:
             auth/uamtk      不请求，会返回 uamtk票据内容为空
             /otn/uamauthclient 能拿到用户名
             """
+            self.session.get(API_USER_LOGIN, allow_redirects=True)
             new_tk = self.auth_uamtk()
             user_name = self.auth_uamauthclient(new_tk)
             self.update_user_info({'user_name': user_name})
+            self.session.get(API_USER_LOGIN, allow_redirects=True)
             self.login_did_success()
-            return True
+            return self.can_access_passengers()
         elif result.get('result_code') == 2:  # 账号之内错误
             # 登录失败，用户名或密码为空
             # 密码输入错误
@@ -291,6 +303,8 @@ class UserJob:
                 self.save_user()
                 self.set_last_heartbeat()
                 return self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用  01-22 有时拿到的状态 是已失效的再加上试试
+            if response.status_code == 200:
+                break
             time.sleep(get_interval_num(self.sleep_interval))
         return is_login
 
@@ -306,6 +320,8 @@ class UserJob:
             if result.get('newapptk'):
                 return result.get('newapptk')
             # TODO 处理获取失败情况
+            if response.status_code == 200:
+                break
         return False
 
     def auth_uamauthclient(self, tk):
@@ -317,6 +333,8 @@ class UserJob:
             if result.get('username'):
                 return result.get('username')
             # TODO 处理获取失败情况
+            if response.status_code == 200:
+                break
         return False
 
     def request_device_id(self, force_renew = False):
@@ -335,7 +353,7 @@ class UserJob:
             try:
                 result = json.loads(response.text)
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36"
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
                 }
                 self.session.headers.update(headers)
                 response = self.session.get(base64.b64decode(result['id']).decode())
@@ -359,7 +377,7 @@ class UserJob:
 
     def request_device_id2(self):
         headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
         }
         self.session.headers.update(headers)
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
@@ -453,6 +471,8 @@ class UserJob:
                 self.update_user_info({**user_data, **{'user_name': user_data.get('name')}})
                 self.save_user()
                 return True
+            if response.status_code == 200:
+                break
             time.sleep(get_interval_num(self.sleep_interval))
         return False
 
@@ -510,12 +530,22 @@ class UserJob:
         if Config().is_master() and response.json().get('data.noLogin') == 'true':  # relogin
             self.handle_login(expire=True)
 
-    def get_user_passengers(self):
+    def get_user_passengers(self, url=API_USER_PASSENGERS2):
         if self.passengers: return self.passengers
-        response = self.session.post(API_USER_PASSENGERS)
+        if url == API_USER_PASSENGERS:
+            key_name = 'data.normal_passengers'
+            next_url = API_USER_PASSENGERS2
+            response = self.session.post(url)
+        else:
+            key_name = 'data.datas'
+            next_url = API_USER_PASSENGERS
+            response = self.session.post(url, {'pageIndex':1, 'pageSize': 30}, headers={
+                           'Referer': 'https://kyfw.12306.cn/otn/view/passengers.html',
+                           'Origin': 'https://kyfw.12306.cn'
+                           })
         result = response.json()
-        if result.get('data.normal_passengers'):
-            self.passengers = result.get('data.normal_passengers')
+        if result.get(key_name):
+            self.passengers = result.get(key_name)
             # 将乘客写入到文件
             with open(Config().USER_PASSENGERS_FILE % self.user_name, 'w', encoding='utf-8') as f:
                 f.write(json.dumps(self.passengers, indent=4, ensure_ascii=False))
@@ -528,15 +558,26 @@ class UserJob:
             if Config().is_slave():
                 self.load_user_from_remote()  # 加载最新 cookie
             stay_second(wait_time)
-            return self.get_user_passengers()
+            return self.get_user_passengers(url=next_url)
 
-    def can_access_passengers(self):
+    def can_access_passengers(self, url=API_USER_PASSENGERS2):
         retry = 0
         while retry < Config().REQUEST_MAX_RETRY:
             retry += 1
-            response = self.session.post(API_USER_PASSENGERS)
+            if url == API_USER_PASSENGERS:
+                key_name = 'data.normal_passengers'
+                response = self.session.post(url)
+                url = API_USER_PASSENGERS2
+            else:
+                key_name = 'data.datas'
+                response = self.session.post(url, {'pageIndex':1, 'pageSize': 30}, headers={
+                               'Referer': 'https://kyfw.12306.cn/otn/view/passengers.html',
+                               'Origin': 'https://kyfw.12306.cn'
+                               })
+                url = API_USER_PASSENGERS
             result = response.json()
-            if result.get('data.normal_passengers'):
+            if result.get(key_name):
+                UserLog.add_quick_log(UserLog.MESSAGE_TEST_GET_USER_PASSENGERS_SUCCESS).flush()
                 return True
             else:
                 wait_time = get_interval_num(self.sleep_interval)
