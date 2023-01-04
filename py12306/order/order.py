@@ -129,15 +129,17 @@ class Browser:
             pos.y += pos.height / 2
             await page.mouse.move(pos.x, pos.y)
             await page.mouse.down()
-            await page.mouse.move(pos.x + pos.width * 10, pos.y, steps=30)
+            await page.mouse.move(pos.x + pos.width * randint(11, 15), pos.y, steps=randint(17, 30))
             await page.mouse.up()
             await page.evaluate(
             'async () => {let i = 3 * 10; while (!csessionid && i >= 0) await new Promise(resolve => setTimeout(resolve, 100), i--);}')
             await page.evaluate('JSON.stringify({session_id: csessionid, sig: sig})')
             self.cookies = await page.cookies()
             OrderLog.add_quick_log('滑动验证码识别成功').flush()
+            # return cookies, self.post_data
         except Exception as e:
             OrderLog.add_quick_log('滑动验证码识别失败').flush()
+            # return None, None
         try:
             await page.close()
         except:

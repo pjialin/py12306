@@ -24,6 +24,7 @@ class UserLog(BaseLog):
 
     MESSAGE_GET_USER_PASSENGERS_FAIL = '获取用户乘客列表失败，错误原因: {} {} 秒后重试'
     MESSAGE_TEST_GET_USER_PASSENGERS_FAIL = '测试获取用户乘客列表失败，错误原因: {} {} 秒后重试'
+    MESSAGE_TEST_GET_USER_PASSENGERS_SUCCESS = '测试读取用户乘客列表成功'
     MESSAGE_USER_PASSENGERS_IS_INVALID = '乘客信息校验失败，在账号 {} 中未找到该乘客: {}\n'
 
     # MESSAGE_WAIT_USER_INIT_COMPLETE = '未找到可用账号或用户正在初始化，{} 秒后重试'
@@ -34,6 +35,8 @@ class UserLog(BaseLog):
     MESSAGE_USER_COOKIE_NOT_FOUND_FROM_REMOTE = '用户 {} 状态加载中...'
 
     MESSAGE_WAIT_USER_INIT_COMPLETE = '账号正在登录中，{} 秒后自动重试'
+
+    MESSAGE_DO_FAKE_QUERY = '正在进行伪装查询...'
 
     def __init__(self):
         super().__init__()
