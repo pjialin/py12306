@@ -27,13 +27,16 @@ pip install -r requirements.txt
 ```
 
 **2. 配置程序**
+
 ```bash
 cp env.py.example env.py
 ```
-自动打码
+~~自动打码~~
 
-（若快已停止服务，目前只能设置**free**打码模式）
-free 已对接到打码共享平台，[https://py12306-helper.pjialin.com](https://py12306-helper.pjialin.com/)，欢迎参与分享
+~~（若快已停止服务，目前只能设置**free**打码模式）~~
+~~free 已对接到打码共享平台，[https://py12306-helper.pjialin.com](https://py12306-helper.pjialin.com/)，欢迎参与分享~~
+
+目前有效可登录方式为qr 或者账号密码登录。账号密码登录流程已经无需打码，而是滑动验证码。
 
 语音通知
 
@@ -132,6 +135,8 @@ docker-compose up -d
     - 新增 ServerChan 和 PushBear 微信推送
 - 19-01-18
     - 新增 CDN 查询
+- 23-04-18
+    - 新增 虾推啥微信推送
 
 ## 截图
 ### Web 管理页面

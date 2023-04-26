@@ -129,7 +129,7 @@ class Browser:
             pos.y += pos.height / 2
             await page.mouse.move(pos.x, pos.y)
             await page.mouse.down()
-            await page.mouse.move(pos.x + pos.width * randint(11, 15), pos.y, steps=randint(17, 30))
+            await page.mouse.move(pos.x + pos.width * randint(11, 15), pos.y, steps=randint(19, 29))
             await page.mouse.up()
             await page.evaluate(
             'async () => {let i = 3 * 10; while (!csessionid && i >= 0) await new Promise(resolve => setTimeout(resolve, 100), i--);}')
@@ -258,6 +258,9 @@ class Order:
                                    normal_message + info_message)
         if Config().BARK_ENABLED:
             Notification.push_bark(normal_message + info_message)
+
+        if Config().XTS_ENABLED:
+            Notification.push_xts(normal_message + info_message)
 
         if Config().NOTIFICATION_BY_VOICE_CODE:  # 语音通知
             if Config().NOTIFICATION_VOICE_CODE_TYPE == 'dingxin':

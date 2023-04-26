@@ -34,9 +34,8 @@ class UserJob:
     user_loaded = False  # 用户是否已加载成功
     passengers = []
     retry_time = 3
-    retry_count = 0
     login_num = 0  # 尝试登录次数
-    sleep_interval = {'min': 0.1, 'max': 5}
+    sleep_interval = {'min': 0.3, 'max': 5}
 
     # Init page
     global_repeat_submit_token = None
@@ -118,18 +117,20 @@ class UserJob:
         if expire: UserLog.print_user_expired()
         self.is_ready = False
         UserLog.print_start_login(user=self)
-        if self.type == 'qr':
-            return self.qr_login()
-        else:
-            if Config().BARK_ENABLED:
-                Notification.push_bark(self.user_name + '掉线了, 正在登录... ...')
-            while True:
-                if self.login2():
-                    break
-                stay_second(get_interval_num(self.sleep_interval))
-            if Config().BARK_ENABLED:
-                Notification.push_bark(self.user_name + '你上线了~~~')
-            return True
+        if Config().BARK_ENABLED:
+            Notification.push_bark(self.user_name + '掉线了, 正在登录... ...')
+        if Config().XTS_ENABLED:
+            Notification.push_xts(self.user_name + '掉线了, 正在登录... ...')
+        while True:
+            ret = self.qr_login() if self.type == 'qr' else self.login2()
+            if ret:
+                break
+            stay_second(get_interval_num(self.sleep_interval))
+        if Config().BARK_ENABLED:
+            Notification.push_bark(self.user_name + '你上线了~~~')
+        if Config().XTS_ENABLED:
+            Notification.push_xts(self.user_name + '你上线了~~~')
+        return True
 
     def login(self):
         """
@@ -169,9 +170,8 @@ class UserJob:
         return False
 
     def qr_login(self):
-        self.request_device_id()
+        self.request_device_id(True)
         image_uuid, png_path = self.download_code()
-        last_time = time_int()
         while True:
             data = {
                 'RAIL_DEVICEID': self.session.cookies.get('RAIL_DEVICEID'),
@@ -184,26 +184,20 @@ class UserJob:
             try:
                 result_code = int(result.get('result_code'))
             except:
-                if time_int() - last_time > 300:
-                    last_time = time_int()
-                    image_uuid, png_path = self.download_code()
+                stay_second(0.3)
                 continue
-            if result_code == 0:
-                time.sleep(get_interval_num(self.sleep_interval))
-            elif result_code == 1:
+            if result_code == 1:
                 UserLog.add_quick_log('请确认登录').flush()
-                time.sleep(get_interval_num(self.sleep_interval))
             elif result_code == 2:
                 break
-            elif result_code == 3:
+            elif result_code != 0:   # 其他情况认为二维码过期并重新下载二维码
                 try:
                     os.remove(png_path)
                 except Exception as e:
                     UserLog.add_quick_log('无法删除文件: {}'.format(e)).flush()
                 image_uuid, png_path = self.download_code()
-            if time_int() - last_time > 300:
-                last_time = time_int()
-                image_uuid, png_path = self.download_code()
+                continue
+
         try:
             os.remove(png_path)
         except Exception as e:
@@ -223,15 +217,15 @@ class UserJob:
             'password': self.password,
         }
         headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
-                }
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
+        }
         self.session.headers.update(headers)
         cookies, post_data = Browser().request_init_slide2(self.session, data)
         while not cookies or not post_data:
             cookies, post_data = Browser().request_init_slide2(self.session, data)
         for cookie in cookies:
             self.session.cookies.update({
-                   cookie['name']: cookie['value']
+                cookie['name']: cookie['value']
             })
         response = self.session.post(API_BASE_LOGIN.get('url')+ '?' + post_data)
         result = response.json()
@@ -262,7 +256,7 @@ class UserJob:
     def download_code(self):
         try:
             UserLog.add_quick_log(UserLog.MESSAGE_QRCODE_DOWNLOADING).flush()
-            response = self.session.post(API_AUTH_QRCODE_BASE64_DOWNLOAD.get('url'), data={'appid': 'otn'})
+            response = Request().post(API_AUTH_QRCODE_BASE64_DOWNLOAD.get('url'), data={'appid': 'otn'})
             result = response.json()
             if result.get('result_code') == '0':
                 img_bytes = base64.b64decode(result.get('image'))
@@ -280,16 +274,13 @@ class UserJob:
                     print_qrcode(png_path)
                 UserLog.add_log(UserLog.MESSAGE_QRCODE_DOWNLOADED.format(png_path)).flush()
                 Notification.send_email_with_qrcode(Config().EMAIL_RECEIVER, '你有新的登录二维码啦!', png_path)
-                self.retry_count = 0
                 return result.get('uuid'), png_path
             raise KeyError('获取二维码失败: {}'.format(result.get('result_message')))
         except Exception as e:
             sleep_time = get_interval_num(self.sleep_interval)
             UserLog.add_quick_log(
                 UserLog.MESSAGE_QRCODE_FAIL.format(e, sleep_time)).flush()
-            time.sleep(sleep_time)
-            self.request_device_id(self.retry_count % 20 == 0)
-            self.retry_count += 1
+            stay_second(sleep_time)
             return self.download_code()
 
     def check_user_is_login(self):
@@ -304,7 +295,7 @@ class UserJob:
                 return self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用  01-22 有时拿到的状态 是已失效的再加上试试
             if response.status_code == 200:
                 break
-            time.sleep(get_interval_num(self.sleep_interval))
+            stay_second(get_interval_num(self.sleep_interval))
         return is_login
 
     def auth_uamtk(self):
@@ -351,10 +342,6 @@ class UserJob:
         if response.status_code == 200:
             try:
                 result = json.loads(response.text)
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
-                }
-                self.session.headers.update(headers)
                 response = self.session.get(base64.b64decode(result['id']).decode())
                 if response.text.find('callbackFunction') >= 0:
                     result = response.text[18:-2]
@@ -376,7 +363,7 @@ class UserJob:
 
     def request_device_id2(self):
         headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
         }
         self.session.headers.update(headers)
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
@@ -432,7 +419,7 @@ class UserJob:
         with open(self.get_cookie_path(), 'wb') as f:
             pickle.dump(self.session.cookies, f)
 
-    def did_loaded_user(self):
+    def did_loaded_user(self, retry_num=0):
         """
         恢复用户成功
         :return:
@@ -444,6 +431,10 @@ class UserJob:
             self.user_did_load()
             return True
         else:
+            if retry_num < int(Config().REQUEST_MAX_RETRY / 1.6):
+                retry_num += 1
+                stay_second(get_interval_num(self.sleep_interval))
+                return self.did_loaded_user(retry_num)
             UserLog.add_quick_log(UserLog.MESSAGE_LOADED_USER_BUT_EXPIRED).flush()
             self.set_last_heartbeat(0)
             return False
@@ -472,7 +463,7 @@ class UserJob:
                 return True
             if response.status_code == 200:
                 break
-            time.sleep(get_interval_num(self.sleep_interval))
+            stay_second(get_interval_num(self.sleep_interval))
         return False
 
     def load_user(self):

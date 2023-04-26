@@ -58,6 +58,11 @@ class Notification():
         self = cls()
         self.push_to_bark(content)
 
+    @classmethod
+    def push_xts(cls, content=''):
+        self = cls()
+        self.push_to_xts(content)
+
     def send_voice_code_of_yiyuan(self, phone, name='', content=''):
         """
         发送语音验证码
@@ -176,6 +181,7 @@ class Notification():
             server.quit()
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_WITH_QRCODE_SUCCESS).flush()
             self.push_bark(CommonLog.MESSAGE_SEND_EMAIL_WITH_QRCODE_SUCCESS)
+            self.push_xts(CommonLog.MESSAGE_SEND_EMAIL_WITH_QRCODE_SUCCESS)
         except Exception as e:
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_EMAIL_FAIL.format(e)).flush()
 
@@ -215,6 +221,17 @@ class Notification():
         else:
             response_error_message = result.get('message')
             CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_BARK_FAIL.format(response_error_message)).flush()
+
+    def push_to_xts(self, content):
+        xts_url = Config().XTS_PUSH_URL
+        if not xts_url:
+            return False
+        response = self.session.request(url=xts_url + '?text=' + content + '&desp=' + content, method='get')
+        result = response.text
+        if result == 'ok':
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_XTS_SUCCESS).flush()
+        else:
+            CommonLog.add_quick_log(CommonLog.MESSAGE_SEND_XTS_FAIL.format(result)).flush()
 
     def send_serverchan(self, skey, title, content):
         from lightpush import lightpush

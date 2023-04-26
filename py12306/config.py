@@ -16,6 +16,8 @@ class Config:
     QUERY_JOBS = []
     # 查询间隔
     QUERY_INTERVAL = 1
+    # 对有余票的车次进行随机排序，从有余票的车次随机下单
+    QUERY_RANDOMIZE_RESULTS = False
     # 空白查询允许增加查询间隔
     EMPTY_RES_SLEEP = True
     # 查询重试次数
@@ -77,6 +79,10 @@ class Config:
     BARK_ENABLED = 0
     BARK_PUSH_URL = ''
 
+    # 虾推啥 推送配置
+    XTS_ENABLED = 0
+    XTS_PUSH_URL = ''
+
     # ServerChan和PushBear配置
     SERVERCHAN_ENABLED = 0
     SERVERCHAN_KEY = '8474-ca071ADSFADSF'
@@ -98,10 +104,12 @@ class Config:
 
     # CDN
     CDN_ENABLED = 0
+    # 通过其他方式筛选的CDN，开关控制是否需要重复做检测
+    CDN_RUN_CHECK = 1
     CDN_CHECK_TIME_OUT = 2
     CDN_ITEM_FILE = PROJECT_DIR + 'data/cdn.txt'
     CDN_ENABLED_AVAILABLE_ITEM_FILE = QUERY_DATA_DIR + 'available.json'
-    MAX_CDN_NUM = 777777
+    MAX_CDN_NUM = 77777
     CDN_NORMAL_MODE = True
 
     CACHE_RAIL_ID_ENABLED = 0

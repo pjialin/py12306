@@ -30,9 +30,9 @@ class Cdn:
     is_alive = True
     is_recheck = False
 
-    safe_stay_time = 0.2
+    safe_stay_time = 1.3
     retry_num = 1
-    thread_num = 5
+    thread_num = 1
     check_time_out = 3
 
     last_check_at = 0
@@ -47,6 +47,14 @@ class Cdn:
         self.init_config()
         create_thread_and_run(self, 'watch_cdn', False)
 
+
+    def build_cdn_infos(self):
+        self.load_items()
+        self.available_items = self.items
+        self.is_finished = True
+        self.is_ready = True
+        self.save_available_items()
+
     def init_data(self):
         self.items = []
         self.available_items = []
@@ -57,9 +65,9 @@ class Cdn:
 
 
     def init_config(self):
-        self.check_url = LEFT_TICKETS.get('url').format(left_date=(datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
+        self.check_url = LEFT_TICKETS.get('url').format(left_date=(datetime.date.today() + datetime.timedelta(days=7)).strftime('%Y-%m-%d'),
                                                     left_station='BJP', arrive_station='SHH', type=Query.get_query_api_type())
-        self.cookie_data = self.load_device_id()
+        self.cookie_data = Query.get_device_id()
         self.check_time_out = Config().CDN_CHECK_TIME_OUT
         self.check_mode_normal = Config().CDN_NORMAL_MODE
 
@@ -81,6 +89,9 @@ class Cdn:
 
     def start(self):
         if not Config.is_cdn_enabled(): return
+        if not Config().CDN_RUN_CHECK:
+            self.build_cdn_infos()
+            return
         self.load_items()
         CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_START_TO_CHECK.format(len(self.items))).flush()
         self.restore_items()
@@ -136,6 +147,8 @@ class Cdn:
         return False
 
     def get_unchecked_item(self):
+        if len(self.available_items) >= Config().MAX_CDN_NUM:
+            return None
         if not self.is_recheck:
             items = list(set(self.items) - set(self.available_items) - set(self.unavailable_items))
         else:
@@ -154,6 +167,7 @@ class Cdn:
         监控 cdn 状态，自动重新检测
         :return:
         """
+        if not Config().CDN_RUN_CHECK: return
         while True:
             if self.is_alive and not self.is_recheck and self.is_need_to_recheck():  # 重新检测
                 self.is_recheck = True
@@ -174,14 +188,16 @@ class Cdn:
         self.init_data()
 
     def check_item_available(self, item, try_num=0):
-        CDN_URL = self.check_url
         session = Request()
-        session.cookies.update(self.cookie_data)
-        CDN_URL = CDN_URL.replace(HOST_URL_OF_12306, item)
-        response = session.get(CDN_URL, headers={'Host': HOST_URL_OF_12306},
+        url = API_CHECK_CDN_AVAILABLE.format(item)
+        if not self.check_mode_normal:
+            url = self.check_url
+            session.cookies.update(self.cookie_data)
+            url = url.replace(HOST_URL_OF_12306, item)
+        response = session.get(url, headers={'Host': HOST_URL_OF_12306},
                                timeout=self.check_time_out,
                                verify=False)
-        if response.status_code == 200 and (self.check_mode_normal or response.json()):
+        if (response.status_code == 200 and self.check_mode_normal) or (response.json() and not self.check_mode_normal):
             if not self.is_recheck:
                 self.available_items.append(item)
             else:
@@ -210,8 +226,6 @@ class Cdn:
                 self.unavailable_items = self.recheck_unavailable_items
                 self.recheck_available_items = []
                 self.recheck_unavailable_items = []
-            if len(self.available_items) > Config().MAX_CDN_NUM:
-                self.available_items = random.sample(self.available_items, Config().MAX_CDN_NUM)
             CommonLog.add_quick_log(CommonLog.MESSAGE_CDN_CHECKED_SUCCESS.format(len(self.available_items))).flush()
             self.save_available_items()
 
@@ -238,26 +252,6 @@ class Cdn:
         if self.is_ready and self.available_items:
             return random.choice(self.available_items)
         return None
-
-    def load_device_id(self):
-        if Config().CDN_NORMAL_MODE:
-            return {}
-        result = None
-        if path.exists(Config().DEVICEID_CACHE_FILE):
-            with open(Config().DEVICEID_CACHE_FILE, encoding='utf-8') as f:
-                result = f.read()
-                try:
-                    result = json.loads(result)
-                except json.JSONDecodeError as e:
-                    result = {}
-
-        if result and time_int() - result.get('save_time', -1) < 120:
-            data = {
-            'RAIL_EXPIRATION': result.get('RAIL_EXPIRATION', '-1'),
-            'RAIL_DEVICEID': result.get('RAIL_DEVICEID', 'abcdefg')
-            }
-            return data
-        return {}
 
 if __name__ == '__main__':
     # Const.IS_TEST = True

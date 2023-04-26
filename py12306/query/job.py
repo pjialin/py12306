@@ -65,7 +65,8 @@ class Job:
     INDEX_SECRET_STR = 0
     INDEX_LEFT_TIME = 8
     INDEX_ARRIVE_TIME = 9
-    last_heartbeat = None
+    INDEX_ELAPSED_TIME = 10
+    max_elapsed_time = None
 
     max_buy_time = 32
     empty_res_sleep = False
@@ -78,7 +79,6 @@ class Job:
         self.update_interval()
 
     def init_data(self, info):
-        self.last_heartbeat = time_int()
         self.id = md5(info)
         self.left_dates = info.get('left_dates')
         self.stations = info.get('stations')
@@ -101,12 +101,19 @@ class Job:
                 parts = period['from'].split(':')
                 if len(parts) == 2:
                     self.from_time = timedelta(
-                        hours=int(parts[0]), seconds=int(parts[1]))
+                        hours=int(parts[0]), minutes=int(parts[1]))
             if 'to' in period:
                 parts = period['to'].split(':')
                 if len(parts) == 2:
                     self.to_time = timedelta(
-                        hours=int(parts[0]), seconds=int(parts[1]))
+                        hours=int(parts[0]), minutes=int(parts[1]))
+
+        elapsed_time = info.get('elapsed')
+        if elapsed_time:
+            parts_elapsed = elapsed_time.split(':')
+            self.max_elapsed_time = timedelta(hours=int(parts_elapsed[0]),minutes=int(parts_elapsed[1]))
+        else:
+            self.max_elapsed_time = timedelta(days=7)
 
     def update_interval(self):
         self.interval = self.query.interval
@@ -115,9 +122,7 @@ class Job:
         self.start()
 
     def check_device_id_validation(self):
-        if time_int() - self.last_heartbeat > Config().DEVICEID_CHECK_INTERVAL:
-            self.query.check_device_id_valid()
-            self.last_heartbeat = time_int()
+        self.query.check_device_id_valid()
 
     def start(self):
         """
@@ -196,6 +201,7 @@ class Job:
         results = self.get_results(response)
         if not results:
             return False
+        potential_tickets = []
         for result in results:
             self.ticket_info = ticket_info = result.split('|')
             if not self.is_trains_number_valid():  # 车次是否有效
@@ -203,6 +209,13 @@ class Job:
             QueryLog.add_log(QueryLog.MESSAGE_QUERY_LOG_OF_EVERY_TRAIN.format(self.get_info_of_train_number()))
             if not self.is_has_ticket(ticket_info):
                 continue
+            potential_tickets.append(ticket_info)
+        if not potential_tickets:
+            return
+        if Config().QUERY_RANDOMIZE_RESULTS:
+            random.shuffle(potential_tickets)
+        for ticket_info in potential_tickets:
+            self.ticket_info = ticket_info
             allow_seats = self.allow_seats if self.allow_seats else list(
                 Config.SEAT_TYPES.values())  # 未设置 则所有可用 TODO  合法检测
             self.handle_seats(allow_seats, ticket_info)
@@ -293,15 +306,23 @@ class Job:
         train_left_time = self.get_info_of_train_left_time()
         time_parts = train_left_time.split(':')
         left_time = timedelta(
-            hours=int(time_parts[0]), seconds=int(time_parts[1]))
+            hours=int(time_parts[0]), minutes=int(time_parts[1]))
         if left_time < self.from_time or left_time > self.to_time:
             return False
 
+        train_elapsed_time = self.get_info_of_train_elapsed_time()
+        time_parts_elapsed = train_elapsed_time.split(':')
+        elapsed_time = timedelta(hours=int(time_parts_elapsed[0]), minutes=int(time_parts_elapsed[1]))
+
         if self.except_train_numbers:
-            return self.get_info_of_train_number().upper() not in map(str.upper, self.except_train_numbers)
+            return self.check_elapsed_time_valid(elapsed_time) and self.get_info_of_train_number().upper() not in map(str.upper, self.except_train_numbers)
         if self.allow_train_numbers:
             return self.get_info_of_train_number().upper() in map(str.upper, self.allow_train_numbers)
-        return True
+
+        return self.check_elapsed_time_valid(elapsed_time)
+
+    def check_elapsed_time_valid(self, elapsed_time):
+        return elapsed_time < self.max_elapsed_time
 
     def is_member_number_valid(self, seat):
         return seat == '有' or self.member_num <= int(seat)
@@ -388,3 +409,6 @@ class Job:
 
     def get_info_of_train_arrive_time(self):
         return self.ticket_info[self.INDEX_ARRIVE_TIME]
+
+    def get_info_of_train_elapsed_time(self):
+        return self.ticket_info[self.INDEX_ELAPSED_TIME]

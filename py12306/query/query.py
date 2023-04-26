@@ -30,6 +30,8 @@ class Query:
     is_ready = False
     api_type = None  # Query api url, Current know value  leftTicket/queryX | leftTicket/queryZ
     expire_ts = -1
+    device_id = {}
+    last_heartbeat = 0
 
     def __init__(self):
         self.session = Request()
@@ -155,7 +157,7 @@ class Query:
             self.update_and_save_device_id(Config().RAIL_EXPIRATION, Config().RAIL_DEVICEID)
             return
         headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
         }
         self.session.headers.update(headers)
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
@@ -174,9 +176,9 @@ class Query:
         data = {
             'RAIL_EXPIRATION': expiration,
             'RAIL_DEVICEID': deviceid,
-            }
+        }
+        self.device_id = data
         self.session.cookies.update(data)
-        data.update({'save_time': time_int()})
         with open(Config().DEVICEID_CACHE_FILE, 'w') as f:
             f.write(json.dumps(data))
 
@@ -190,10 +192,10 @@ class Query:
                 except json.JSONDecodeError as e:
                     result = {}
 
-        if result and time_int() - result.get('save_time', -1) < 120:
+        if result and int(result.get('RAIL_EXPIRATION', '0')) - time_int_ms() > 288000000:
             data = {
-            'RAIL_EXPIRATION': result.get('RAIL_EXPIRATION', '-1'),
-            'RAIL_DEVICEID': result.get('RAIL_DEVICEID', 'abcdefg')
+                'RAIL_EXPIRATION': result.get('RAIL_EXPIRATION', '-1'),
+                'RAIL_DEVICEID': result.get('RAIL_DEVICEID', 'abcdefg')
             }
             self.session.cookies.update(data)
         else:
@@ -228,7 +230,7 @@ class Query:
         import re
         self = cls()
         if self.api_type:
-            self.expire_ts = int(self.session.cookies.get('RAIL_EXPIRATION'))
+            self.expire_ts = int(self.session.cookies.get('RAIL_EXPIRATION', '0'))
             return self.api_type
         response = self.session.get(API_QUERY_INIT_PAGE)
         if response.status_code == 200:
@@ -245,11 +247,18 @@ class Query:
         return cls.get_query_api_type()
 
     @classmethod
+    def get_device_id(cls):
+        self = cls()
+        return self.device_id
+
+    @classmethod
     def check_device_id_valid(cls):
         self = cls()
-        if self.expire_ts - time_int_ms() < Config().DEVICEID_CHECK_INTERVAL * 1250:
-            self.request_device_id(True)
-            self.get_query_api_type()
+        if time_int() - self.last_heartbeat > Config().DEVICEID_CHECK_INTERVAL:
+            self.last_heartbeat = time_int()
+            if self.expire_ts - time_int_ms() < Config().DEVICEID_CHECK_INTERVAL * 1250:
+                self.request_device_id(True)
+                self.get_query_api_type()
 
 # def get_jobs_from_cluster(self):
 #     jobs = self.cluster.session.get_dict(Cluster.KEY_JOBS)

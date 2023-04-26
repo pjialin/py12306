@@ -13,13 +13,13 @@ def app_available_check():
     if Config().IS_DEBUG:
         return True
     now = time_now()
-    if now.weekday() == 1 and (now.hour >= 23 and now.minute > 30 or 1 <= now.hour < 5):
+    if now.weekday() == 1 and ((now.hour >= 23 and now.minute > 30) or 1 <= now.hour < 5):
         CommonLog.add_quick_log(CommonLog.MESSAGE_12306_IS_CLOSED.format(time_now())).flush()
         open_time = datetime.datetime(now.year, now.month, now.day, 5)
         if open_time < now:
             open_time += datetime.timedelta(1)
         sleep((open_time - now).seconds)
-    elif 1 <= now.hour < 5:
+    elif (now.weekday() == 2 and now.hour < 5) or 1 <= now.hour < 5:
         CommonLog.add_quick_log(CommonLog.MESSAGE_12306_IS_CLOSED.format(time_now())).flush()
         open_time = datetime.datetime(now.year, now.month, now.day, 5)
         sleep((open_time - now).seconds)
@@ -135,6 +135,10 @@ class App:
         if Config().BARK_ENABLED:  # Bark通知
             CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_PUSH_BARK).flush()
             Notification.push_bark('测试发送信息')
+
+        if Config().XTS_ENABLED:  # 虾推啥通知
+            CommonLog.add_quick_log(CommonLog.MESSAGE_TEST_SEND_PUSH_XTS).flush()
+            Notification.push_xts('测试发送信息')
 
     @classmethod
     def run_check(cls):
