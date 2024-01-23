@@ -24,7 +24,7 @@ class OrderLog(BaseLog):
 
     MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_SUCCESS = '# 提交订单成功！#'
     MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_ERROR = '出票失败，错误原因 {}'
-    MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_FAIL = '提交订单失败，错误原因 {}'
+    MESSAGE_CONFIRM_SINGLE_FOR_QUEUE_FAIL = '确认排队订单失败，错误原因 {}'
 
     MESSAGE_QUERY_ORDER_WAIT_TIME_WAITING = '排队等待中，排队人数 {}，预计还需要 {} 秒'
     MESSAGE_QUERY_ORDER_WAIT_TIME_FAIL = '排队失败，错误原因 {}'
