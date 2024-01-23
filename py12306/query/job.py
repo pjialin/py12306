@@ -66,7 +66,7 @@ class Job:
     INDEX_LEFT_TIME = 8
     INDEX_ARRIVE_TIME = 9
 
-    max_buy_time = 32
+    max_buy_time = 14
 
     def __init__(self, info, query):
         self.cluster = Cluster()
@@ -124,6 +124,10 @@ class Job:
                 self.refresh_station(station)
                 for date in self.left_dates:
                     self.left_date = date
+                    diff_days = self.compute_date_diff(date)
+                    if diff_days >= self.max_buy_time:
+                        QueryLog.add_quick_log('还未开始预售的日期，不进行查询！').flush()
+                        continue
                     response = self.query_by_date(date)
                     self.handle_response(response)
                     QueryLog.add_query_time_log(time=response.elapsed.total_seconds(), is_cdn=self.is_cdn)
@@ -138,6 +142,14 @@ class Job:
                 QueryLog.add_log('\n').flush(sep='\t\t', publish=False)
             if Const.IS_TEST: return
 
+    def compute_date_diff(self, date):
+        date_now = datetime.datetime.now()
+        date_query = datetime.datetime.strptime(str(date), "%Y-%m-%d")
+        diff = (date_query - date_now).days
+        if date_now.day == date_query.day:
+            diff = 0
+        return diff
+
     def judge_date_legal(self, date):
         date_now = datetime.datetime.now()
         date_query = datetime.datetime.strptime(str(date), "%Y-%m-%d")
@@ -149,7 +161,7 @@ class Job:
             QueryLog.add_quick_log(msg).flush(publish=False)
             raise RuntimeError(msg)
         elif diff > self.max_buy_time:
-            msg = '乘车日期错误，超出一个月预售期！！'
+            msg = '乘车日期错误，超出预售期！！'
             QueryLog.add_quick_log(msg).flush(publish=False)
             raise RuntimeError(msg)
         else:
