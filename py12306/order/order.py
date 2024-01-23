@@ -293,7 +293,7 @@ class Order:
         }
         response = self.session.post(API_SUBMIT_ORDER_REQUEST, data)
         result = response.json()
-        if result.get('data') == '0':
+        if result.get('status') == True:
             OrderLog.add_quick_log(OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_SUCCESS).flush()
             return True
         else:
@@ -305,6 +305,7 @@ class Order:
             OrderLog.add_quick_log(
                 OrderLog.MESSAGE_SUBMIT_ORDER_REQUEST_FAIL.format(
                     result.get('messages', CommonLog.MESSAGE_RESPONSE_EMPTY_ERROR))).flush()
+            OrderLog.add_quick_log('执行结果' + str(result)).flush()
         return False
 
     def check_order_info(self, slide_info=None):
