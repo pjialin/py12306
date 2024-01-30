@@ -2,7 +2,7 @@
 appdirs==1.4.3
 beautifulsoup4==4.7.0
 bs4==0.0.1
-certifi==2018.11.29
+certifi==2023.11.17
 chardet==3.0.4
 Click==7.0
 cssselect==1.0.3
@@ -20,7 +20,7 @@ PyJWT==1.7.1
 pyppeteer-box==0.0.27
 pyquery==1.4.0
 redis==3.0.1
-requests==2.21.0
+requests==2.31.0
 requests-html==0.9.0
 six==1.12.0
 soupsieve==1.6.2
