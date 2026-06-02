@@ -174,7 +174,7 @@ class UserJob:
             result = response.json()
             try:
                 result_code = int(result.get('result_code'))
-            except:
+            except Exception:
                 if time_int() - last_time > 300:
                     last_time = time_int()
                     image_uuid, png_path = self.download_code()
@@ -352,7 +352,7 @@ class UserJob:
                        'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
                        'RAIL_DEVICEID': Config().RAIL_DEVICEID,
                    })
-            except:
+            except Exception:
                 return self.request_device_id()
         else:
             return self.request_device_id()
@@ -378,7 +378,7 @@ class UserJob:
                            'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
                            'RAIL_DEVICEID': Config().RAIL_DEVICEID,
                        })
-            except:
+            except Exception:
                 return self.request_device_id2()
         else:
             return self.request_device_id2()
@@ -619,7 +619,7 @@ class UserJob:
             self.global_repeat_submit_token = token.groups()[0]
             self.ticket_info_for_passenger_form = json.loads(form.groups()[0].replace("'", '"'))
             self.order_request_dto = json.loads(order.groups()[0].replace("'", '"'))
-        except:
+        except Exception:
             return False, False, html  # TODO Error
 
         slide_val = re.search(r"var if_check_slide_passcode.*='(\d?)'", html)
