@@ -140,11 +140,11 @@ class Browser:
             OrderLog.add_quick_log('滑动验证码识别失败').flush()
         try:
             await page.close()
-        except:
+        except Exception:
             pass
         try:
             await browser.close()
-        except:
+        except Exception:
             pass
         return self.cookies, self.post_data
 
@@ -210,7 +210,7 @@ class Order:
             try:
                 slide_info = Browser().request_init_slide(self.session, init_html)
                 if not slide_info.get('session_id') or not slide_info.get('sig'):
-                    raise Exception()
+                    raise RuntimeError("Order failed")
             except Exception:
                 OrderLog.add_quick_log('滑动验证码识别失败').flush()
                 return

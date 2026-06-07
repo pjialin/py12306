@@ -49,7 +49,7 @@ class Request(HTMLSession):
         try:
             result = self.old_json()
             return Dict(result)
-        except:
+        except Exception:
             return Dict(default)
 
     def request(self, *args, **kwargs):  # 拦截所有错误

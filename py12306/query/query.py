@@ -147,7 +147,7 @@ class Query:
                         'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
                         'RAIL_DEVICEID': Config().RAIL_DEVICEID,
                     })
-            except:
+            except Exception:
                 return self.request_device_id()
         else:
             return self.request_device_id()
@@ -173,7 +173,7 @@ class Query:
                            'RAIL_EXPIRATION': Config().RAIL_EXPIRATION,
                            'RAIL_DEVICEID': Config().RAIL_DEVICEID,
                        })
-            except:
+            except Exception:
                 return self.request_device_id2()
         else:
             return self.request_device_id2()
