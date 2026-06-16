@@ -2,7 +2,7 @@
 appdirs==1.4.3
 beautifulsoup4==4.7.0
 bs4==0.0.1
-certifi==2023.11.17
+certifi==2024.7.4
 chardet==3.0.4
 Click==7.0
 cssselect==1.0.3
